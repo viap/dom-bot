@@ -1,0 +1,10 @@
+#dist
+dist/*
+
+#node_modules
+node_modules/*
+
+#yarn
+.yarn/
+yarn.lock
+yarn-error.log
