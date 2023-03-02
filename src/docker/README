@@ -1,0 +1,7 @@
+# Инструкции взяты здесь
+https://hub.docker.com/_/mongo
+
+#Команды
+
+# Запуск
+1. docker-compose -f stack.yml up

@@ -1,29 +1,30 @@
 import { Keyboard } from "grammy"
 
 
-export type AnswerProps = {
+export type AnswerProps<T extends string> = {
     content: string
     value?: string | number | boolean
+    scales: {[key in T]:number}
 }
 
-export type QuestionProps = {
+export type QuestionProps<T extends string> = {
     content: string
     mandatory?: boolean 
     type?: QuestionType
-    answers: Array<AnswerProps>
+    answers: Array<AnswerProps<T>>
 }
 
 export enum QuestionType {
     SINGLE,
     MULTIPLE
 }
-export class Question {
+export class Question<T extends string> {
     content: string
     mandatory: boolean 
-    answers: Array<AnswerProps>
+    answers: Array<AnswerProps<T>>
     type: QuestionType
 
-    constructor({content="", mandatory=false, answers=[], type=QuestionType.SINGLE}: QuestionProps){
+    constructor({content="", mandatory=false, answers=[], type=QuestionType.SINGLE}: QuestionProps<T>){
         this.content = content
         this.answers = answers
         this.type = type
@@ -31,15 +32,16 @@ export class Question {
     }
 }
 
-export type QuizProps = {
+export type QuizProps<T extends string> = {
     version?: string
     key?: string
     lang?: QuizLang
     name?: string
     descr?: string
     type?: QuizType
-    questions?: Array<QuestionProps>
+    questions?: Array<QuestionProps<T>>
     givenAnswers?: Array<any>
+    outcome: {[key in T]?:string}
     getResult?: (givenAnswers: Array<any>)=>string
 }
 
@@ -54,21 +56,19 @@ export enum QuizLang {
     GE
 }
 
-export class Quiz {
+export class Quiz <T extends string> {
     private version: string
     private key: string
     private lang: QuizLang
     private name: string
     private descr: string
     private type: QuizType
-    private questions: Array<Question>
-    private givenAnswers: Array<AnswerProps>
-    private finished: boolean
+    private questions: Array<Question<T>>
+    private givenAnswers: Array<AnswerProps<T>>
     private keyboards: Array<Keyboard>
+    private outcome: {[key in T]?:string}
 
-    getResult: (givenAnswers: Array<any>)=>string
-
-    constructor({version="1.0", key="", lang=QuizLang.RUS,name="", descr="", type=QuizType.NORMAL, questions=[], givenAnswers=[], getResult=()=>""}: QuizProps) {
+    constructor({version="1.0", key="", lang=QuizLang.RUS,name="", descr="", type=QuizType.NORMAL, questions=[], givenAnswers=[], outcome={}}: QuizProps<T>) {
         this.key=key
         this.version = version
         this.lang=lang
@@ -76,19 +76,10 @@ export class Quiz {
         this.descr=descr
         this.type=type
         this.givenAnswers = []
+        this.outcome = outcome
         this.questions = questions.map((questionProps)=>{
-            return new Question(questionProps)
+            return new Question<T>(questionProps)
         })
-
-        this.finished = false;
-        
-        this.getResult = ()=> {
-            if(this.givenAnswers.length === this.questions.length) {
-                return getResult(this.givenAnswers)
-            } else {
-                return "Прохождение опроса не завершено"
-            }
-        }
 
         this.keyboards = this.questions.map((question) => {
             const rowLength = 2
@@ -112,9 +103,45 @@ export class Quiz {
             return keyboard
         })
     }
+
+    getResult = ()=> {
+        if(this.givenAnswers.length === this.questions.length) {
+            const results: {[key:string]: number} = {}
+
+            this.givenAnswers.forEach((answer)=>{
+                const keys = Object.keys(answer.scales)
+
+                keys.forEach((key)=>{
+                    results[key] = (results[key] || 0) + answer.scales[key as T]
+                })
+            })
+
+            let finalResult: {key: string, value: number, outcome: Array<string>} | undefined
+            Object.entries(results).forEach((entry)=>{
+                if(!finalResult || finalResult.value <= entry[1]) {
+                    const outcome: Array<string> = finalResult?.value === entry[1] ? finalResult.outcome: []
+                    outcome.push(this.outcome[entry[0] as T] || "")
+
+                    finalResult = {
+                        key: entry[0],
+                        value: entry[1],
+                        outcome: outcome
+                    }
+                }
+            })
+
+            return finalResult?.outcome.join(" или ") || ""
+        } else {
+            return "Прохождение опроса не завершено"
+        }
+    }
     
-    isFinished():boolean {
-        return this.finished
+    clearProgress(){
+        this.givenAnswers = []
+    }
+
+    isPassed():boolean {
+        return this.givenAnswers.length === this.questions.length
     }
 
     getIndex ():number {
@@ -125,7 +152,7 @@ export class Quiz {
         return this.keyboards[this.getIndex()]
     }
 
-    getQuestion():Question {
+    getQuestion():Question<T> {
         const index = this.givenAnswers.length
         return this.questions[index] || this.questions[this.questions.length-1]
     }
@@ -148,22 +175,21 @@ export class Quiz {
         return false
     }
 
-    private setAnswer (answer?: AnswerProps): boolean{
+    private setAnswer (answer?: AnswerProps<T>): boolean {
         if(answer){
             this.givenAnswers.push(answer)
-            this.finished = this.givenAnswers.length === this.questions.length
             return true
         } else {
             return false
         }
     }
 
-    serializeProgress(): QuizProps {
+    serializeProgress(): QuizProps<T> {
         return {
             key: this.key,
             version: this.version,
             lang: this.lang,
             givenAnswers: this.givenAnswers
-        } as QuizProps
+        } as QuizProps<T>
     }
 }

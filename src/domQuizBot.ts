@@ -1,18 +1,19 @@
-import {Bot, ChatTypeContext, CommandContext, Composer, session, Context, SessionFlavor, GrammyError, HttpError, Keyboard} from "grammy"
-import { 
-    type Conversation,
-    type ConversationFlavor,
+import {
     conversations,
-    createConversation, } from "@grammyjs/conversations";
-import { Menu } from "@grammyjs/menu";
-import { TOKEN } from "./config/consts"
-import { AnswerProps, Quiz, QuizProps } from "./modules/Quiz/index";
-import { firstQuiz } from "./modules/Quiz/Entities/firstQuiz"
+    createConversation, type Conversation,
+    type ConversationFlavor
+} from "@grammyjs/conversations";
+import { Bot, Context, GrammyError, HttpError, session, SessionFlavor } from "grammy";
+import { BOT_COMMANDS, BOT_COMMANDS_DESCR, BOT_ERROR, BOT_MSG, CONVERSATION_NAME, TOKEN } from "./config/consts";
+import { QuizProgress } from "./conversations/quizProgress";
+import { Terms } from "./conversations/terms";
+import { firstQuiz } from "./modules/Quiz/Entities/firstQuiz";
+import { SessionData } from "./types";
 
-type SessionData = {
-    hasTermsAgreement: boolean
-    progress?: QuizProps
-}
+import mongoose from "mongoose"
+import * as MongoStorage from "@grammyjs/storage-mongodb"
+import db_config from "./config/db"
+
 
 type MyContext = Context & SessionFlavor<SessionData> & ConversationFlavor
 type MyConversation = Conversation<MyContext>;
@@ -20,85 +21,99 @@ type MyConversation = Conversation<MyContext>;
 export const domBot = (new Bot<MyContext>(TOKEN))
 // const privateBot = domBot.chatType("private")
 
+/** COMMANDS */
+
+domBot.api.setMyCommands([
+    { command: BOT_COMMANDS.START, description: BOT_COMMANDS_DESCR.START },
+    { command: BOT_COMMANDS.SELECT_QUIZ, description: BOT_COMMANDS_DESCR.SELECT_QUIZ },
+    { command: BOT_COMMANDS.TERMS, description: BOT_COMMANDS_DESCR.TERMS },
+  ]);
+
+/** DB CONNECTION */
+
+await mongoose.connect(db_config.url, db_config.opts)
+console.log("DB: connected")
+
+const collection = mongoose.connection.db.collection<MongoStorage.ISession>(
+    "sessions",
+  );
+
+/** SESSION */
+
 function sessionInit (): SessionData {
     return { hasTermsAgreement: false }
 }
 
-async function quizProgress(conversation: MyConversation, ctx: MyContext){
-    
-    if(firstQuiz.isFinished()){
-        await ctx.reply("Вы уже прошли тест, хотите повторить?", {reply_markup: new Keyboard([[{"text": "Да"}, {text:"Нет"}]])})
-        const response = await conversation.waitFor(":text");
-        if(response.msg.text === "Да") {
-            //Notice: пока не используется
-            delete ctx.session.progress
-        } else {
-            return await ctx.reply("Ок", {reply_markup:{remove_keyboard:true}})
-        }
-    }
-    
-    while (!firstQuiz.isFinished()) {
-        ctx.reply(firstQuiz.getQuestion().content,
-            {reply_markup: firstQuiz.getKeyboard()}
-        )
-        const response = await conversation.waitFor(":text");
-        firstQuiz.setAnswerByResponse(response.msg.text)
-    }
+function getSessionKey(ctx: Context): string | undefined {
+    // Give every user their one personal session storage per chat with the bot
+    // (an independent session for each group and their private chat)
+    return ctx.from === undefined || ctx.chat === undefined
+      ? undefined
+      : `${ctx.from.id}/${ctx.chat.id}`;
+  }
 
-    await ctx.reply("Вы прошли тест, поздравляю!", {reply_markup: {remove_keyboard:true}});
+domBot.use(session({
+    getSessionKey, 
+    initial: sessionInit, 
+    storage: new MongoStorage.MongoDBAdapter<SessionData>({ collection })
+}))
 
-    // await ctx.reply("How many favorite movies do you have?");
-    // const count = await conversation.form.number();
-    // const movies: string[] = [];
-    // for (let i = 0; i < count; i++) {
-    //   await ctx.reply(`Tell me number ${i + 1}!`);
-    //   const titleCtx = await conversation.waitFor(":text");
-    //   movies.push(titleCtx.msg.text);
-    // }
-    // await ctx.reply("Here is a better ranking!");
-    // movies.sort();
-    // await ctx.reply(movies.map((m, i) => `${i + 1}. ${m}`).join("\n"));
-}
+/** CONVERSATIONS */
 
-domBot.api.setMyCommands([
-    { command: "start", description: "Запустить бота" },
-    { command: "start_quiz", description: "Начать прохождение теста" },
-    // { command: "help", description: "Показать подсказки" },
-    // { command: "settings", description: "Настройки" },
-  ]);
+const quizProgress = new QuizProgress<MyContext>(firstQuiz)
+const terms = new Terms<MyContext>()
 
-domBot.use(session({initial: sessionInit}))
 domBot.use(conversations())
-domBot.use(createConversation(quizProgress))
+domBot.use(createConversation(terms.getConversation(), CONVERSATION_NAME.TERMS_AGREEMENT))
+domBot.use(createConversation(quizProgress.getConversation(), CONVERSATION_NAME.QUIZ_PROGRESS))
+
+/** COMMAND HANDLERS */
+
+domBot.command(BOT_COMMANDS.START, async (ctx)=> {
+    await ctx.conversation.exit()
+    await ctx.reply(BOT_MSG.WELCOME)
+})
+
+domBot.command(BOT_COMMANDS.SELECT_QUIZ, async (ctx)=> {
+    await ctx.conversation.enter(CONVERSATION_NAME.QUIZ_PROGRESS)
+})
+
+domBot.command(BOT_COMMANDS.TERMS, async (ctx)=> {
+    await ctx.conversation.enter(CONVERSATION_NAME.TERMS_AGREEMENT)
+})
+
+/** CALLBACKS */
+
+// domBot.callbackQuery(CALLBACK.QUIZ_CANCEL, async (ctx) => {
+//     await ctx.conversation.exit(CONVERSATION_NAME.QUIZ_PROGRESS);
+//     await ctx.answerCallbackQuery( firstQuiz.getResult() );
+// });
+
+// domBot.callbackQuery(CALLBACK.TERMS_YES, async (ctx) => {
+//     if(ctx.session.hasTermsAgreement){
+//         await ctx.conversation.enter(CONVERSATION_NAME.TERMS_AGREEMENT)
+//     }
+// });
+
+/** MESSAGE HANDLERS */
+
+domBot.on("message", (ctx)=>{
+    ctx.reply(`${BOT_MSG.DEFAULT} - ${ctx.message.text}`)
+})
+
+/** ERROR HANDLERS */
 
 domBot.catch((err) => {
     const ctx = err.ctx;
-    console.error(`Error while handling update ${ctx.update.update_id}:`);
+    console.error(`${BOT_ERROR.UPDATE} ${ctx.update.update_id}:`);
     const e = err.error;
     if (e instanceof GrammyError) {
-      console.error("Error in request:", e.description);
+      console.error(`${BOT_ERROR.REQUEST}:`, e.description);
     } else if (e instanceof HttpError) {
-      console.error("Could not contact Telegram:", e);
+      console.error(`${BOT_ERROR.UNAVAILABLE}:`, e);
     } else {
-      console.error("Unknown error:", e);
+      console.error(`${BOT_ERROR.UNKNOWN}:`, e);
     }
 });
 
-domBot.callbackQuery("cancel_quiz", async (ctx) => {
-    await ctx.conversation.exit("quizProgress");
-    await ctx.answerCallbackQuery("Прохождение теста завершено!");
-});
-
-domBot.command("start", (ctx)=>{
-    ctx.reply("Добро пожаловать!")
-})
-
-domBot.command("start_quiz", async (ctx)=>{
-    console.log("On command - startQuiz")
-    
-    await ctx.conversation.enter("quizProgress")
-})
-
-domBot.on("message", (ctx)=>{
-    ctx.reply(`Got a message - ${ctx.message.text}`)
-})
+domBot.errorBoundary((err) => console.error(BOT_ERROR.CONVERSATION, err))
