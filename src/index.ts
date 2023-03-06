@@ -1,10 +1,10 @@
-import { domBot } from "./domQuizBot";
+import { domBot } from "./domQuizBot"
 
-import {run} from "@grammyjs/runner"
+import { run } from "@grammyjs/runner"
 
 const runner = run(domBot)
-if(runner.isRunning()){
-    console.log("Bot was started")
+if (runner.isRunning()) {
+  console.log("Bot was started")
 } else {
-    console.log("Something went wrong on bot starting")
+  console.log("Something went wrong on bot starting")
 }

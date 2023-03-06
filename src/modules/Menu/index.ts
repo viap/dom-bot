@@ -1,66 +1,65 @@
-
 export type Item = {
-    key: string
-    content: string,
-    click?: ()=>void
-    items: Array<Item>
+  key: string
+  content: string
+  click?: () => void
+  items: Array<Item>
 }
 
 export type MenuProps = {
-    items?: Array<Item>
+  items?: Array<Item>
 }
 
-export class Menu  {
-    items: Array<Item>
-    
-    constructor({items=[]}:MenuProps) {
-        this.items = items
-    }
+export class Menu {
+  items: Array<Item>
 
-    static showItems(items:Array<Item>){
-        return items.forEach((item)=>{
-            return Menu.renderItem(item)
-        })
-    }
+  constructor({ items = [] }: MenuProps) {
+    this.items = items
+  }
 
-    static renderItem(item:Item){
-        return item.content
-    }
+  static showItems(items: Array<Item>) {
+    return items.forEach((item) => {
+      return Menu.renderItem(item)
+    })
+  }
 
-    show(itemKey?:string){
-        return Menu.showItems(this.getItems(itemKey))
-    }
+  static renderItem(item: Item) {
+    return item.content
+  }
 
-    getItems(itemKey?:string){
-        const curItem = this.findItem(itemKey || "")
-        const items = curItem?.items || this.items
-        return items
-    }
+  show(itemKey?: string) {
+    return Menu.showItems(this.getItems(itemKey))
+  }
 
-    findItem(itemKey:string){
-        return this.items.find((item)=>item.key === itemKey)
-    }
+  getItems(itemKey?: string) {
+    const curItem = this.findItem(itemKey || "")
+    const items = curItem?.items || this.items
+    return items
+  }
 
-    addItem(item:Item){
-        return this.items.push(item)
-    }
+  findItem(itemKey: string) {
+    return this.items.find((item) => item.key === itemKey)
+  }
 
-    removeItem(itemKey:string){
-        const index = this.items.findIndex((item)=>item.key === itemKey)
-        if(index){
-            this.items.slice(index,1)
-        }
-        return this.items
-    }
+  addItem(item: Item) {
+    return this.items.push(item)
+  }
 
-    itemClick(itemKey:string){
-        const curItem = this.findItem(itemKey)
-        if(curItem) {
-            if(curItem.click){
-                curItem.click()
-            } else {
-                this.show(itemKey)
-            }
-        }
+  removeItem(itemKey: string) {
+    const index = this.items.findIndex((item) => item.key === itemKey)
+    if (index) {
+      this.items.slice(index, 1)
     }
+    return this.items
+  }
+
+  itemClick(itemKey: string) {
+    const curItem = this.findItem(itemKey)
+    if (curItem) {
+      if (curItem.click) {
+        curItem.click()
+      } else {
+        this.show(itemKey)
+      }
+    }
+  }
 }

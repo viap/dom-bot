@@ -1,4 +1,3 @@
-
 export type SessionData = {
-    hasTermsAgreement: boolean
+  hasTermsAgreement: boolean
 }
