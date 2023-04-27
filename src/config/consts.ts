@@ -1,10 +1,6 @@
 import { ReplyKeyboardMarkup, ReplyKeyboardRemove } from "@grammyjs/types"
-import fs from "fs"
-import { cwd } from "process"
-
-export const TOKEN = fs.readFileSync(cwd() + "/src/config/token", {
-  encoding: "utf8",
-})
+import { Psychologist } from "../types"
+import { PSY_SCHOOLS } from "../modules/Quiz/consts"
 
 export const ReplyMarkup = {
   emptyKeyboard: { remove_keyboard: true } as ReplyKeyboardRemove,
@@ -13,13 +9,15 @@ export const ReplyMarkup = {
 
 export enum BOT_COMMANDS {
   START = "start",
+  START_QUIZ = "start_quiz",
   SELECT_QUIZ = "select_quiz",
   TERMS = "terms",
 }
 
 export enum BOT_COMMANDS_DESCR {
   START = "Запустить бота",
-  SELECT_QUIZ = "Начать прохождение теста",
+  START_QUIZ = "Начать прохождение теста",
+  SELECT_QUIZ = "Выберите тест для прохождения",
   TERMS = "Соглашение использования",
 }
 
@@ -47,13 +45,16 @@ export enum QUIZ_MSG {
   REPLAY_NO = "Нет",
   REPLAY_NO_REPLY = "Ок",
 
+  UNKNOWN_ANSWER = "Непонятный ответ, выберите из предложенных вариантов:",
+
   SHOW_RESULT = "Посмотреть результат",
   CONGRATS = "Опрос завершен 🥳",
 }
 
 export enum CONVERSATION_NAME {
-  QUIZ_PROGRESS = "quiz_progress",
   TERMS_AGREEMENT = "terms_agreement",
+  QUIZ_PROGRESS = "quiz_progress",
+  SELECT_QUIZ = "select_quiz",
 }
 
 export enum TERMS {

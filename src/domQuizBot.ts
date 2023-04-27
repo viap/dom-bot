@@ -1,38 +1,49 @@
 import {
   conversations,
   createConversation,
-  type Conversation,
-  type ConversationFlavor
+  type ConversationFlavor,
 } from "@grammyjs/conversations"
+import * as MongoStorage from "@grammyjs/storage-mongodb"
+import dotenv from "dotenv"
 import {
   Bot,
   Context,
   GrammyError,
   HttpError,
+  SessionFlavor,
   session,
-  SessionFlavor
 } from "grammy"
+import path from "path"
+import { fileURLToPath } from "url"
 import {
   BOT_COMMANDS,
   BOT_COMMANDS_DESCR,
   BOT_ERROR,
   BOT_MSG,
   CONVERSATION_NAME,
-  TOKEN
 } from "./config/consts"
 import { QuizProgress } from "./conversations/quizProgress"
 import { Terms } from "./conversations/terms"
-import { firstQuiz } from "./modules/Quiz/Entities/firstQuiz"
+import { DbConnection, getSessions } from "./services/db/connectDB"
 import { SessionData } from "./types"
 
-import * as MongoStorage from "@grammyjs/storage-mongodb"
-import mongoose from "mongoose"
-import db_config from "./config/db"
+/** ENVIROMENT */
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+dotenv.config({ path: __dirname + "/config/.env" })
+
+/** DB CONNECTION */
+
+const connection = await DbConnection.getConnection()
+const sessions = getSessions(connection)
+
+/** BOT */
 
 type MyContext = Context & SessionFlavor<SessionData> & ConversationFlavor
-type MyConversation = Conversation<MyContext>
+// type MyConversation = Conversation<MyContext>
 
-export const domBot = new Bot<MyContext>(TOKEN)
+export const domBot = new Bot<MyContext>(process.env.TOKEN || "")
 // const privateBot = domBot.chatType("private")
 
 /** COMMANDS */
@@ -40,24 +51,20 @@ export const domBot = new Bot<MyContext>(TOKEN)
 domBot.api.setMyCommands([
   { command: BOT_COMMANDS.START, description: BOT_COMMANDS_DESCR.START },
   {
-    command: BOT_COMMANDS.SELECT_QUIZ,
-    description: BOT_COMMANDS_DESCR.SELECT_QUIZ,
+    command: BOT_COMMANDS.START_QUIZ,
+    description: BOT_COMMANDS_DESCR.START_QUIZ,
   },
   { command: BOT_COMMANDS.TERMS, description: BOT_COMMANDS_DESCR.TERMS },
+  // {
+  //   command: BOT_COMMANDS.SELECT_QUIZ,
+  //   description: BOT_COMMANDS_DESCR.SELECT_QUIZ,
+  // },
 ])
-
-/** DB CONNECTION */
-
-await mongoose.connect(db_config.url, db_config.opts)
-console.log("DB: connected")
-
-const collection =
-  mongoose.connection.db.collection<MongoStorage.ISession>("sessions")
 
 /** SESSION */
 
 function sessionInit(): SessionData {
-  return { hasTermsAgreement: false }
+  return { hasTermsAgreement: false, quizAnswers: {} }
 }
 
 function getSessionKey(ctx: Context): string | undefined {
@@ -72,16 +79,27 @@ domBot.use(
   session({
     getSessionKey,
     initial: sessionInit,
-    storage: new MongoStorage.MongoDBAdapter<SessionData>({ collection }),
+    storage: new MongoStorage.MongoDBAdapter<SessionData>({
+      collection: sessions,
+    }),
   })
 )
 
-/** CONVERSATIONS */
-
-const quizProgress = new QuizProgress<MyContext>(firstQuiz)
-const terms = new Terms<MyContext>()
+/** MIDDLEWARES: init */
 
 domBot.use(conversations())
+
+domBot.command(BOT_COMMANDS.START, async (ctx) => {
+  await ctx.conversation.exit()
+  await ctx.reply(BOT_MSG.WELCOME)
+})
+
+/** CONVERSATIONS: use */
+
+// const quizProgress = new QuizProgress<MyContext>(firstQuiz)
+const terms = new Terms<MyContext>()
+const quizProgress = new QuizProgress<MyContext>()
+
 domBot.use(
   createConversation(terms.getConversation(), CONVERSATION_NAME.TERMS_AGREEMENT)
 )
@@ -94,12 +112,7 @@ domBot.use(
 
 /** COMMAND HANDLERS */
 
-domBot.command(BOT_COMMANDS.START, async (ctx) => {
-  await ctx.conversation.exit()
-  await ctx.reply(BOT_MSG.WELCOME)
-})
-
-domBot.command(BOT_COMMANDS.SELECT_QUIZ, async (ctx) => {
+domBot.command(BOT_COMMANDS.START_QUIZ, async (ctx) => {
   await ctx.conversation.enter(CONVERSATION_NAME.QUIZ_PROGRESS)
 })
 

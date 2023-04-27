@@ -6,7 +6,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "yarn tsc",
+    "copy-env-dev": "cp ./src/config/.env.dev ./dist/config/.env",
+    "copy-env-prod": "cp ./src/config/.env.prod ./dist/config/.env",
+    "build": "yarn tsc && yarn copy-env-dev",
+    "build-prod": "yarn tsc && yarn copy-env-prod",
     "start": "node --es-module-specifier-resolution=node dist/index.js",
     "restart": "yarn build && yarn start"
   },
@@ -24,11 +27,12 @@
     "@grammyjs/storage-mongodb": "^2.1.1",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
+    "dotenv": "^16.0.3",
     "eslint": "^8.35.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
     "grammy": "^1.14.1",
-    "mongoose": "^7.0.0",
+    "mongoose": "^7.0.1",
     "prettier": "^2.8.4"
   }
 }

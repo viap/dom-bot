@@ -1,26 +1,23 @@
 import { Keyboard } from "grammy"
+import { QUIZ_STRINGS } from "./consts"
 
-export type AnswerProps<T extends string> = {
-  content: string
-  value?: string | number | boolean
-  scales: { [key in T]: number }
-}
-
-export type QuestionProps<T extends string> = {
-  content: string
-  mandatory?: boolean
-  type?: QuestionType
-  answers: Array<AnswerProps<T>>
-}
-
-export enum QuestionType {
-  SINGLE,
-  MULTIPLE,
-}
-export class Question<T extends string> {
+import { AnswerProps } from "../../models/Answer"
+import { GivenAnswer, GivenAnswerProps } from "../../models/GivenAnswer"
+import { QuestionProps, QuestionType } from "../../models/Question"
+import {
+  QuizLang,
+  QuizM,
+  QuizProps,
+  QuizStatus,
+  QuizType,
+} from "../../models/Quiz"
+import mongoose from "mongoose"
+import * as MongoStorage from "@grammyjs/storage-mongodb"
+import { QuizGivenAnswers, SessionData } from "../../types"
+export class QuestionModel {
   content: string
   mandatory: boolean
-  answers: Array<AnswerProps<T>>
+  answers: Array<AnswerProps>
   type: QuestionType
 
   constructor({
@@ -28,7 +25,7 @@ export class Question<T extends string> {
     mandatory = false,
     answers = [],
     type = QuestionType.SINGLE,
-  }: QuestionProps<T>) {
+  }: QuestionProps) {
     this.content = content
     this.answers = answers
     this.type = type
@@ -36,63 +33,39 @@ export class Question<T extends string> {
   }
 }
 
-export type QuizProps<T extends string> = {
-  version?: string
-  key?: string
-  lang?: QuizLang
-  name?: string
-  descr?: string
-  type?: QuizType
-  questions?: Array<QuestionProps<T>>
-  givenAnswers?: Array<any>
-  outcome: { [key in T]?: string }
-  getResult?: (givenAnswers: Array<any>) => string
-}
-
-export enum QuizType {
-  NORMAL,
-  CONSISTENT,
-}
-
-export enum QuizLang {
-  RUS,
-  EN,
-  GE,
-}
-
-export class Quiz<T extends string> {
-  private version: string
-  private key: string
+export class Quiz {
+  private _id: mongoose.Types.ObjectId
   private lang: QuizLang
   private name: string
   private descr: string
   private type: QuizType
-  private questions: Array<Question<T>>
-  private givenAnswers: Array<AnswerProps<T>>
+  private status: QuizStatus
+  private questions: Array<QuestionModel>
+  private givenAnswers: Array<GivenAnswerProps>
   private keyboards: Array<Keyboard>
-  private outcome: { [key in T]?: string }
+  private scales: { [key: string]: number }
 
   constructor({
-    version = "1.0",
-    key = "",
+    _id,
     lang = QuizLang.RUS,
     name = "",
     descr = "",
     type = QuizType.NORMAL,
+    status = QuizStatus.DISABLED,
     questions = [],
     givenAnswers = [],
-    outcome = {},
-  }: QuizProps<T>) {
-    this.key = key
-    this.version = version
+    scales = {},
+  }: QuizProps) {
+    this._id = _id
     this.lang = lang
     this.name = name
     this.descr = descr
     this.type = type
-    this.givenAnswers = []
-    this.outcome = outcome
+    this.status = status
+    this.givenAnswers = givenAnswers
+    this.scales = scales
     this.questions = questions.map((questionProps) => {
-      return new Question<T>(questionProps)
+      return new QuestionModel(questionProps)
     })
 
     this.keyboards = this.questions.map((question) => {
@@ -107,7 +80,10 @@ export class Quiz<T extends string> {
       })
 
       if (this.type === QuizType.NORMAL) {
-        keyboard.row().add({ text: "<" }).add({ text: ">" })
+        keyboard
+          .row()
+          .add({ text: QUIZ_STRINGS.QUESTION_PREV })
+          .add({ text: QUIZ_STRINGS.QUESTION_NEXT })
         // .row()
         // .add({text: "Сбросить"})
       }
@@ -116,26 +92,71 @@ export class Quiz<T extends string> {
     })
   }
 
+  // METHODS: public
+
+  isPassed(): boolean {
+    return this.givenAnswers.length === this.questions.length
+  }
+
+  clearProgress() {
+    this.givenAnswers = []
+  }
+
+  setAnswers(givenAnswers: Array<GivenAnswerProps>) {
+    this.givenAnswers = givenAnswers
+  }
+
+  serializeQuiz(): QuizProps {
+    return {
+      name: this.name,
+      descr: this.descr,
+      lang: this.lang,
+      type: this.type,
+      status: this.status,
+      questions: this.questions,
+      scales: this.scales,
+    } as QuizProps
+  }
+
+  saveQuizModel() {
+    const quiz = new QuizM(this.serializeQuiz())
+    quiz.save()
+  }
+
+  // METHODS: private
+
+  private setAnswer(givenAnswer: GivenAnswerProps): boolean {
+    this.givenAnswers.push(givenAnswer)
+    return true
+  }
+
+  // GETTERS
+
   getResult = () => {
+    const questions = this.questions
     if (this.givenAnswers.length === this.questions.length) {
       const results: { [key: string]: number } = {}
 
-      this.givenAnswers.forEach((answer) => {
-        const keys = Object.keys(answer.scales)
+      this.givenAnswers.forEach((givenAnswer) => {
+        const scales =
+          questions[givenAnswer.question].answers[givenAnswer.answer].scales ||
+          {}
+        const keys = Object.keys(scales)
 
         keys.forEach((key) => {
-          results[key] = (results[key] || 0) + answer.scales[key as T]
+          results[key] = (results[key] || 0) + scales[key]
         })
       })
 
       let finalResult:
-        | { key: string; value: number; outcome: Array<string> }
+        | { key: string; value: number; outcome: Array<number> }
         | undefined
+
       Object.entries(results).forEach((entry) => {
         if (!finalResult || finalResult.value <= entry[1]) {
-          const outcome: Array<string> =
+          const outcome: Array<number> =
             finalResult?.value === entry[1] ? finalResult.outcome : []
-          outcome.push(this.outcome[entry[0] as T] || "")
+          outcome.push(this.scales[entry[0]] || 0)
 
           finalResult = {
             key: entry[0],
@@ -145,18 +166,21 @@ export class Quiz<T extends string> {
         }
       })
 
-      return finalResult?.outcome.join(" или ") || ""
+      return (
+        finalResult?.outcome.join(` ${QUIZ_STRINGS.RESULT_OR} `) ||
+        QUIZ_STRINGS.RESULT_EMPTY
+      )
     } else {
-      return "Прохождение опроса не завершено"
+      return QUIZ_STRINGS.RESULT_NOT_FINISHED
     }
   }
 
-  clearProgress() {
-    this.givenAnswers = []
+  getName(): string {
+    return this.name
   }
 
-  isPassed(): boolean {
-    return this.givenAnswers.length === this.questions.length
+  getDescr(): string {
+    return this.descr
   }
 
   getIndex(): number {
@@ -167,46 +191,46 @@ export class Quiz<T extends string> {
     return this.keyboards[this.getIndex()]
   }
 
-  getQuestion(): Question<T> {
-    const index = this.givenAnswers.length
+  getQuestion(): QuestionModel {
+    const index = this.givenAnswers.length || 0
     return this.questions[index] || this.questions[this.questions.length - 1]
   }
+
+  getQuestionIndex(): number {
+    return this.givenAnswers.length
+  }
+
+  getQuizGivenAnswers(): QuizGivenAnswers {
+    return { [this._id.toString()]: this.givenAnswers }
+  }
+
+  // SETTERS
 
   setAnswerByResponse(response: string): boolean {
     const question = this.getQuestion()
     if (question) {
-      const answer = question.answers.find(
+      const answerIndex = question.answers.findIndex(
         (answer) => answer.content === response
       )
-      return this.setAnswer(answer)
+
+      if (answerIndex >= 0) {
+        return this.setAnswer({
+          question: this.getQuestionIndex(),
+          answer: answerIndex,
+        })
+      }
     }
+
     return false
   }
 
-  setAnswerByIndex(index: number): boolean {
-    const question = this.getQuestion()
-    if (question) {
-      const answer = question.answers[index]
-      return this.setAnswer(answer)
-    }
-    return false
-  }
-
-  private setAnswer(answer?: AnswerProps<T>): boolean {
-    if (answer) {
-      this.givenAnswers.push(answer)
-      return true
-    } else {
-      return false
-    }
-  }
-
-  serializeProgress(): QuizProps<T> {
-    return {
-      key: this.key,
-      version: this.version,
-      lang: this.lang,
-      givenAnswers: this.givenAnswers,
-    } as QuizProps<T>
-  }
+  // NOTICE: не используется
+  // setAnswerByIndex(index: number): boolean {
+  //   const question = this.getQuestion()
+  //   if (question) {
+  //     const answer = question.answers[index]
+  //     return this.setAnswer(answer)
+  //   }
+  //   return false
+  // }
 }

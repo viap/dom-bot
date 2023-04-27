@@ -9,7 +9,10 @@ export class Terms<
   //   constructor() {}
 
   getConversation() {
-    return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
+    return async (
+      conversation: Conversation<MyContext>,
+      ctx: MyContext
+    ): Promise<boolean> => {
       if (conversation.session.hasTermsAgreement) {
         await ctx.reply(TERMS.DESCRIPTION, {
           reply_markup: ReplyMarkup.emptyKeyboard,
