@@ -1,8 +1,6 @@
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import mongoose from "mongoose"
-import { QuizProps } from "../../models/Quiz"
 import { DbMessages } from "./consts"
-// import { firstQuizProps } from "../../modules/Quiz/Entities/firstQuiz"
 
 export class DbConnection {
   private static connection: mongoose.Connection

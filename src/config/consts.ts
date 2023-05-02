@@ -1,6 +1,6 @@
 import { ReplyKeyboardMarkup, ReplyKeyboardRemove } from "@grammyjs/types"
-import { Psychologist } from "../types"
-import { PSY_SCHOOLS } from "../modules/Quiz/consts"
+import { ContactInfo, Psychologist } from "../types"
+import { PSY_SCHOOLS } from "../components/Quiz/consts"
 
 export const ReplyMarkup = {
   emptyKeyboard: { remove_keyboard: true } as ReplyKeyboardRemove,
@@ -64,3 +64,32 @@ export enum TERMS {
   NO_REPLY = "Очень жаль 😟",
   DESCRIPTION = "Список условий и отказ от ответственности",
 }
+
+export const commonContacts: ContactInfo = {
+  telegram: "Soroka_tg",
+  instagram: "psydom_tbilisi",
+  whatsapp: "",
+  phone: "995557701626",
+}
+
+export const listOfPsychologists: Array<Psychologist<PSY_SCHOOLS>> = [
+  {
+    schools: [
+      PSY_SCHOOLS.EXISTENSE,
+      PSY_SCHOOLS.ANALYZE,
+      PSY_SCHOOLS.CBT,
+      PSY_SCHOOLS.GESTALT,
+    ],
+    name: "Алёна Чалова",
+    descr: "Кандидат психологических наук и бла бла бла",
+    photo: "chalova_alena.png",
+    contacts: commonContacts,
+  },
+  {
+    schools: [PSY_SCHOOLS.ANALYZE],
+    name: "Виктор Заикин",
+    descr: "Кандидат психологических наук и бла, бла, бла ...",
+    photo: "",
+    contacts: commonContacts,
+  },
+]

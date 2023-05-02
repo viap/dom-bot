@@ -22,6 +22,8 @@ export enum QuestionType {
   MULTIPLE,
 }
 
+export type QuizScalesResult = { [key: string]: number }
+
 export type QuestionProps = {
   content: string
   mandatory?: boolean
@@ -44,7 +46,7 @@ export type QuizProps = {
   status?: QuizStatus
   questions: Array<QuestionProps> //Array<QuestionProps>
   givenAnswers?: Array<GivenAnswerProps> // mongoose.Types.DocumentArray<GivenAnswerProps>
-  scales: { [key: string]: number }
+  scales: { [key: string]: string }
 }
 
 export const QuizSchema = new mongoose.Schema<QuizProps>({

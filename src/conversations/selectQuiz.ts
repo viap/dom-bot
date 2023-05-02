@@ -1,12 +1,6 @@
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
+import { BOT_COMMANDS_DESCR } from "../config/consts"
 import { Context, Keyboard, SessionFlavor } from "grammy"
-import {
-  BOT_COMMANDS,
-  BOT_COMMANDS_DESCR,
-  CONVERSATION_NAME,
-  ReplyMarkup,
-  TERMS,
-} from "../config/consts"
 import { QuizM, QuizStatus } from "../models/Quiz"
 import { SessionData } from "../types"
 

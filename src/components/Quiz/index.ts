@@ -2,18 +2,18 @@ import { Keyboard } from "grammy"
 import { QUIZ_STRINGS } from "./consts"
 
 import { AnswerProps } from "../../models/Answer"
-import { GivenAnswer, GivenAnswerProps } from "../../models/GivenAnswer"
+import { GivenAnswerProps } from "../../models/GivenAnswer"
 import { QuestionProps, QuestionType } from "../../models/Question"
+import mongoose from "mongoose"
 import {
   QuizLang,
   QuizM,
   QuizProps,
+  QuizScalesResult,
   QuizStatus,
   QuizType,
 } from "../../models/Quiz"
-import mongoose from "mongoose"
-import * as MongoStorage from "@grammyjs/storage-mongodb"
-import { QuizGivenAnswers, SessionData } from "../../types"
+import { QuizGivenAnswers } from "types"
 export class QuestionModel {
   content: string
   mandatory: boolean
@@ -43,7 +43,7 @@ export class Quiz {
   private questions: Array<QuestionModel>
   private givenAnswers: Array<GivenAnswerProps>
   private keyboards: Array<Keyboard>
-  private scales: { [key: string]: number }
+  private scales: { [key: string]: string }
 
   constructor({
     _id,
@@ -132,47 +132,25 @@ export class Quiz {
 
   // GETTERS
 
-  getResult = () => {
+  getResult() {
     const questions = this.questions
-    if (this.givenAnswers.length === this.questions.length) {
-      const results: { [key: string]: number } = {}
+    // const scales = this.scales
+    const results: QuizScalesResult = {}
 
+    if (this.givenAnswers.length === this.questions.length) {
       this.givenAnswers.forEach((givenAnswer) => {
-        const scales =
+        const scalesValues =
           questions[givenAnswer.question].answers[givenAnswer.answer].scales ||
           {}
-        const keys = Object.keys(scales)
+        const keys = Object.keys(scalesValues)
 
         keys.forEach((key) => {
-          results[key] = (results[key] || 0) + scales[key]
+          results[key] = (results[key] || 0) + scalesValues[key]
         })
       })
-
-      let finalResult:
-        | { key: string; value: number; outcome: Array<number> }
-        | undefined
-
-      Object.entries(results).forEach((entry) => {
-        if (!finalResult || finalResult.value <= entry[1]) {
-          const outcome: Array<number> =
-            finalResult?.value === entry[1] ? finalResult.outcome : []
-          outcome.push(this.scales[entry[0]] || 0)
-
-          finalResult = {
-            key: entry[0],
-            value: entry[1],
-            outcome: outcome,
-          }
-        }
-      })
-
-      return (
-        finalResult?.outcome.join(` ${QUIZ_STRINGS.RESULT_OR} `) ||
-        QUIZ_STRINGS.RESULT_EMPTY
-      )
-    } else {
-      return QUIZ_STRINGS.RESULT_NOT_FINISHED
     }
+
+    return results
   }
 
   getName(): string {

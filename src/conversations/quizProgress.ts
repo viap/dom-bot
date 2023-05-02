@@ -1,14 +1,16 @@
+import { Quiz } from "../components/Quiz/index"
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
 import { Context, Keyboard, SessionFlavor } from "grammy"
-import mongoose from "mongoose"
-import { QUIZ_MSG, ReplyMarkup } from "../config/consts"
-import { QuizM } from "../models/Quiz"
-import { Quiz } from "../modules/Quiz/index"
-import { SessionData } from "../types"
+import { QUIZ_MSG, listOfPsychologists } from "../config/consts"
+import { QuizM, QuizScalesResult } from "../models/Quiz"
+import { Psychologist, SessionData } from "../types"
 
-import { Terms } from "./terms"
+import { GivenAnswerProps } from "../models/GivenAnswer"
+import { PSY_SCHOOLS } from "../components/Quiz/consts"
 import { SelectQiuz } from "./selectQuiz"
-import { GivenAnswer, GivenAnswerProps } from "../models/GivenAnswer"
+import { Terms } from "./terms"
+
+import { getValueByKey } from "../common/utils"
 
 export class QuizProgress<
   MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
@@ -96,14 +98,13 @@ export class QuizProgress<
           case QUIZ_MSG.REPLAY_NO:
             return await ctx.reply(QUIZ_MSG.REPLAY_NO_REPLY)
           case QUIZ_MSG.SHOW_RESULT:
-            return await ctx.reply(this.quiz.getResult())
+            await this.showResultInterpretation(ctx, this.quiz.getResult())
+            return true
         }
       }
 
       if (!this.quiz.isPassed()) {
         while (!this.quiz.isPassed()) {
-          conversation.log("this.quiz.getQuestion()", this.quiz.getQuestion())
-
           await ctx.reply(this.quiz.getQuestion().content, {
             reply_markup: this.quiz.getKeyboard().oneTime(true),
           })
@@ -118,8 +119,64 @@ export class QuizProgress<
         }
 
         await ctx.reply(QUIZ_MSG.CONGRATS)
-        await ctx.reply(this.quiz.getResult())
+        await this.showResultInterpretation(ctx, this.quiz.getResult())
+        return true
       }
     }
+  }
+
+  private async showResultInterpretation(
+    ctx: MyContext,
+    scalesResult: QuizScalesResult
+  ) {
+    const result: { max: number; winners: Array<string> } = {
+      max: 0,
+      winners: [],
+    }
+
+    Object.entries(scalesResult).map((entry) => {
+      if (entry[1] > result.max) {
+        result.max = entry[1]
+        result.winners = [entry[0]]
+      } else if (entry[1] === result.max) {
+        result.winners.push(entry[0])
+      }
+    })
+
+    await ctx.reply("Вам подходят следующие направления:")
+
+    const suitableSpecialists: Array<Psychologist<PSY_SCHOOLS>> = []
+
+    const schoolInfo: Array<string> = []
+    result.winners.forEach((school: string) => {
+      schoolInfo.push(school + " - описание")
+      suitableSpecialists.push(
+        ...listOfPsychologists.filter((psycholog) => {
+          const ss = getValueByKey(PSY_SCHOOLS, school) as PSY_SCHOOLS
+
+          return psycholog.schools.includes(ss)
+        })
+      )
+    })
+
+    await ctx.reply(schoolInfo.join("----"))
+
+    if (suitableSpecialists.length) {
+      await ctx.reply(
+        "Психологический центр DOM предлагает следующих специалистов:"
+      )
+
+      const psychologistsInfo = suitableSpecialists.map(this.psychologToMessage)
+
+      await ctx.reply(psychologistsInfo.join(" / "))
+    } else {
+      await ctx.reply("К сожалению у нас нет таких специалистов :-(")
+    }
+  }
+
+  private psychologToMessage(psycholog: Psychologist<PSY_SCHOOLS>): string {
+    const result = ``
+
+    return ""
   }
 }
