@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import { GivenAnswerProps } from "models/GivenAnswer"
+import { GivenAnswerProps } from "../models/GivenAnswer"
 
 export type QuizGivenAnswers = {
   [key: string]: Array<GivenAnswerProps>

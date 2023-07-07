@@ -4,12 +4,16 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "_moduleAliases": {
+    "@": "dist"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "copy-assets": "cp -r ./src/assets ./dist/assets",
     "copy-env-dev": "cp ./src/config/.env.dev ./dist/config/.env",
     "copy-env-prod": "cp ./src/config/.env.prod ./dist/config/.env",
-    "build": "yarn tsc && yarn copy-env-dev",
-    "build-prod": "yarn tsc && yarn copy-env-prod",
+    "build": "yarn tsc && yarn copy-env-dev && yarn copy-assets",
+    "build-prod": "yarn tsc && yarn copy-env-prod && yarn copy-assets",
     "start": "node --es-module-specifier-resolution=node dist/index.js",
     "restart": "yarn build && yarn start"
   },
@@ -17,6 +21,7 @@
   "license": "ISC",
   "devDependencies": {
     "@grammyjs/types": "^2.12.1",
+    "@types/module-alias": "^2.0.1",
     "@types/node": "^18.14.1",
     "typescript": "^4.9.5"
   },
@@ -32,6 +37,7 @@
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
     "grammy": "^1.14.1",
+    "module-alias": "^2.2.3",
     "mongoose": "^7.0.1",
     "prettier": "^2.8.4"
   }

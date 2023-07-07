@@ -13,7 +13,7 @@ import {
   QuizStatus,
   QuizType,
 } from "../../models/Quiz"
-import { QuizGivenAnswers } from "types"
+import { QuizGivenAnswers } from "../../types"
 export class QuestionModel {
   content: string
   mandatory: boolean

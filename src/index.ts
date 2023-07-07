@@ -1,3 +1,5 @@
+// import "module-alias/register"
+
 import { run } from "@grammyjs/runner"
 import { domBot } from "./domQuizBot"
 

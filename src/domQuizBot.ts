@@ -2,6 +2,7 @@ import {
   conversations,
   createConversation,
   type ConversationFlavor,
+  Conversation,
 } from "@grammyjs/conversations"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import dotenv from "dotenv"
@@ -20,12 +21,16 @@ import {
   BOT_COMMANDS_DESCR,
   BOT_ERROR,
   BOT_MSG,
-  CONVERSATION_NAME,
 } from "./config/consts"
-import { QuizProgress } from "./conversations/quizProgress"
-import { Terms } from "./conversations/terms"
+import { CONVERSATION_NAME } from "./conversations/consts"
+import ConversationsList from "./conversations"
+
 import { DbConnection, getSessions } from "./services/db/connectDB"
 import { SessionData } from "./types"
+import { ReplyMarkup } from "./config/consts"
+
+import { MENU_LISTS, MenuModel } from "./models/Menu"
+import { MenuBlock } from "./components/MenuBlock"
 
 /** ENVIROMENT */
 
@@ -37,6 +42,11 @@ dotenv.config({ path: __dirname + "/config/.env" })
 
 const connection = await DbConnection.getConnection()
 const sessions = getSessions(connection)
+
+const telegramMenu = await MenuModel.findOne({
+  key: MENU_LISTS.TELERGAM,
+})
+const menuBlock = new MenuBlock(telegramMenu!)
 
 /** BOT */
 
@@ -50,15 +60,7 @@ export const domBot = new Bot<MyContext>(process.env.TOKEN || "")
 
 domBot.api.setMyCommands([
   { command: BOT_COMMANDS.START, description: BOT_COMMANDS_DESCR.START },
-  {
-    command: BOT_COMMANDS.START_QUIZ,
-    description: BOT_COMMANDS_DESCR.START_QUIZ,
-  },
-  { command: BOT_COMMANDS.TERMS, description: BOT_COMMANDS_DESCR.TERMS },
-  // {
-  //   command: BOT_COMMANDS.SELECT_QUIZ,
-  //   description: BOT_COMMANDS_DESCR.SELECT_QUIZ,
-  // },
+  { command: BOT_COMMANDS.MENU, description: BOT_COMMANDS_DESCR.MENU },
 ])
 
 /** SESSION */
@@ -70,6 +72,7 @@ function sessionInit(): SessionData {
 function getSessionKey(ctx: Context): string | undefined {
   // Give every user their one personal session storage per chat with the bot
   // (an independent session for each group and their private chat)
+
   return ctx.from === undefined || ctx.chat === undefined
     ? undefined
     : `${ctx.from.id}/${ctx.chat.id}`
@@ -85,53 +88,52 @@ domBot.use(
   })
 )
 
-/** MIDDLEWARES: init */
-
+/** CONVERSATIONS: init */
 domBot.use(conversations())
 
+/** COMMAND HANDLERS: start */
 domBot.command(BOT_COMMANDS.START, async (ctx) => {
+  console.log("BOT_COMMANDS.START")
   await ctx.conversation.exit()
-  await ctx.reply(BOT_MSG.WELCOME)
+  await ctx.reply(BOT_MSG.WELCOME, { reply_markup: ReplyMarkup.emptyKeyboard })
 })
 
 /** CONVERSATIONS: use */
 
-// const quizProgress = new QuizProgress<MyContext>(firstQuiz)
-const terms = new Terms<MyContext>()
-const quizProgress = new QuizProgress<MyContext>()
-
-domBot.use(
-  createConversation(terms.getConversation(), CONVERSATION_NAME.TERMS_AGREEMENT)
-)
-domBot.use(
-  createConversation(
-    quizProgress.getConversation(),
-    CONVERSATION_NAME.QUIZ_PROGRESS
-  )
-)
+Object.values(CONVERSATION_NAME).forEach((conversationName) => {
+  if (conversationName in ConversationsList) {
+    switch (conversationName) {
+      case CONVERSATION_NAME.SELECT_MENU_ITEM:
+        if (menuBlock) {
+          domBot.use(
+            createConversation(
+              new ConversationsList[conversationName]<MyContext>(
+                menuBlock
+              ).getConversation(),
+              conversationName
+            )
+          )
+        }
+        break
+      default:
+        domBot.use(
+          createConversation(
+            new ConversationsList[
+              conversationName
+            ]<MyContext>().getConversation(),
+            conversationName
+          )
+        )
+    }
+  }
+})
 
 /** COMMAND HANDLERS */
 
-domBot.command(BOT_COMMANDS.START_QUIZ, async (ctx) => {
-  await ctx.conversation.enter(CONVERSATION_NAME.QUIZ_PROGRESS)
+domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
+  console.log("BOT_COMMANDS.MENU")
+  await ctx.conversation.enter(CONVERSATION_NAME.SELECT_MENU_ITEM)
 })
-
-domBot.command(BOT_COMMANDS.TERMS, async (ctx) => {
-  await ctx.conversation.enter(CONVERSATION_NAME.TERMS_AGREEMENT)
-})
-
-/** CALLBACKS */
-
-// domBot.callbackQuery(CALLBACK.QUIZ_CANCEL, async (ctx) => {
-//     await ctx.conversation.exit(CONVERSATION_NAME.QUIZ_PROGRESS);
-//     await ctx.answerCallbackQuery( firstQuiz.getResult() );
-// });
-
-// domBot.callbackQuery(CALLBACK.TERMS_YES, async (ctx) => {
-//     if(ctx.session.hasTermsAgreement){
-//         await ctx.conversation.enter(CONVERSATION_NAME.TERMS_AGREEMENT)
-//     }
-// });
 
 /** MESSAGE HANDLERS */
 
@@ -140,7 +142,6 @@ domBot.on("message", (ctx) => {
 })
 
 /** ERROR HANDLERS */
-
 domBot.catch((err) => {
   const ctx = err.ctx
   console.error(`${BOT_ERROR.UPDATE} ${ctx.update.update_id}:`)
@@ -154,4 +155,6 @@ domBot.catch((err) => {
   }
 })
 
-domBot.errorBoundary((err) => console.error(BOT_ERROR.CONVERSATION, err))
+domBot.errorBoundary((err) => {
+  console.error(BOT_ERROR.CONVERSATION, err)
+})

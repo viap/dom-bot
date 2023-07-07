@@ -1,16 +1,18 @@
 import { Quiz } from "../components/Quiz/index"
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
-import { Context, Keyboard, SessionFlavor } from "grammy"
-import { QUIZ_MSG, listOfPsychologists } from "../config/consts"
+import { Context, InputFile, Keyboard, SessionFlavor } from "grammy"
+import { listOfPsychologists } from "../config/consts"
 import { QuizM, QuizScalesResult } from "../models/Quiz"
 import { Psychologist, SessionData } from "../types"
 
 import { GivenAnswerProps } from "../models/GivenAnswer"
-import { PSY_SCHOOLS } from "../components/Quiz/consts"
+import { PSY_SCHOOLS, getPsySchoolDescr } from "../components/Quiz/consts"
 import { SelectQiuz } from "./selectQuiz"
 import { Terms } from "./terms"
 
 import { getValueByKey } from "../common/utils"
+import { cwd } from "process"
+import { QUIZ_MSG } from "./consts"
 
 export class QuizProgress<
   MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
@@ -149,34 +151,65 @@ export class QuizProgress<
 
     const schoolInfo: Array<string> = []
     result.winners.forEach((school: string) => {
-      schoolInfo.push(school + " - описание")
+      const schoolValue = getValueByKey(PSY_SCHOOLS, school) as PSY_SCHOOLS
+
+      schoolInfo.push(`*${school}*  
+      _${getPsySchoolDescr(schoolValue)}_`)
+
       suitableSpecialists.push(
         ...listOfPsychologists.filter((psycholog) => {
-          const ss = getValueByKey(PSY_SCHOOLS, school) as PSY_SCHOOLS
-
-          return psycholog.schools.includes(ss)
+          return psycholog.schools.includes(schoolValue)
         })
       )
     })
 
-    await ctx.reply(schoolInfo.join("----"))
+    await ctx.reply(schoolInfo.join("\r\n\r\n"), { parse_mode: "MarkdownV2" })
 
     if (suitableSpecialists.length) {
       await ctx.reply(
         "Психологический центр DOM предлагает следующих специалистов:"
       )
 
-      const psychologistsInfo = suitableSpecialists.map(this.psychologToMessage)
+      const uniqSpecialists = new Set<Psychologist<PSY_SCHOOLS>>(
+        suitableSpecialists
+      )
 
-      await ctx.reply(psychologistsInfo.join(" / "))
+      const specialistIterator = uniqSpecialists.entries()
+      let iterItem: IteratorResult<
+        [Psychologist<PSY_SCHOOLS>, Psychologist<PSY_SCHOOLS>]
+      >
+
+      do {
+        iterItem = specialistIterator.next()
+        if (!iterItem.done) {
+          const person = iterItem.value[1]
+          await this.replyPsychologistInfo(ctx, person)
+        }
+      } while (iterItem && !iterItem.done)
+
+      // const psychologistsInfo = suitableSpecialists.map(this.psychologToMessage)
+      // await ctx.reply(psychologistsInfo.join(" / "))
     } else {
       await ctx.reply("К сожалению у нас нет таких специалистов :-(")
     }
   }
 
-  private psychologToMessage(psycholog: Psychologist<PSY_SCHOOLS>): string {
-    const result = ``
+  private async replyPsychologistInfo(
+    ctx: MyContext,
+    psychologist: Psychologist<PSY_SCHOOLS>
+  ) {
+    if (psychologist.photo) {
+      const address = cwd() + `/dist/assets/photos/${psychologist.photo}`
 
-    return ""
+      console.log("address", address)
+      const photo: InputFile = new InputFile(address, psychologist.photo)
+      await ctx.replyWithPhoto(photo)
+    }
+    await ctx.reply(psychologist.name)
+    if (psychologist.descr) {
+      await ctx.reply(psychologist.descr)
+    }
+
+    return true
   }
 }
