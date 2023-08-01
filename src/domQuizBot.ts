@@ -1,19 +1,7 @@
-import {
-  conversations,
-  createConversation,
-  type ConversationFlavor,
-  Conversation,
-} from "@grammyjs/conversations"
+import { conversations, createConversation } from "@grammyjs/conversations"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import dotenv from "dotenv"
-import {
-  Bot,
-  Context,
-  GrammyError,
-  HttpError,
-  SessionFlavor,
-  session,
-} from "grammy"
+import { Bot, Context, GrammyError, HttpError, session } from "grammy"
 import path from "path"
 import { fileURLToPath } from "url"
 import {
@@ -22,15 +10,20 @@ import {
   BOT_ERROR,
   BOT_MSG,
 } from "./config/consts"
-import { CONVERSATION_NAME } from "./conversations/consts"
 import ConversationsList from "./conversations"
+import { CONVERSATION_NAME } from "./conversations/consts"
 
-import { DbConnection, getSessions } from "./services/db/connectDB"
-import { SessionData } from "./types"
 import { ReplyMarkup } from "./config/consts"
+import { DbConnection, getSessions } from "./services/db/connectDB"
+import { MyContext } from "./types/myContext"
+import { SessionData } from "./types/sessionData"
 
-import { MENU_LISTS, MenuModel } from "./models/Menu"
 import { MenuBlock } from "./components/MenuBlock"
+import { MENU_LISTS, MenuModel } from "./models/Menu"
+
+import { TelegramUserDto } from "./api/dto/telegramUser.dto"
+import { isValidToken } from "./api/isValidToken"
+import { loginByTelegram } from "./api/loginByTelegram"
 
 /** ENVIROMENT */
 
@@ -46,12 +39,9 @@ const sessions = getSessions(connection)
 const telegramMenu = await MenuModel.findOne({
   key: MENU_LISTS.TELERGAM,
 })
-const menuBlock = new MenuBlock(telegramMenu!)
+const menuBlock = telegramMenu ? new MenuBlock(telegramMenu) : undefined
 
 /** BOT */
-
-type MyContext = Context & SessionFlavor<SessionData> & ConversationFlavor
-// type MyConversation = Conversation<MyContext>
 
 export const domBot = new Bot<MyContext>(process.env.TOKEN || "")
 // const privateBot = domBot.chatType("private")
@@ -72,7 +62,6 @@ function sessionInit(): SessionData {
 function getSessionKey(ctx: Context): string | undefined {
   // Give every user their one personal session storage per chat with the bot
   // (an independent session for each group and their private chat)
-
   return ctx.from === undefined || ctx.chat === undefined
     ? undefined
     : `${ctx.from.id}/${ctx.chat.id}`
@@ -87,6 +76,28 @@ domBot.use(
     }),
   })
 )
+
+/** API: login */
+domBot.use(async (ctx, next) => {
+  if (ctx.from) {
+    if (!(await isValidToken(ctx))) {
+      delete ctx.session.token
+    }
+
+    if (!ctx.session.token) {
+      await loginByTelegram(ctx, {
+        ...ctx.from,
+        id: ctx.from.id + "",
+      } as TelegramUserDto)
+    }
+  }
+
+  if (!ctx.session.token) {
+    return await ctx.reply(BOT_MSG.UNAVAILABLE)
+  }
+
+  return next
+})
 
 /** CONVERSATIONS: init */
 domBot.use(conversations())

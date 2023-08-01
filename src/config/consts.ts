@@ -26,6 +26,7 @@ export enum BOT_COMMANDS_DESCR {
 export enum BOT_MSG {
   WELCOME = "Добро пожаловать!",
   DEFAULT = "Получил сообщение",
+  UNAVAILABLE = "Сервис не доступен :-(",
 }
 
 export enum BOT_ERROR {

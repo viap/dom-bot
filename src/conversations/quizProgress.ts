@@ -3,7 +3,7 @@ import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
 import { Context, InputFile, Keyboard, SessionFlavor } from "grammy"
 import { listOfPsychologists } from "../config/consts"
 import { QuizM, QuizScalesResult } from "../models/Quiz"
-import { Psychologist, SessionData } from "../types"
+import { Psychologist } from "../types"
 
 import { GivenAnswerProps } from "../models/GivenAnswer"
 import { PSY_SCHOOLS, getPsySchoolDescr } from "../components/Quiz/consts"
@@ -13,6 +13,7 @@ import { Terms } from "./terms"
 import { getValueByKey } from "../common/utils"
 import { cwd } from "process"
 import { QUIZ_MSG } from "./consts"
+import { SessionData } from "../types/sessionData"
 
 export class QuizProgress<
   MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor

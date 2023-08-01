@@ -31,3 +31,7 @@ export enum TERMS {
   NO_REPLY = "Очень жаль 😟",
   DESCRIPTION = "Список условий и отказ от ответственности",
 }
+
+export enum SELECT_MENU_ITEM {
+  EMPTY_MENY = "Нет меню :-(",
+}

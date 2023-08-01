@@ -1,14 +1,7 @@
-import mongoose from "mongoose"
 import { GivenAnswerProps } from "../models/GivenAnswer"
 
 export type QuizGivenAnswers = {
   [key: string]: Array<GivenAnswerProps>
-}
-
-export type SessionData = {
-  hasTermsAgreement: boolean
-  selectedQuiz?: mongoose.Types.ObjectId
-  quizAnswers: QuizGivenAnswers
 }
 
 export type ContactInfo = {

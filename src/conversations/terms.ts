@@ -1,7 +1,7 @@
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
 import { Context, Keyboard, SessionFlavor } from "grammy"
 import { ReplyMarkup } from "../config/consts"
-import { SessionData } from "../types"
+import { SessionData } from "../types/sessionData"
 import { TERMS } from "./consts"
 
 export class Terms<

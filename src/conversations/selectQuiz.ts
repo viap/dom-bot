@@ -2,7 +2,7 @@ import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
 import { BOT_COMMANDS_DESCR } from "../config/consts"
 import { Context, Keyboard, SessionFlavor } from "grammy"
 import { QuizM, QuizStatus } from "../models/Quiz"
-import { SessionData } from "../types"
+import { SessionData } from "../types/sessionData"
 
 export class SelectQiuz<
   MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
