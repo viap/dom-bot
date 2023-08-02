@@ -26,6 +26,7 @@ export const DefaultMenu: MenuBlockItemsProps = {
           name: "Добавить клиента",
           descr: "",
           items: [],
+          conversation: CONVERSATION_NAMES.ADD_CLIENT,
         },
         {
           name: "Отметить сессию",
