@@ -1,30 +1,30 @@
 import { Keyboard } from "grammy"
-import { QUIZ_STRINGS } from "./consts"
+import { QUIZ_TEXTS } from "./enums/quizTexts.enum"
 
-import { AnswerProps } from "../../models/Answer"
-import { GivenAnswerProps } from "../../models/GivenAnswer"
-import { QuestionProps, QuestionType } from "../../models/Question"
 import mongoose from "mongoose"
-import {
-  QuizLang,
-  QuizM,
-  QuizProps,
-  QuizScalesResult,
-  QuizStatus,
-  QuizType,
-} from "../../models/Quiz"
-import { QuizGivenAnswers } from "../../types"
+import { AnswerProps } from "./types/answerProps"
+import { GivenAnswerProps } from "./types/givenAnswerProps"
+import { QuestionProps } from "./types/questionProps"
+import { QuestionTypes } from "./enums/quiestionTypes.enum"
+import { QuizModel } from "./models/quiz.model"
+import { QuizProps } from "./types/quizProps"
+import { QuizTypes } from "./enums/quizTypes.enum"
+import { QuizScalesResult } from "./types/quizScalesResult"
+import { QuizStatus } from "./enums/quizStatus.enum"
+import { QuizLang } from "./enums/quizLang.enum"
+import { QuizGivenAnswers } from "./types/quizGivenAnswers"
+
 export class QuestionModel {
   content: string
   mandatory: boolean
   answers: Array<AnswerProps>
-  type: QuestionType
+  type?: QuestionTypes
 
   constructor({
     content = "",
     mandatory = false,
     answers = [],
-    type = QuestionType.SINGLE,
+    type = QuestionTypes.SINGLE,
   }: QuestionProps) {
     this.content = content
     this.answers = answers
@@ -38,9 +38,9 @@ export class Quiz {
   private lang: QuizLang
   private name: string
   private descr: string
-  private type: QuizType
+  private type: QuizTypes
   private status: QuizStatus
-  private questions: Array<QuestionModel>
+  private questions: Array<QuestionProps>
   private givenAnswers: Array<GivenAnswerProps>
   private keyboards: Array<Keyboard>
   private scales: { [key: string]: string }
@@ -50,7 +50,7 @@ export class Quiz {
     lang = QuizLang.RUS,
     name = "",
     descr = "",
-    type = QuizType.NORMAL,
+    type = QuizTypes.NORMAL,
     status = QuizStatus.DISABLED,
     questions = [],
     givenAnswers = [],
@@ -79,11 +79,11 @@ export class Quiz {
         }
       })
 
-      if (this.type === QuizType.NORMAL) {
+      if (this.type === QuizTypes.NORMAL) {
         keyboard
           .row()
-          .add({ text: QUIZ_STRINGS.QUESTION_PREV })
-          .add({ text: QUIZ_STRINGS.QUESTION_NEXT })
+          .add({ text: QUIZ_TEXTS.QUESTION_PREV })
+          .add({ text: QUIZ_TEXTS.QUESTION_NEXT })
         // .row()
         // .add({text: "Сбросить"})
       }
@@ -119,7 +119,7 @@ export class Quiz {
   }
 
   saveQuizModel() {
-    const quiz = new QuizM(this.serializeQuiz())
+    const quiz = new QuizModel(this.serializeQuiz())
     quiz.save()
   }
 
@@ -169,7 +169,7 @@ export class Quiz {
     return this.keyboards[this.getIndex()]
   }
 
-  getQuestion(): QuestionModel {
+  getQuestion(): QuestionProps {
     const index = this.givenAnswers.length || 0
     return this.questions[index] || this.questions[this.questions.length - 1]
   }

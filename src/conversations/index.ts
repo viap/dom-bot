@@ -1,14 +1,14 @@
 import { Terms } from "./terms"
 import { SelectQiuz } from "./selectQuiz"
 import { QuizProgress } from "./quizProgress"
-import { CONVERSATION_NAME } from "./consts"
+import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 import { SelectMenuItem } from "./selectMenuItem"
 import { MarkSession } from "./markSession"
 
 export default {
-  [CONVERSATION_NAME.SELECT_MENU_ITEM]: SelectMenuItem,
-  [CONVERSATION_NAME.TERMS_AGREEMENT]: Terms,
-  [CONVERSATION_NAME.SELECT_QUIZ]: SelectQiuz,
-  [CONVERSATION_NAME.QUIZ_PROGRESS]: QuizProgress,
-  [CONVERSATION_NAME.MARK_SESSION]: MarkSession,
+  [CONVERSATION_NAMES.SELECT_MENU_ITEM]: SelectMenuItem,
+  [CONVERSATION_NAMES.TERMS_AGREEMENT]: Terms,
+  [CONVERSATION_NAMES.SELECT_QUIZ]: SelectQiuz,
+  [CONVERSATION_NAMES.QUIZ_PROGRESS]: QuizProgress,
+  [CONVERSATION_NAMES.MARK_SESSION]: MarkSession,
 }

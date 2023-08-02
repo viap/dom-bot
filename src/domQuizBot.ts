@@ -4,26 +4,25 @@ import dotenv from "dotenv"
 import { Bot, Context, GrammyError, HttpError, session } from "grammy"
 import path from "path"
 import { fileURLToPath } from "url"
-import {
-  BOT_COMMANDS,
-  BOT_COMMANDS_DESCR,
-  BOT_ERROR,
-  BOT_MSG,
-} from "./config/consts"
+import { BOT_COMMANDS } from "./common/enums/botCommands.enum"
+import { BOT_COMMANDS_DESCR } from "./common/enums/botCommandsDescr.enum"
+import { BOT_ERRORS } from "./common/enums/botErrors.enum"
+import { BOT_TEXTS } from "./common/enums/botTexts.enum"
 import ConversationsList from "./conversations"
-import { CONVERSATION_NAME } from "./conversations/consts"
+import { CONVERSATION_NAMES } from "./conversations/enums/conversationNames.enum"
 
-import { ReplyMarkup } from "./config/consts"
+import { ReplyMarkup } from "./common/consts/replyMarkup"
 import { DbConnection, getSessions } from "./services/db/connectDB"
 import { MyContext } from "./types/myContext"
 import { SessionData } from "./types/sessionData"
 
-import { MenuBlock } from "./components/MenuBlock"
-import { MENU_LISTS, MenuModel } from "./models/Menu"
+import { MenuBlock } from "./components/MenuBlock/menuBlock"
+import { DefaultMenu } from "./components/MenuBlock/consts/defaultMenu"
 
-import { TelegramUserDto } from "./api/dto/telegramUser.dto"
+import { getMeUser } from "./api/getMeUser"
 import { isValidToken } from "./api/isValidToken"
 import { loginByTelegram } from "./api/loginByTelegram"
+import { TelegramUserDto } from "./common/dto/telegramUser.dto"
 
 /** ENVIROMENT */
 
@@ -35,11 +34,6 @@ dotenv.config({ path: __dirname + "/config/.env" })
 
 const connection = await DbConnection.getConnection()
 const sessions = getSessions(connection)
-
-const telegramMenu = await MenuModel.findOne({
-  key: MENU_LISTS.TELERGAM,
-})
-const menuBlock = telegramMenu ? new MenuBlock(telegramMenu) : undefined
 
 /** BOT */
 
@@ -93,10 +87,10 @@ domBot.use(async (ctx, next) => {
   }
 
   if (!ctx.session.token) {
-    return await ctx.reply(BOT_MSG.UNAVAILABLE)
+    return await ctx.reply(BOT_TEXTS.UNAVAILABLE)
   }
 
-  return next
+  return next()
 })
 
 /** CONVERSATIONS: init */
@@ -106,25 +100,36 @@ domBot.use(conversations())
 domBot.command(BOT_COMMANDS.START, async (ctx) => {
   console.log("BOT_COMMANDS.START")
   await ctx.conversation.exit()
-  await ctx.reply(BOT_MSG.WELCOME, { reply_markup: ReplyMarkup.emptyKeyboard })
+  await ctx.reply(BOT_TEXTS.WELCOME, {
+    reply_markup: ReplyMarkup.emptyKeyboard,
+  })
 })
 
 /** CONVERSATIONS: use */
 
-Object.values(CONVERSATION_NAME).forEach((conversationName) => {
+Object.values(CONVERSATION_NAMES).forEach((conversationName) => {
   if (conversationName in ConversationsList) {
     switch (conversationName) {
-      case CONVERSATION_NAME.SELECT_MENU_ITEM:
-        if (menuBlock) {
-          domBot.use(
-            createConversation(
-              new ConversationsList[conversationName]<MyContext>(
-                menuBlock
-              ).getConversation(),
-              conversationName
-            )
+      case CONVERSATION_NAMES.SELECT_MENU_ITEM:
+        domBot.use(async (ctx, next) => {
+          const user = await getMeUser(ctx)
+          if (!user) {
+            return await ctx.reply("Пользователь не авторизован")
+          }
+
+          const menuBlock = DefaultMenu
+            ? new MenuBlock(user, DefaultMenu)
+            : undefined
+
+          const selectMenuItemConversation = createConversation(
+            new ConversationsList[conversationName]<MyContext>(
+              menuBlock
+            ).getConversation(),
+            conversationName
           )
-        }
+
+          return selectMenuItemConversation(ctx, next)
+        })
         break
       default:
         domBot.use(
@@ -143,29 +148,29 @@ Object.values(CONVERSATION_NAME).forEach((conversationName) => {
 
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
   console.log("BOT_COMMANDS.MENU")
-  await ctx.conversation.enter(CONVERSATION_NAME.SELECT_MENU_ITEM)
+  await ctx.conversation.enter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
 })
 
 /** MESSAGE HANDLERS */
 
 domBot.on("message", (ctx) => {
-  ctx.reply(`${BOT_MSG.DEFAULT} - ${ctx.message.text}`)
+  ctx.reply(`${BOT_TEXTS.DEFAULT} - ${ctx.message.text}`)
 })
 
 /** ERROR HANDLERS */
 domBot.catch((err) => {
   const ctx = err.ctx
-  console.error(`${BOT_ERROR.UPDATE} ${ctx.update.update_id}:`)
+  console.error(`${BOT_ERRORS.UPDATE} ${ctx.update.update_id}:`)
   const e = err.error
   if (e instanceof GrammyError) {
-    console.error(`${BOT_ERROR.REQUEST}:`, e.description)
+    console.error(`${BOT_ERRORS.REQUEST}:`, e.description)
   } else if (e instanceof HttpError) {
-    console.error(`${BOT_ERROR.UNAVAILABLE}:`, e)
+    console.error(`${BOT_ERRORS.UNAVAILABLE}:`, e)
   } else {
-    console.error(`${BOT_ERROR.UNKNOWN}:`, e)
+    console.error(`${BOT_ERRORS.UNKNOWN}:`, e)
   }
 })
 
 domBot.errorBoundary((err) => {
-  console.error(BOT_ERROR.CONVERSATION, err)
+  console.error(BOT_ERRORS.CONVERSATION, err)
 })

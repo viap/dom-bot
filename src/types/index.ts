@@ -1,9 +1,3 @@
-import { GivenAnswerProps } from "../models/GivenAnswer"
-
-export type QuizGivenAnswers = {
-  [key: string]: Array<GivenAnswerProps>
-}
-
 export type ContactInfo = {
   telegram?: string
   instagram?: string

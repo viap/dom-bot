@@ -1,12 +1,5 @@
-import * as MongoStorage from "@grammyjs/storage-mongodb"
 import mongoose from "mongoose"
-
-export type GivenAnswerProps = {
-  // session: any //MongoStorage.ISession
-  // quiz: any
-  question: number
-  answer: number
-}
+import { GivenAnswerProps } from "../types/givenAnswerProps"
 
 export const GivenAnswerSchema = new mongoose.Schema<GivenAnswerProps>({
   // session: { type: mongoose.Types.ObjectId, ref: "Session" },
@@ -14,5 +7,3 @@ export const GivenAnswerSchema = new mongoose.Schema<GivenAnswerProps>({
   question: { type: Number },
   answer: { type: Number },
 })
-
-export const GivenAnswer = mongoose.model("GivenAnswer", GivenAnswerSchema)

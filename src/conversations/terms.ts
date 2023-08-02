@@ -1,8 +1,8 @@
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
 import { Context, Keyboard, SessionFlavor } from "grammy"
-import { ReplyMarkup } from "../config/consts"
+import { ReplyMarkup } from "../common/consts/replyMarkup"
 import { SessionData } from "../types/sessionData"
-import { TERMS } from "./consts"
+import { CONVERSATION_TERMS_TEXTS } from "./enums/conversationTermsTexts.enum"
 
 export class Terms<
   MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
@@ -15,28 +15,28 @@ export class Terms<
       ctx: MyContext
     ): Promise<boolean> => {
       if (conversation.session.hasTermsAgreement) {
-        await ctx.reply(TERMS.DESCRIPTION, {
+        await ctx.reply(CONVERSATION_TERMS_TEXTS.DESCRIPTION, {
           reply_markup: ReplyMarkup.emptyKeyboard,
         })
       } else {
-        await ctx.reply(TERMS.DESCRIPTION, {
+        await ctx.reply(CONVERSATION_TERMS_TEXTS.DESCRIPTION, {
           reply_markup: new Keyboard()
-            .add({ text: TERMS.YES })
-            .add({ text: TERMS.NO }),
+            .add({ text: CONVERSATION_TERMS_TEXTS.YES })
+            .add({ text: CONVERSATION_TERMS_TEXTS.NO }),
         })
 
         const response = await conversation.waitFor(":text")
 
         switch (response.msg.text) {
-          case TERMS.YES:
+          case CONVERSATION_TERMS_TEXTS.YES:
             conversation.session.hasTermsAgreement = true
-            await ctx.reply(TERMS.YES_REPLY, {
+            await ctx.reply(CONVERSATION_TERMS_TEXTS.YES_REPLY, {
               reply_markup: ReplyMarkup.emptyKeyboard,
             })
             break
-          case TERMS.NO:
+          case CONVERSATION_TERMS_TEXTS.NO:
             conversation.session.hasTermsAgreement = false
-            await ctx.reply(TERMS.NO_REPLY, {
+            await ctx.reply(CONVERSATION_TERMS_TEXTS.NO_REPLY, {
               reply_markup: ReplyMarkup.emptyKeyboard,
             })
             break

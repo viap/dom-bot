@@ -1,19 +1,49 @@
-import { Quiz } from "../components/Quiz/index"
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
 import { Context, InputFile, Keyboard, SessionFlavor } from "grammy"
-import { listOfPsychologists } from "../config/consts"
-import { QuizM, QuizScalesResult } from "../models/Quiz"
-import { Psychologist } from "../types"
+import { Quiz } from "../components/Quiz/quiz"
+import { QuizModel } from "../components/Quiz/models/quiz.model"
+import { QuizScalesResult } from "../components/Quiz/types/quizScalesResult"
+import { ContactInfo, Psychologist } from "../types"
 
-import { GivenAnswerProps } from "../models/GivenAnswer"
-import { PSY_SCHOOLS, getPsySchoolDescr } from "../components/Quiz/consts"
+import { PSY_SCHOOLS } from "../common/enums/psySchools.enum"
+import { getPsySchoolDescr } from "../common/utils/getPsySchoolDescr"
+import { GivenAnswerProps } from "../components/Quiz/types/givenAnswerProps"
 import { SelectQiuz } from "./selectQuiz"
 import { Terms } from "./terms"
 
-import { getValueByKey } from "../common/utils"
 import { cwd } from "process"
-import { QUIZ_MSG } from "./consts"
+import { getValueByKey } from "../common/utils/getValueByKey"
 import { SessionData } from "../types/sessionData"
+import { CONVERSATION_QUIZ_TEXTS } from "./enums/conversationQuizTexts.enum"
+
+export const commonContacts: ContactInfo = {
+  telegram: "Soroka_tg",
+  instagram: "psydom_tbilisi",
+  whatsapp: "",
+  phone: "995557701626",
+}
+
+export const listOfPsychologists: Array<Psychologist<PSY_SCHOOLS>> = [
+  {
+    schools: [
+      PSY_SCHOOLS.EXISTENSE,
+      PSY_SCHOOLS.ANALYZE,
+      PSY_SCHOOLS.CBT,
+      PSY_SCHOOLS.GESTALT,
+    ],
+    name: "Алёна Чалова",
+    descr: "Кандидат психологических наук и бла бла бла",
+    photo: "chalova_alena.png",
+    contacts: commonContacts,
+  },
+  {
+    schools: [PSY_SCHOOLS.ANALYZE],
+    name: "Виктор Заикин",
+    descr: "Кандидат психологических наук и бла, бла, бла ...",
+    photo: "",
+    contacts: commonContacts,
+  },
+]
 
 export class QuizProgress<
   MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
@@ -56,7 +86,7 @@ export class QuizProgress<
     ctx: MyContext
   ) {
     if (ctx.session.selectedQuiz && ctx.session.selectedQuiz._id) {
-      const quizProps = await QuizM.findOne({
+      const quizProps = await QuizModel.findOne({
         _id: ctx.session.selectedQuiz,
       }).exec()
 
@@ -84,23 +114,23 @@ export class QuizProgress<
       }
 
       if (this.quiz.isPassed()) {
-        await ctx.reply(QUIZ_MSG.REPLAY, {
+        await ctx.reply(CONVERSATION_QUIZ_TEXTS.REPLAY, {
           reply_markup: new Keyboard()
-            .add({ text: QUIZ_MSG.REPLAY_YES })
-            .add({ text: QUIZ_MSG.REPLAY_NO })
+            .add({ text: CONVERSATION_QUIZ_TEXTS.REPLAY_YES })
+            .add({ text: CONVERSATION_QUIZ_TEXTS.REPLAY_NO })
             .row()
-            .add({ text: QUIZ_MSG.SHOW_RESULT })
+            .add({ text: CONVERSATION_QUIZ_TEXTS.SHOW_RESULT })
             .oneTime(true),
         })
         const response = await conversation.waitFor("message:text")
 
         switch (response.msg.text) {
-          case QUIZ_MSG.REPLAY_YES:
+          case CONVERSATION_QUIZ_TEXTS.REPLAY_YES:
             this.quiz.clearProgress()
             break
-          case QUIZ_MSG.REPLAY_NO:
-            return await ctx.reply(QUIZ_MSG.REPLAY_NO_REPLY)
-          case QUIZ_MSG.SHOW_RESULT:
+          case CONVERSATION_QUIZ_TEXTS.REPLAY_NO:
+            return await ctx.reply(CONVERSATION_QUIZ_TEXTS.REPLAY_NO_REPLY)
+          case CONVERSATION_QUIZ_TEXTS.SHOW_RESULT:
             await this.showResultInterpretation(ctx, this.quiz.getResult())
             return true
         }
@@ -117,11 +147,11 @@ export class QuizProgress<
           if (this.quiz.setAnswerByResponse(response.msg.text)) {
             conversation.session.quizAnswers = this.quiz.getQuizGivenAnswers()
           } else {
-            ctx.reply(QUIZ_MSG.UNKNOWN_ANSWER)
+            ctx.reply(CONVERSATION_QUIZ_TEXTS.UNKNOWN_ANSWER)
           }
         }
 
-        await ctx.reply(QUIZ_MSG.CONGRATS)
+        await ctx.reply(CONVERSATION_QUIZ_TEXTS.CONGRATS)
         await this.showResultInterpretation(ctx, this.quiz.getResult())
         return true
       }

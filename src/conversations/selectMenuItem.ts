@@ -1,10 +1,10 @@
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
 import { Context, SessionFlavor } from "grammy"
-import { MenuBlock } from "../components/MenuBlock"
+import { MenuBlock } from "../components/MenuBlock/menuBlock"
 import { SessionData } from "../types/sessionData"
 
 import ConversationsList from "../conversations"
-import { SELECT_MENU_ITEM } from "./consts"
+import { CONVERSATION_SELECT_MENU_ITEM_TEXTS } from "./enums/conversationSelectMenuItemTexts.enum"
 
 export class SelectMenuItem<
   MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
@@ -18,30 +18,35 @@ export class SelectMenuItem<
   getConversation() {
     return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
       if (!this.menu) {
-        await ctx.reply(SELECT_MENU_ITEM.EMPTY_MENY)
+        await ctx.reply(CONVERSATION_SELECT_MENU_ITEM_TEXTS.EMPTY_MENY)
         return
       }
 
-      // Set top menu item as current
-      this.menu.selectItem("")
-
-      let current = this.menu.getCurrent()
-      while (!current.conversation && current.children?.length) {
-        await ctx.reply(current.name + ":", {
-          reply_markup: this.menu.getKeyboard().oneTime(),
+      this.menu.selectRoot()
+      while (
+        !this.menu.getCurrentConversation() &&
+        this.menu.getCurrentAvailableItems().length
+      ) {
+        await ctx.reply(this.menu.getCurrentName() + ":", {
+          reply_markup: this.menu.getKeyboard().oneTime(true),
         })
 
-        const response = await conversation.waitFor("message:text")
-        this.menu.selectItem(response.msg.text)
-        current = this.menu.getCurrent()
+        const {
+          msg: { text },
+        } = await conversation.waitFor("message:text")
+
+        if (text === CONVERSATION_SELECT_MENU_ITEM_TEXTS.NEXT) {
+          this.menu.nextPage()
+        } else if (text === CONVERSATION_SELECT_MENU_ITEM_TEXTS.PREV) {
+          this.menu.prevPage()
+        } else {
+          this.menu.selectItem(text)
+        }
       }
 
-      // await ctx.reply(
-      //   "Выбрано действие:" + JSON.stringify(this.menu.getCurrent())
-      // )
-
-      if (current.conversation && current.conversation in ConversationsList) {
-        await new ConversationsList[current.conversation]().getConversation()(
+      const conversationName = this.menu.getCurrentConversation()
+      if (conversationName && conversationName in ConversationsList) {
+        await new ConversationsList[conversationName]().getConversation()(
           conversation,
           ctx
         )

@@ -2,7 +2,7 @@ import { MyContext } from "../types/myContext"
 import { postRequest } from "./common/postRequest"
 import { API_PATHS } from "./consts/apiPaths"
 import { LoginByTelegramDto } from "./dto/loginByTelegram.dto"
-import { TelegramUserDto } from "./dto/telegramUser.dto"
+import { TelegramUserDto } from "../common/dto/telegramUser.dto"
 
 export async function loginByTelegram(
   ctx: MyContext,

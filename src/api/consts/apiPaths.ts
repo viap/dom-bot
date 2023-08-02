@@ -4,6 +4,18 @@ export const API_PATHS = {
     loginByTelegram: "/auth/login/telegram",
   },
   users: {
+    all: "/users",
     me: "/users/me",
+    one: "/users/:id",
+  },
+  psychologists: {
+    all: "/psychologists",
+    me: "/psychologists/me",
+    one: "/psychologists/:id",
+  },
+  therapySessions: {
+    all: "/therapy-sessions",
+    my: "/therapy-sessions/my",
+    one: "/therapy-sessions/:id",
   },
 }

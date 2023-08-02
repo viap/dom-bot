@@ -1,7 +1,8 @@
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
-import { BOT_COMMANDS_DESCR } from "../config/consts"
+import { BOT_COMMANDS_DESCR } from "../common/enums/botCommandsDescr.enum"
 import { Context, Keyboard, SessionFlavor } from "grammy"
-import { QuizM, QuizStatus } from "../models/Quiz"
+import { QuizModel } from "../components/Quiz/models/quiz.model"
+import { QuizStatus } from "../components/Quiz/enums/quizStatus.enum"
 import { SessionData } from "../types/sessionData"
 
 export class SelectQiuz<
@@ -11,7 +12,7 @@ export class SelectQiuz<
 
   getConversation() {
     return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
-      const quizes = await QuizM.find({ status: QuizStatus.ACTIVE }).exec()
+      const quizes = await QuizModel.find({ status: QuizStatus.ACTIVE }).exec()
 
       if (quizes.length === 1) {
         conversation.session.selectedQuiz = quizes[0]._id
