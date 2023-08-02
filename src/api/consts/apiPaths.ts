@@ -1,6 +1,6 @@
 export const API_PATHS = {
   auth: {
-    ping: "/auth/ping",
+    checkToken: "/auth/check-token",
     loginByTelegram: "/auth/login/telegram",
   },
   users: {
