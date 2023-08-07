@@ -12,6 +12,7 @@ export const API_PATHS = {
     all: "/psychologists",
     me: "/psychologists/me",
     one: "/psychologists/:id",
+    addMyNewClient: "/psychologists/me/add-new-client",
   },
   therapySessions: {
     all: "/therapy-sessions",

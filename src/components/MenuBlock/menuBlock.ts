@@ -1,11 +1,11 @@
 import { Keyboard } from "grammy"
-import { Roles } from "../../common/enums/roles.enum"
 import { UserDto } from "../../common/dto/user.dto"
-import { CONVERSATION_SELECT_MENU_ITEM_TEXTS } from "../../conversations/enums/conversationSelectMenuItemTexts.enum"
+import { ROLES } from "../../common/enums/roles.enum"
+import { ACTION_BUTTONS } from "../../conversations/enums/actionButtons.enum"
 import { CONVERSATION_NAMES } from "../../conversations/enums/conversationNames.enum"
+import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
-import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 
 const defaultItemsParams: MenuBlockItemsParams = {
   pageNumber: 0,
@@ -19,6 +19,7 @@ export class MenuBlock {
 
   private options: MenuBlockOptions = {
     maxItemsOnScreen: 100,
+    withNavigationButtons: true,
   }
 
   private itemsParams: MenuBlockItemsParams = {
@@ -43,7 +44,7 @@ export class MenuBlock {
 
   private putDownTheRoles(
     menu: MenuBlockItemsProps,
-    roles: Array<Roles> = [Roles.User]
+    roles: Array<ROLES> = [ROLES.USER]
   ) {
     menu.roles = menu.roles || roles
     if (menu.items) {
@@ -89,6 +90,10 @@ export class MenuBlock {
     return this.current.name
   }
 
+  getCurrent(): MenuBlockItemsProps {
+    return this.current
+  }
+
   selectRoot() {
     return this.selectItem()
   }
@@ -122,16 +127,46 @@ export class MenuBlock {
       this.itemsParams.pageNumber > 0 ? this.itemsParams.pageNumber - 1 : 0
   }
 
-  getCurrent(): MenuBlockItemsProps {
-    return this.current
+  private get navigationButtons(): Keyboard {
+    const topButtonsKeyboard = new Keyboard()
+
+    if (
+      this.options.withNavigationButtons &&
+      this.current.name !== this.menu.name
+    ) {
+      topButtonsKeyboard
+        .add({ text: ACTION_BUTTONS.BACK })
+        .add({ text: ACTION_BUTTONS.HOME })
+        .row()
+    }
+
+    return topButtonsKeyboard
   }
 
-  getName(): string {
-    return this.current.name
+  private get paginationButtons(): Keyboard {
+    const bottomButtonsKeyboard = new Keyboard()
+
+    this.updateItemsParams()
+
+    if (this.itemsParams.pagesCount > 1 && this.itemsParams.pageNumber > 0) {
+      bottomButtonsKeyboard.add(ACTION_BUTTONS.PREV)
+    }
+    if (
+      this.itemsParams.pagesCount > 1 &&
+      this.itemsParams.pageNumber < this.itemsParams.pagesCount - 1
+    ) {
+      bottomButtonsKeyboard.add(ACTION_BUTTONS.NEXT)
+    }
+
+    if (bottomButtonsKeyboard.keyboard.length) {
+      bottomButtonsKeyboard.row()
+    }
+
+    return bottomButtonsKeyboard
   }
 
   getKeyboard(): Keyboard {
-    const buttons = new Keyboard()
+    const keyboard = new Keyboard()
     const availableItems = this.getCurrentAvailableItems()
 
     this.updateItemsParams()
@@ -143,28 +178,11 @@ export class MenuBlock {
     )
 
     currentItems.forEach((item: MenuBlockItemsProps) => {
-      buttons.add(item.name).row()
+      keyboard.add(item.name).row()
     })
 
-    const extraButtons = []
-    if (this.itemsParams.pagesCount > 1 && this.itemsParams.pageNumber > 0) {
-      extraButtons.push(CONVERSATION_SELECT_MENU_ITEM_TEXTS.PREV)
-    }
-    if (
-      this.itemsParams.pagesCount > 1 &&
-      this.itemsParams.pageNumber < this.itemsParams.pagesCount - 1
-    ) {
-      extraButtons.push(CONVERSATION_SELECT_MENU_ITEM_TEXTS.NEXT)
-    }
-
-    extraButtons.forEach((buttonText) => {
-      buttons.add(buttonText)
-    })
-
-    if (extraButtons.length) {
-      buttons.row()
-    }
-
-    return buttons
+    return this.navigationButtons
+      .append(keyboard)
+      .append(this.paginationButtons)
   }
 }

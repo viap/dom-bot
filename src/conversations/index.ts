@@ -1,16 +1,72 @@
-import { Terms } from "./terms"
-import { SelectQiuz } from "./selectQuiz"
-import { QuizProgress } from "./quizProgress"
+import { createConversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
-import { SelectMenuItem } from "./selectMenuItem"
-import { MarkSession } from "./psychologists/markSession"
 import { AddClient } from "./psychologists/addClient"
+import { MarkSession } from "./psychologists/markSession"
+// import { QuizProgress } from "./quizProgress"
+import { MiddlewareFn } from "grammy"
+import { MyContext } from "types/myContext"
+import { SelectMenuItem } from "./selectMenuItem"
+import { SelectQiuz } from "./selectQuiz"
+import { Terms } from "./terms"
+import { BotConversation } from "./types/botConversation"
 
-export default {
-  [CONVERSATION_NAMES.SELECT_MENU_ITEM]: SelectMenuItem,
-  [CONVERSATION_NAMES.TERMS_AGREEMENT]: Terms,
-  [CONVERSATION_NAMES.SELECT_QUIZ]: SelectQiuz,
-  [CONVERSATION_NAMES.QUIZ_PROGRESS]: QuizProgress,
-  [CONVERSATION_NAMES.MARK_SESSION]: MarkSession,
-  [CONVERSATION_NAMES.ADD_CLIENT]: AddClient,
+export const BotConversations = {
+  getList(): Array<BotConversation> {
+    return [Terms, AddClient, MarkSession, SelectQiuz, SelectMenuItem]
+  },
+
+  getByName(name: CONVERSATION_NAMES): BotConversation | undefined {
+    return this.getList().find((botConversation) => {
+      return botConversation.getName() === name
+    })
+  },
+
+  getMiddlewareByName(
+    name: CONVERSATION_NAMES
+  ): MiddlewareFn<MyContext> | undefined {
+    const conversation = this.getByName(name)
+
+    if (conversation) {
+      return this.getMiddleware(conversation)
+    }
+  },
+
+  getMiddleware(conversation: BotConversation): MiddlewareFn<MyContext> {
+    if (conversation.contextPreload) {
+      return async (ctx, next) => {
+        const props = conversation.contextPreload
+          ? await conversation.contextPreload(ctx)
+          : []
+
+        return createConversation(
+          conversation.getConversation(...props),
+          conversation.getName()
+        )(ctx, next)
+      }
+    } else {
+      return createConversation(
+        conversation.getConversation(),
+        conversation.getName()
+      )
+    }
+  },
+
+  listOfMiddlewares(
+    others?: Array<BotConversation>
+  ): Array<MiddlewareFn<MyContext>> {
+    const list = others || [...this.getList()]
+    const result: Array<MiddlewareFn<MyContext>> = []
+
+    const conversation = list.shift()
+
+    if (conversation) {
+      result.push(this.getMiddleware(conversation))
+
+      if (list.length) {
+        result.push(...this.listOfMiddlewares(list))
+      }
+    }
+
+    return result
+  },
 }

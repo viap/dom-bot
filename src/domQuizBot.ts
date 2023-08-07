@@ -1,4 +1,4 @@
-import { conversations, createConversation } from "@grammyjs/conversations"
+import { conversations } from "@grammyjs/conversations"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import dotenv from "dotenv"
 import { Bot, Context, GrammyError, HttpError, session } from "grammy"
@@ -8,21 +8,15 @@ import { BOT_COMMANDS } from "./common/enums/botCommands.enum"
 import { BOT_COMMANDS_DESCR } from "./common/enums/botCommandsDescr.enum"
 import { BOT_ERRORS } from "./common/enums/botErrors.enum"
 import { BOT_TEXTS } from "./common/enums/botTexts.enum"
-import ConversationsList from "./conversations"
+import { BotConversations } from "./conversations"
 import { CONVERSATION_NAMES } from "./conversations/enums/conversationNames.enum"
 
-import { ReplyMarkup } from "./common/consts/replyMarkup"
+import { ReplyMarkup } from "./common/utils/replyMarkup"
 import { DbConnection, getSessions } from "./services/db/connectDB"
 import { MyContext } from "./types/myContext"
 import { SessionData } from "./types/sessionData"
 
-import { MenuBlock } from "./components/MenuBlock/menuBlock"
-import { DefaultMenu } from "./components/MenuBlock/consts/defaultMenu"
-
-import { getMeUser } from "./api/getMeUser"
-import { isValidToken } from "./api/isValidToken"
-import { loginByTelegram } from "./api/loginByTelegram"
-import { TelegramUserDto } from "./common/dto/telegramUser.dto"
+import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
 
 /** ENVIROMENT */
 
@@ -72,26 +66,7 @@ domBot.use(
 )
 
 /** API: login */
-domBot.use(async (ctx, next) => {
-  if (ctx.from) {
-    if (!(await isValidToken(ctx))) {
-      delete ctx.session.token
-    }
-
-    if (!ctx.session.token) {
-      await loginByTelegram(ctx, {
-        ...ctx.from,
-        id: ctx.from.id + "",
-      } as TelegramUserDto)
-    }
-  }
-
-  if (!ctx.session.token) {
-    return await ctx.reply(BOT_TEXTS.UNAVAILABLE)
-  }
-
-  return next()
-})
+domBot.use(apiLoginByTelegram)
 
 /** CONVERSATIONS: init */
 domBot.use(conversations())
@@ -100,61 +75,42 @@ domBot.use(conversations())
 domBot.command(BOT_COMMANDS.START, async (ctx) => {
   console.log("BOT_COMMANDS.START")
   await ctx.conversation.exit()
-  await ctx.reply(BOT_TEXTS.WELCOME, {
-    reply_markup: ReplyMarkup.emptyKeyboard,
-  })
+  await ctx.reply(BOT_TEXTS.WELCOME, ReplyMarkup.emptyKeyboard)
 })
 
 /** CONVERSATIONS: use */
-
-Object.values(CONVERSATION_NAMES).forEach((conversationName) => {
-  if (conversationName in ConversationsList) {
-    switch (conversationName) {
-      case CONVERSATION_NAMES.SELECT_MENU_ITEM:
-        domBot.use(async (ctx, next) => {
-          const user = await getMeUser(ctx)
-          if (!user) {
-            return await ctx.reply("Пользователь не авторизован")
-          }
-
-          const menuBlock = DefaultMenu
-            ? new MenuBlock(user, DefaultMenu)
-            : undefined
-
-          const selectMenuItemConversation = createConversation(
-            new ConversationsList[conversationName]<MyContext>(
-              menuBlock
-            ).getConversation(),
-            conversationName
-          )
-
-          return selectMenuItemConversation(ctx, next)
-        })
-        break
-      default:
-        domBot.use(
-          createConversation(
-            new ConversationsList[
-              conversationName
-            ]<MyContext>().getConversation(),
-            conversationName
-          )
-        )
-    }
-  }
-})
+domBot.use(...BotConversations.listOfMiddlewares())
 
 /** COMMAND HANDLERS */
-
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
   console.log("BOT_COMMANDS.MENU")
-  await ctx.conversation.enter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+  // await ctx.conversation.exit(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+  await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+
+  // const middleware = await BotConversations.getMiddlewareByName(
+  //   CONVERSATION_NAMES.TERMS_AGREEMENT
+  // )
+
+  // console.log("middleware", middleware)
+
+  // if (middleware) {
+  //   const composer = domBot.use(middleware)
+  //   console.log("composer", composer)
+
+  //   console.log("conversation 2", ctx.conversation)
+
+  //   // await ctx.conversation.enter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+  //   // return await middleware(ctx, async () => {
+  //   //   console.log("-------")
+  //   //   return
+  //   // })
+  // }
 })
 
 /** MESSAGE HANDLERS */
 
-domBot.on("message", (ctx) => {
-  ctx.reply(`${BOT_TEXTS.DEFAULT} - ${ctx.message.text}`)
+domBot.on("message", async (ctx) => {
+  await ctx.reply(`${BOT_TEXTS.DEFAULT} - ${ctx.message.text}`)
 })
 
 /** ERROR HANDLERS */

@@ -1,56 +1,78 @@
-import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
-import { Context, SessionFlavor } from "grammy"
+import { Conversation } from "@grammyjs/conversations"
 import { MenuBlock } from "../components/MenuBlock/menuBlock"
-import { SessionData } from "../types/sessionData"
 
-import ConversationsList from "../conversations"
-import { CONVERSATION_SELECT_MENU_ITEM_TEXTS } from "./enums/conversationSelectMenuItemTexts.enum"
+import { MyContext } from "../types/myContext"
+import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
+import { ACTION_BUTTONS } from "./enums/actionButtons.enum"
+import { BotConversations } from "./index"
+import { BotConversation } from "./types/botConversation"
+import { getMeUser } from "../api/getMeUser"
+import { DefaultMenu } from "../components/MenuBlock/consts/defaultMenu"
+import { ReplyMarkup } from "../common/utils/replyMarkup"
 
-export class SelectMenuItem<
-  MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
-> {
-  constructor(private menu?: MenuBlock) {
-    if (menu) {
-      this.menu = menu
+export const SelectMenuItem: BotConversation = {
+  async contextPreload(ctx) {
+    const user = await getMeUser(ctx)
+
+    if (!user) {
+      throw new Error("Пользователь не авторизован")
     }
-  }
 
-  getConversation() {
+    const menuBlock = DefaultMenu ? new MenuBlock(user, DefaultMenu) : undefined
+
+    return [menuBlock]
+  },
+
+  getName() {
+    return CONVERSATION_NAMES.SELECT_MENU_ITEM
+  },
+
+  getConversation(menu: MenuBlock) {
     return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
-      if (!this.menu) {
-        await ctx.reply(CONVERSATION_SELECT_MENU_ITEM_TEXTS.EMPTY_MENY)
+      if (!menu) {
+        await ctx.reply(ACTION_BUTTONS.EMPTY_MENU)
         return
       }
 
-      this.menu.selectRoot()
+      menu.selectRoot()
       while (
-        !this.menu.getCurrentConversation() &&
-        this.menu.getCurrentAvailableItems().length
+        !menu.getCurrentConversation() &&
+        menu.getCurrentAvailableItems().length
       ) {
-        await ctx.reply(this.menu.getCurrentName() + ":", {
-          reply_markup: this.menu.getKeyboard().oneTime(true),
+        await ctx.reply(`*${menu.getCurrentName().toUpperCase()}*:`, {
+          ...ReplyMarkup.keyboard(menu.getKeyboard()),
+          ...ReplyMarkup.oneTime,
+          ...ReplyMarkup.parseModeV2,
         })
 
-        const {
-          msg: { text },
-        } = await conversation.waitFor("message:text")
+        ctx = await conversation.waitFor("message:text")
+        const text = ctx.msg?.text || ""
 
-        if (text === CONVERSATION_SELECT_MENU_ITEM_TEXTS.NEXT) {
-          this.menu.nextPage()
-        } else if (text === CONVERSATION_SELECT_MENU_ITEM_TEXTS.PREV) {
-          this.menu.prevPage()
+        if (text === ACTION_BUTTONS.NEXT) {
+          menu.nextPage()
+        } else if (text === ACTION_BUTTONS.PREV) {
+          menu.prevPage()
+        } else if (text === ACTION_BUTTONS.HOME) {
+          menu.selectRoot()
+        } else if (text === ACTION_BUTTONS.BACK) {
+          menu.selectRoot()
         } else {
-          this.menu.selectItem(text)
+          menu.selectItem(text)
         }
       }
 
-      const conversationName = this.menu.getCurrentConversation()
-      if (conversationName && conversationName in ConversationsList) {
-        await new ConversationsList[conversationName]().getConversation()(
-          conversation,
-          ctx
-        )
+      const conversationName = menu.getCurrentConversation()
+      const botConversation = conversationName
+        ? BotConversations.getByName(conversationName)
+        : undefined
+
+      console.log("conversationName", conversationName)
+      console.log("getList", BotConversations.getList())
+      console.log("botConversation", botConversation)
+
+      if (botConversation) {
+        await botConversation.getConversation()(conversation, ctx)
       }
     }
-  }
+  },
 }

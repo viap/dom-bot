@@ -1,6 +1,6 @@
-export enum Roles {
-  User = "user",
-  Admin = "admin",
-  Editor = "editor",
-  Psychologist = "psychologist",
+export enum ROLES {
+  USER = "user",
+  ADMIN = "admin",
+  EDITOR = "editor",
+  PSYCHOLOGIST = "psychologist",
 }

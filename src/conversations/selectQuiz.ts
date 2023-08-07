@@ -1,14 +1,16 @@
-import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
+import { Conversation } from "@grammyjs/conversations"
+import { Keyboard } from "grammy"
 import { BOT_COMMANDS_DESCR } from "../common/enums/botCommandsDescr.enum"
-import { Context, Keyboard, SessionFlavor } from "grammy"
-import { QuizModel } from "../components/Quiz/models/quiz.model"
 import { QuizStatus } from "../components/Quiz/enums/quizStatus.enum"
-import { SessionData } from "../types/sessionData"
+import { QuizModel } from "../components/Quiz/models/quiz.model"
+import { MyContext } from "../types/myContext"
+import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
+import { BotConversation } from "./types/botConversation"
 
-export class SelectQiuz<
-  MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
-> {
-  //   constructor() {}
+export const SelectQiuz: BotConversation = {
+  getName() {
+    return CONVERSATION_NAMES.SELECT_QUIZ
+  },
 
   getConversation() {
     return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
@@ -26,11 +28,10 @@ export class SelectQiuz<
           reply_markup: keyboard,
         })
 
-        const response = await conversation.waitFor(":text")
+        ctx = await conversation.waitFor(":text")
+        const text = ctx.msg?.text || ""
 
-        const selectedQiuz = quizes.find(
-          (quiz) => quiz.name === response.msg.text
-        )
+        const selectedQiuz = quizes.find((quiz) => quiz.name === text)
 
         if (selectedQiuz) {
           conversation.session.selectedQuiz = selectedQiuz._id
@@ -39,5 +40,5 @@ export class SelectQiuz<
 
       return conversation.session.selectedQuiz
     }
-  }
+  },
 }

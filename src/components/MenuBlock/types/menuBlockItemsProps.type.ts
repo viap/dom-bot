@@ -1,4 +1,4 @@
-import { Roles } from "../../../common/enums/roles.enum"
+import { ROLES } from "../../../common/enums/roles.enum"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 
 export type MenuBlockItemsProps = {
@@ -6,7 +6,7 @@ export type MenuBlockItemsProps = {
   key?: string
   name: string
   descr: string
-  roles?: Array<Roles>
+  roles?: Array<ROLES>
   items: Array<MenuBlockItemsProps>
   conversation?: CONVERSATION_NAMES
 }

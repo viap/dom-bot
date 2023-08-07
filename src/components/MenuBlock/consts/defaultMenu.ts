@@ -1,11 +1,11 @@
-import { Roles } from "../../../common/enums/roles.enum"
+import { ROLES } from "../../../common/enums/roles.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 
 export const DefaultMenu: MenuBlockItemsProps = {
   name: "Меню",
   descr: "Меню для Телеграма",
-  roles: [Roles.User],
+  roles: [ROLES.USER],
   items: [
     {
       name: "Расписание",
@@ -20,7 +20,7 @@ export const DefaultMenu: MenuBlockItemsProps = {
     {
       name: "Личный кабинет",
       descr: "Личный кабинет члена команды DOM'a",
-      roles: [Roles.Psychologist],
+      roles: [ROLES.PSYCHOLOGIST],
       items: [
         {
           name: "Добавить клиента",

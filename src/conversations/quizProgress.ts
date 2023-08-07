@@ -1,20 +1,21 @@
-import { Conversation, ConversationFlavor } from "@grammyjs/conversations"
-import { Context, InputFile, Keyboard, SessionFlavor } from "grammy"
-import { Quiz } from "../components/Quiz/quiz"
+import { Conversation } from "@grammyjs/conversations"
+import { InputFile, Keyboard } from "grammy"
 import { QuizModel } from "../components/Quiz/models/quiz.model"
+import { Quiz } from "../components/Quiz/quiz"
 import { QuizScalesResult } from "../components/Quiz/types/quizScalesResult"
 import { ContactInfo, Psychologist } from "../types"
 
 import { PSY_SCHOOLS } from "../common/enums/psySchools.enum"
 import { getPsySchoolDescr } from "../common/utils/getPsySchoolDescr"
 import { GivenAnswerProps } from "../components/Quiz/types/givenAnswerProps"
-import { SelectQiuz } from "./selectQuiz"
-import { Terms } from "./terms"
 
 import { cwd } from "process"
 import { getValueByKey } from "../common/utils/getValueByKey"
-import { SessionData } from "../types/sessionData"
+import { ReplyMarkup } from "../common/utils/replyMarkup"
+import { MyContext } from "../types/myContext"
+import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 import { CONVERSATION_QUIZ_TEXTS } from "./enums/conversationQuizTexts.enum"
+import { BotConversations } from "./index"
 
 export const commonContacts: ContactInfo = {
   telegram: "Soroka_tg",
@@ -45,9 +46,7 @@ export const listOfPsychologists: Array<Psychologist<PSY_SCHOOLS>> = [
   },
 ]
 
-export class QuizProgress<
-  MyContext extends Context & SessionFlavor<SessionData> & ConversationFlavor
-> {
+export class QuizProgress {
   private quiz?: Quiz
 
   // constructor() {}
@@ -58,15 +57,13 @@ export class QuizProgress<
   ): Promise<boolean> {
     // ask for agreement if it is not get yet
     if (!conversation.session.hasTermsAgreement) {
-      const terms = new Terms<MyContext>()
-      const termsComversation = terms.getConversation()
-      conversation.session.hasTermsAgreement = await termsComversation(
-        conversation,
-        ctx
+      const termsComversation = BotConversations.getByName(
+        CONVERSATION_NAMES.TERMS_AGREEMENT
       )
-      // conversation.session.hasTermsAgreement = await conversation.external(() =>
-      //   termsComversation(conversation, ctx)
-      // )
+
+      if (termsComversation) {
+        await termsComversation.getConversation(conversation, ctx)
+      }
     }
 
     return conversation.session.hasTermsAgreement
@@ -76,9 +73,13 @@ export class QuizProgress<
     conversation: Conversation<MyContext>,
     ctx: MyContext
   ) {
-    const selectQuiz = new SelectQiuz<MyContext>()
-    const selectQuizComversation = selectQuiz.getConversation()
-    await selectQuizComversation(conversation, ctx)
+    const selectQuizComversation = BotConversations.getByName(
+      CONVERSATION_NAMES.SELECT_QUIZ
+    )
+
+    if (selectQuizComversation) {
+      await selectQuizComversation.getConversation(conversation, ctx)
+    }
   }
 
   private async loadQuiz(
@@ -122,9 +123,10 @@ export class QuizProgress<
             .add({ text: CONVERSATION_QUIZ_TEXTS.SHOW_RESULT })
             .oneTime(true),
         })
-        const response = await conversation.waitFor("message:text")
+        ctx = await conversation.waitFor("message:text")
+        const text = ctx.msg?.text || ""
 
-        switch (response.msg.text) {
+        switch (text) {
           case CONVERSATION_QUIZ_TEXTS.REPLAY_YES:
             this.quiz.clearProgress()
             break
@@ -142,12 +144,13 @@ export class QuizProgress<
             reply_markup: this.quiz.getKeyboard().oneTime(true),
           })
 
-          const response = await conversation.waitFor("message:text")
+          ctx = await conversation.waitFor("message:text")
+          const text = ctx.msg?.text || ""
 
-          if (this.quiz.setAnswerByResponse(response.msg.text)) {
+          if (this.quiz.setAnswerByResponse(text)) {
             conversation.session.quizAnswers = this.quiz.getQuizGivenAnswers()
           } else {
-            ctx.reply(CONVERSATION_QUIZ_TEXTS.UNKNOWN_ANSWER)
+            await ctx.reply(CONVERSATION_QUIZ_TEXTS.UNKNOWN_ANSWER)
           }
         }
 
@@ -194,7 +197,7 @@ export class QuizProgress<
       )
     })
 
-    await ctx.reply(schoolInfo.join("\r\n\r\n"), { parse_mode: "MarkdownV2" })
+    await ctx.reply(schoolInfo.join("\r\n\r\n"), ReplyMarkup.parseModeV2)
 
     if (suitableSpecialists.length) {
       await ctx.reply(
