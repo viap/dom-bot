@@ -2,9 +2,9 @@ import { Conversation } from "@grammyjs/conversations"
 import { Keyboard } from "grammy"
 import { ReplyKeyboardMarkup, ReplyKeyboardRemove } from "grammy/types"
 import { MyContext } from "types/myContext"
-import { addMyNewClient } from "../../api/addMyNewClient"
-import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
+import { addMyNewClient } from "../api/addMyNewClient"
+import { ReplyMarkup } from "../common/utils/replyMarkup"
+import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 
 export const AddClient = {
   getName() {

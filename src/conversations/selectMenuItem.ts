@@ -1,14 +1,12 @@
 import { Conversation } from "@grammyjs/conversations"
 import { MenuBlock } from "../components/MenuBlock/menuBlock"
 
-import { MyContext } from "../types/myContext"
-import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
-import { ACTION_BUTTONS } from "./enums/actionButtons.enum"
-import { BotConversations } from "./index"
-import { BotConversation } from "./types/botConversation"
 import { getMeUser } from "../api/getMeUser"
 import { DefaultMenu } from "../components/MenuBlock/consts/defaultMenu"
-import { ReplyMarkup } from "../common/utils/replyMarkup"
+import { MyContext } from "../types/myContext"
+import { ACTION_BUTTONS } from "./enums/actionButtons.enum"
+import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
+import { BotConversation } from "./types/botConversation"
 
 export const SelectMenuItem: BotConversation = {
   async contextPreload(ctx) {
@@ -34,45 +32,7 @@ export const SelectMenuItem: BotConversation = {
         return
       }
 
-      menu.selectRoot()
-      while (
-        !menu.getCurrentConversation() &&
-        menu.getCurrentAvailableItems().length
-      ) {
-        await ctx.reply(`*${menu.getCurrentName().toUpperCase()}*:`, {
-          ...ReplyMarkup.keyboard(menu.getKeyboard()),
-          ...ReplyMarkup.oneTime,
-          ...ReplyMarkup.parseModeV2,
-        })
-
-        ctx = await conversation.waitFor("message:text")
-        const text = ctx.msg?.text || ""
-
-        if (text === ACTION_BUTTONS.NEXT) {
-          menu.nextPage()
-        } else if (text === ACTION_BUTTONS.PREV) {
-          menu.prevPage()
-        } else if (text === ACTION_BUTTONS.HOME) {
-          menu.selectRoot()
-        } else if (text === ACTION_BUTTONS.BACK) {
-          menu.selectRoot()
-        } else {
-          menu.selectItem(text)
-        }
-      }
-
-      const conversationName = menu.getCurrentConversation()
-      const botConversation = conversationName
-        ? BotConversations.getByName(conversationName)
-        : undefined
-
-      console.log("conversationName", conversationName)
-      console.log("getList", BotConversations.getList())
-      console.log("botConversation", botConversation)
-
-      if (botConversation) {
-        await botConversation.getConversation()(conversation, ctx)
-      }
+      await menu.show(conversation, ctx)
     }
   },
 }

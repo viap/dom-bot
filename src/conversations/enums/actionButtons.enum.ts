@@ -3,6 +3,6 @@ export enum ACTION_BUTTONS {
   NEXT = ">",
   PREV = "<",
 
-  HOME = "Домой",
+  HOME = "Основное меню",
   BACK = "Назад",
 }
