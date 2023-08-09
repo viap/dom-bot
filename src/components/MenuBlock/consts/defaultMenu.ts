@@ -1,5 +1,6 @@
 import { ROLES } from "../../../common/enums/roles.enum"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import { MENU_DATA_TYPES } from "../enums/menuDataTypes.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
 export const DefaultMenu: MenuBlockItemsProps = {
@@ -25,7 +26,9 @@ export const DefaultMenu: MenuBlockItemsProps = {
         {
           name: "Клиенты",
           descr: "",
-          items: [],
+          from: MENU_DATA_TYPES.CLIENTS,
+          conversation: CONVERSATION_NAMES.CLIENT_DETAILS,
+          options: { columns: 2 },
         },
         {
           name: "Добавить клиента",

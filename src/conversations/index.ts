@@ -8,11 +8,19 @@ import { MyContext } from "types/myContext"
 import { SelectMenuItem } from "./selectMenuItem"
 import { SelectQiuz } from "./selectQuiz"
 import { Terms } from "./terms"
+import { ClientDetails } from "./clientDetails"
 import { BotConversation } from "./types/botConversation"
 
 export const BotConversations = {
   getList(): Array<BotConversation> {
-    return [Terms, AddClient, MarkSession, SelectQiuz, SelectMenuItem]
+    return [
+      Terms,
+      AddClient,
+      MarkSession,
+      SelectQiuz,
+      SelectMenuItem,
+      ClientDetails,
+    ]
   },
 
   getByName(name: CONVERSATION_NAMES): BotConversation | undefined {
@@ -21,13 +29,13 @@ export const BotConversations = {
     })
   },
 
-  getMiddlewareByName(
-    name: CONVERSATION_NAMES
-  ): MiddlewareFn<MyContext> | undefined {
+  getMiddlewareByName(name: CONVERSATION_NAMES): MiddlewareFn<MyContext> {
     const conversation = this.getByName(name)
 
     if (conversation) {
       return this.getMiddleware(conversation)
+    } else {
+      return (ctx, next) => next()
     }
   },
 

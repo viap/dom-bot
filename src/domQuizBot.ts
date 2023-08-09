@@ -79,7 +79,10 @@ domBot.command(BOT_COMMANDS.START, async (ctx) => {
 })
 
 /** CONVERSATIONS: use */
-domBot.use(...BotConversations.listOfMiddlewares())
+// domBot.use(...BotConversations.listOfMiddlewares())
+domBot.use(
+  BotConversations.getMiddlewareByName(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+)
 
 /** COMMAND HANDLERS */
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {

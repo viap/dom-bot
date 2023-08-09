@@ -3,14 +3,15 @@ import { MyContext } from "../types/myContext"
 import { BotConversation } from "./types/botConversation"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 
-export const MarkSession: BotConversation = {
+export const ClientDetails: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.MARK_SESSION
+    return CONVERSATION_NAMES.CLIENT_DETAILS
   },
 
-  getConversation() {
+  getConversation(props) {
     return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
-      return await ctx.reply("Тут отмечаем сессию")
+      await ctx.reply("Тут информация о выбранном клиенте")
+      await ctx.reply(JSON.stringify(props))
     }
   },
 }

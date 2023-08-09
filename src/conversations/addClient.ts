@@ -49,14 +49,14 @@ export const AddClient = {
               text: "Назад",
               action: FORM_BUTTON_ACTIONS.BACK,
               callback: async () => {
-                console.log("Нажали назад")
+                conversation.log("Нажали назад")
               },
             },
             {
               text: "Отмена",
               action: FORM_BUTTON_ACTIONS.REJECT,
               callback: async () => {
-                console.log("Нажали отмена")
+                conversation.log("Нажали отмена")
               },
             },
           ],
@@ -260,6 +260,9 @@ export class Form<T extends ObjectPrimitiveValues> {
         this.ctx = await this.conversation.waitFor("message:text")
         const text = this.ctx.msg?.text || ""
         const buttonAction = this.getButtonAction(text)
+
+        this.conversation.log("text", text)
+        this.conversation.log("buttonAction", buttonAction)
 
         if (buttonAction) {
           switch (buttonAction.action) {

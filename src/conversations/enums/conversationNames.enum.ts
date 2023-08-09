@@ -6,4 +6,5 @@ export enum CONVERSATION_NAMES {
   // FOR PSYCHOLOGISTS:
   MARK_SESSION = "mark_session",
   ADD_CLIENT = "add_client",
+  CLIENT_DETAILS = "client_details",
 }

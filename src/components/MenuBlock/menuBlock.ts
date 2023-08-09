@@ -1,11 +1,14 @@
 import { Conversation } from "@grammyjs/conversations"
+import { CONVERSATION_NAMES } from "conversations/enums/conversationNames.enum"
 import { Keyboard } from "grammy"
 import { MyContext } from "types/myContext"
+import { getMyClients } from "../../api/getMyClients"
 import { UserDto } from "../../common/dto/user.dto"
 import { ROLES } from "../../common/enums/roles.enum"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { ACTION_BUTTONS } from "../../conversations/enums/actionButtons.enum"
 import { BotConversations } from "../../conversations/index"
+import { MENU_DATA_TYPES } from "./enums/menuDataTypes.enum"
 import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
@@ -63,6 +66,10 @@ export class MenuBlock {
 
   getParent(): MenuBlockItemsProps | undefined {
     return this.parent
+  }
+
+  set currentItems(items: Array<MenuBlockItemsProps>) {
+    this.current.items = items
   }
 
   get currentItems() {
@@ -196,17 +203,43 @@ export class MenuBlock {
   }
 
   private makeAction(text: string) {
-    if (text === ACTION_BUTTONS.NEXT) {
-      this.nextPage()
-    } else if (text === ACTION_BUTTONS.PREV) {
-      this.prevPage()
-    } else if (text === ACTION_BUTTONS.HOME) {
-      this.selectRoot()
-    } else if (text === ACTION_BUTTONS.BACK) {
-      this.selectItem(this.parentName)
-    } else {
-      this.selectItem(text)
+    switch (text) {
+      case ACTION_BUTTONS.NEXT:
+        this.nextPage()
+        break
+      case ACTION_BUTTONS.PREV:
+        this.prevPage()
+        break
+      case ACTION_BUTTONS.BACK:
+        this.selectItem(this.parentName)
+        break
+      case ACTION_BUTTONS.HOME:
+        this.selectRoot()
+        break
+      default:
+        this.selectItem(text)
+        break
     }
+  }
+
+  private async uploadItems(
+    ctx: MyContext,
+    type: MENU_DATA_TYPES,
+    conversation: CONVERSATION_NAMES
+  ): Promise<Array<MenuBlockItemsProps>> {
+    let items: Array<MenuBlockItemsProps> = []
+    switch (type) {
+      case MENU_DATA_TYPES.CLIENTS:
+        items = (await getMyClients(ctx)).map((item) => {
+          return {
+            name: item.name,
+            conversation,
+            conversationProps: [item],
+          } as MenuBlockItemsProps
+        })
+    }
+
+    return items
   }
 
   async show(
@@ -216,8 +249,15 @@ export class MenuBlock {
   ) {
     this.selectItem(itemName)
 
-    while (!this.current.conversation && this.currentItems.length) {
-      await ctx.reply(`${this.current.name.toUpperCase()}:`, {
+    conversation.log("@@@@@@@@@@@@@ SHOW @@@@@@@@@@@@@@@@@@")
+
+    let keepGoing = true
+    do {
+      if (!this.currentItems.length) {
+        this.selectItem(this.parentName)
+      }
+
+      await ctx.reply(`[ ${this.current.name.toUpperCase()} ]`, {
         ...ReplyMarkup.keyboard(this.getKeyboard()),
         ...ReplyMarkup.oneTime,
         ...ReplyMarkup.parseModeV2,
@@ -225,20 +265,38 @@ export class MenuBlock {
 
       ctx = await conversation.waitFor("message:text")
       const text = ctx.msg?.text || ""
+
+      conversation.log("text", text)
+
       this.makeAction(text)
-    }
 
-    const botConversation = this.current.conversation
-      ? BotConversations.getByName(this.current.conversation)
-      : undefined
+      conversation.log("current", this.current)
+      conversation.log("parent", this.parent)
 
-    try {
-      if (botConversation) {
-        await botConversation.getConversation()(conversation, ctx)
+      try {
+        if (this.current.from && this.current.conversation) {
+          this.currentItems = await this.uploadItems(
+            ctx,
+            this.current.from,
+            this.current.conversation
+          )
+        } else if (this.current.conversation) {
+          const botConversation = BotConversations.getByName(
+            this.current.conversation
+          )
+          if (botConversation) {
+            const props = this.current.conversationProps
+              ? this.current.conversationProps
+              : []
+            await botConversation.getConversation(...props)(conversation, ctx)
+          }
+        }
+      } catch (e) {
+        conversation.log("Произошла ошибка", e)
+      } finally {
+        keepGoing = true
       }
-    } finally {
-      await this.show(conversation, ctx, this.parentName)
-    }
+    } while (keepGoing)
   }
 
   selectRoot() {
@@ -284,9 +342,9 @@ export class MenuBlock {
 
     currentItems.forEach((item: MenuBlockItemsProps) => {
       keyboard.add(item.name)
-      if (this.currentOptions.columns === 1) {
-        keyboard.row()
-      }
+      // if (this.currentOptions.columns === 1) {
+      keyboard.row()
+      // }
     })
     keyboard.toFlowed(this.currentOptions.columns)
 
