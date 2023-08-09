@@ -1,5 +1,6 @@
 import { CURRENCIES } from "../enums/currencies.enum"
 import { UserDto } from "./user.dto"
+import { ClientDto } from "./client.dto"
 
 export type PsychologistDto = {
   _id: string
@@ -8,5 +9,5 @@ export type PsychologistDto = {
   sessionDurations: []
   education: []
   isInTheClub: boolean
-  clients: []
+  clients: Array<ClientDto>
 }

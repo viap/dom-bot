@@ -232,7 +232,7 @@ export class MenuBlock {
       case MENU_DATA_TYPES.CLIENTS:
         items = (await getMyClients(ctx)).map((item) => {
           return {
-            name: item.name,
+            name: item.user.name,
             conversation,
             conversationProps: [item],
           } as MenuBlockItemsProps
