@@ -1,7 +1,7 @@
 import { Conversation, ConversationFn } from "@grammyjs/conversations"
 import { Keyboard } from "grammy"
 import { ReplyMarkup } from "../common/utils/replyMarkup"
-import { MyContext } from "../types/myContext"
+import { MyContext } from "../common/types/myContext"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 import { CONVERSATION_TERMS_TEXTS } from "./enums/conversationTermsTexts.enum"
 import { BotConversation } from "./types/botConversation"

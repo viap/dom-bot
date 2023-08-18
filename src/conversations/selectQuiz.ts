@@ -3,7 +3,7 @@ import { Keyboard } from "grammy"
 import { BOT_COMMANDS_DESCR } from "../common/enums/botCommandsDescr.enum"
 import { QuizStatus } from "../components/Quiz/enums/quizStatus.enum"
 import { QuizModel } from "../components/Quiz/models/quiz.model"
-import { MyContext } from "../types/myContext"
+import { MyContext } from "../common/types/myContext"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 import { BotConversation } from "./types/botConversation"
 

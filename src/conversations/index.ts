@@ -1,14 +1,15 @@
 import { createConversation } from "@grammyjs/conversations"
-import { AddClient } from "./addClient"
+import { AddClient } from "./psychologist/addClient"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
-import { MarkSession } from "./markSession"
+import { addSession } from "./psychologist/addSession"
+import { DeleteSession } from "./psychologist/deleteSession"
+import { EditClient } from "./psychologist/editClient"
 // import { QuizProgress } from "./quizProgress"
 import { MiddlewareFn } from "grammy"
-import { MyContext } from "types/myContext"
+import { MyContext } from "../common/types/myContext"
 import { SelectMenuItem } from "./selectMenuItem"
 import { SelectQiuz } from "./selectQuiz"
 import { Terms } from "./terms"
-import { ClientDetails } from "./clientDetails"
 import { BotConversation } from "./types/botConversation"
 
 export const BotConversations = {
@@ -16,10 +17,11 @@ export const BotConversations = {
     return [
       Terms,
       AddClient,
-      MarkSession,
       SelectQiuz,
       SelectMenuItem,
-      ClientDetails,
+      EditClient,
+      addSession,
+      DeleteSession,
     ]
   },
 
