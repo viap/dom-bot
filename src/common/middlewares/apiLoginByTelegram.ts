@@ -1,4 +1,4 @@
-import { MyContext } from "types/myContext"
+import { MyContext } from "../../common/types/myContext"
 import { isValidToken } from "../../api/isValidToken"
 import { loginByTelegram } from "../../api/loginByTelegram"
 import { TelegramUserDto } from "../dto/telegramUser.dto"

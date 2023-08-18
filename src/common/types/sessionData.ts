@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import { QuizGivenAnswers } from "../components/Quiz/types/quizGivenAnswers"
+import { QuizGivenAnswers } from "../../components/Quiz/types/quizGivenAnswers"
 
 export type SessionData = {
   token?: string
