@@ -1,17 +1,15 @@
 import { ROLES } from "../../../common/enums/roles.enum"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import { MenuBlockOptions } from "./menuBlockOptions.type"
-import { MENU_DATA_TYPES } from "../enums/menuDataTypes.enum"
 
 export type MenuBlockItemsProps = {
-  key?: string
   name: string
-  descr: string
+  content?: string | ((...props: Array<unknown>) => string)
   roles?: Array<ROLES>
   options?: Partial<MenuBlockOptions>
-  //
-  from?: MENU_DATA_TYPES
   items?: Array<MenuBlockItemsProps>
+  submenu?: SUBMENU_TYPES
   conversation?: CONVERSATION_NAMES
-  conversationProps?: Array<any>
+  conversationProps?: Array<unknown>
 }

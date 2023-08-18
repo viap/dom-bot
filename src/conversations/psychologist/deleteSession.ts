@@ -10,7 +10,7 @@ import { ConversationResult } from "../types/conversationResult"
 
 export const DeleteSession: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.MY_CLIENT_DELETE_SESSION
+    return CONVERSATION_NAMES.DELETE_THERAPY_SESSION
   },
 
   getConversation(client: ClientDto, session: TherapySessionDto) {

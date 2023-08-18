@@ -19,7 +19,7 @@ import { ConversationResult } from "../types/conversationResult"
 
 export const addSession: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.MY_CLIENT_ADD_SESSION
+    return CONVERSATION_NAMES.ADD_THERAPY_SESSION
   },
 
   getConversation(client: ClientDto, sessions: Array<TherapySessionDto>) {

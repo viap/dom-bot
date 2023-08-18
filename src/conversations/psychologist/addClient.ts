@@ -11,7 +11,7 @@ import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 
 export const AddClient: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.MY_CLIENT_ADD
+    return CONVERSATION_NAMES.CLIENT_ADD
   },
   getConversation() {
     return async (conversation: Conversation<MyContext>, ctx: MyContext) => {

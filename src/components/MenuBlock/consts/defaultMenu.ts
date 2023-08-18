@@ -1,53 +1,39 @@
 import { ROLES } from "../../../common/enums/roles.enum"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
-import { MENU_DATA_TYPES } from "../enums/menuDataTypes.enum"
+import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import { defaultRoles } from "./defaultRoles"
 
 export const DefaultMenu: MenuBlockItemsProps = {
   name: "Меню",
-  descr: "Меню для Телеграма",
-  roles: [ROLES.USER],
+  roles: defaultRoles,
   items: [
     {
       name: "Расписание",
-      descr: "Расписание кабинетов DOM'а",
-      items: [],
+      content: "Расписание кабинетов DOM'а",
     },
     {
       name: "Забронировать кабинет",
-      descr: "Забронировать кабинет",
-      items: [],
+      content: "Забронировать кабинет",
     },
     {
       name: "Личный кабинет",
-      descr: "Личный кабинет члена команды DOM'a",
       roles: [ROLES.PSYCHOLOGIST],
       items: [
         {
           name: "Клиенты",
-          descr: "",
-          from: MENU_DATA_TYPES.CLIENTS,
-          conversation: CONVERSATION_NAMES.CLIENT_DETAILS,
+          submenu: SUBMENU_TYPES.CLIENTS,
           options: { columns: 2 },
         },
         {
           name: "Добавить клиента",
-          descr: "",
-          items: [],
-          conversation: CONVERSATION_NAMES.ADD_CLIENT,
-        },
-        {
-          name: "Отметить сессию",
-          descr: "",
-          items: [],
-          conversation: CONVERSATION_NAMES.MARK_SESSION,
+          conversation: CONVERSATION_NAMES.CLIENT_ADD,
         },
       ],
     },
     {
       name: "О пространстве",
-      descr: "Описание",
-      items: [],
+      content: "Описание пространства",
     },
   ],
 }
