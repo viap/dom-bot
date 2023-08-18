@@ -19,7 +19,7 @@ import { ConversationResult } from "../types/conversationResult"
 
 export const addSession: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.ADD_THERAPY_SESSION
+    return CONVERSATION_NAMES.THERAPY_SESSION_ADD
   },
 
   getConversation(client: ClientDto, sessions: Array<TherapySessionDto>) {
@@ -150,7 +150,7 @@ export const addSession: BotConversation = {
       const parent = getClientMenuItem(client, resultSessions)
       return {
         parent,
-        goTo: "Клиенты", //parent.name,
+        goTo: parent.name,
         goToFromTheTop: true,
       }
     }

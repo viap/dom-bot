@@ -1,5 +1,5 @@
 import { Conversation } from "@grammyjs/conversations"
-import { deleteTherapySession } from "../../api/deleteTherapySession"
+import { deleteClient } from "../../api/deleteClient"
 import { ClientDto } from "../../common/dto/client.dto"
 import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { MyContext } from "../../common/types/myContext"
@@ -8,12 +8,12 @@ import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-export const DeleteSession: BotConversation = {
+export const DeleteClient: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.THERAPY_SESSION_DELETE
+    return CONVERSATION_NAMES.CLIENT_DELETE
   },
 
-  getConversation(client: ClientDto, session: TherapySessionDto) {
+  getConversation(client: ClientDto, sessions: Array<TherapySessionDto>) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
@@ -22,22 +22,21 @@ export const DeleteSession: BotConversation = {
 
       try {
         result = await conversation.external(async () => {
-          return await deleteTherapySession(ctx, session._id)
+          return await deleteClient(ctx, client.user._id)
         })
-        // result = await deleteTherapySession(ctx, session)
       } catch {
         result = false
       }
 
       if (result) {
-        await ctx.reply("*Сессия удалена*", ReplyMarkup.parseModeV2)
+        await ctx.reply("*Клиент удален*", ReplyMarkup.parseModeV2)
 
         return {
           goTo: "Клиенты",
           goToFromTheTop: true,
         }
       } else {
-        await ctx.reply("*Сессию удалить не удалось*", ReplyMarkup.parseModeV2)
+        await ctx.reply("*Клиента удалить не удалось*", ReplyMarkup.parseModeV2)
       }
     }
   },

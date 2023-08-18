@@ -37,7 +37,8 @@ export function getTherapySessionMenuItem(
 
   const deletionIsAvailable =
     Date.now() - session.timestamp < oneDayInMilliseconds
-  return {
+
+  const result = {
     name: "Сессия №" + index,
     content: getTextOfData(
       "",
@@ -58,16 +59,21 @@ export function getTherapySessionMenuItem(
         comission: "комиссия",
       }
     ),
-    roles,
     items: [
       deletionIsAvailable
         ? {
             name: "Удалить сессию",
             conversationProps,
-            conversation: CONVERSATION_NAMES.DELETE_THERAPY_SESSION,
+            conversation: CONVERSATION_NAMES.THERAPY_SESSION_DELETE,
           }
         : undefined,
     ].filter((item) => !!item),
     conversationProps,
   } as MenuBlockItemsProps
+
+  if (roles) {
+    result.roles = roles
+  }
+
+  return result
 }

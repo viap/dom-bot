@@ -1,14 +1,14 @@
-import { ROLES } from "../../../common/enums/roles.enum"
 import { getPsychologistClients } from "../../../api/getPsychologistClients"
 import { getTherapySessions } from "../../../api/getTherapySessions"
 import { ClientDto } from "../../../common/dto/client.dto"
+import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
+import { ROLES } from "../../../common/enums/roles.enum"
 import { MyContext } from "../../../common/types/myContext"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
-import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
-import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
 import { groupBy } from "../../../common/utils/groupBy"
+import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
+import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
 export async function loadClientsMenuItems(
   ctx: MyContext,
@@ -61,13 +61,13 @@ export function getClientMenuItem(
       {
         name: "Добавить сессию",
         conversationProps,
-        conversation: CONVERSATION_NAMES.ADD_THERAPY_SESSION,
+        conversation: CONVERSATION_NAMES.THERAPY_SESSION_ADD,
       },
       sessions.length > 0
         ? {
             name: "Список сессий",
             conversationProps,
-            conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_LIST,
+            conversation: CONVERSATION_NAMES.CLIENT_THERAPY_SESSIONS_LIST,
             submenu: SUBMENU_TYPES.THERAPY_SESSIONS,
             options: {
               columns: 2,

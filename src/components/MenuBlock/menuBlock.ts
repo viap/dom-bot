@@ -241,6 +241,11 @@ export class MenuBlock {
   }
 
   async printItemContent(item: MenuBlockItemsProps = this.current) {
+    await this.ctx.reply(
+      ReplyMarkup.escapeForParseModeV2(`[ ${item.name.toUpperCase()} ]`),
+      ReplyMarkup.parseModeV2
+    )
+
     if (item.content) {
       await this.ctx.reply(
         typeof item.content === "string"
@@ -251,17 +256,14 @@ export class MenuBlock {
     }
   }
 
-  async printCurrentItems() {
-    await this.ctx.reply(
-      ReplyMarkup.escapeForParseModeV2(
-        `[ ${this.current.name.toUpperCase()} ]`
-      ),
-      {
+  async showCurrentItems() {
+    if (this.currentItems.length) {
+      await this.ctx.reply(ReplyMarkup.escapeForParseModeV2(`[ ... ]`), {
         ...ReplyMarkup.keyboard(this.getKeyboard()),
         ...ReplyMarkup.oneTime,
         ...ReplyMarkup.parseModeV2,
-      }
-    )
+      })
+    }
   }
   async show(itemName?: string) {
     this.selectItem(itemName, true)
@@ -272,6 +274,22 @@ export class MenuBlock {
 
       await this.printItemContent()
 
+      try {
+        if (this.current.conversation) {
+          const botConversation = BotConversations.getByName(
+            this.current.conversation
+          )
+          if (botConversation) {
+            await this.showConversation(botConversation)
+            continue
+          }
+        }
+      } catch (e) {
+        this.conversation.log("Произошла ошибка в conversation", e)
+      } finally {
+        keepGoing = true
+      }
+
       if (this.current.submenu) {
         this.currentItems = await this.conversation.external(async () => {
           return this.current.submenu
@@ -280,11 +298,17 @@ export class MenuBlock {
         })
       }
 
-      if (!this.currentItems.length) {
+      if (!this.currentItems.length && this.parentName) {
         this.selectItem(this.parentName, true)
+        continue
       }
 
-      await this.printCurrentItems()
+      if (!this.currentItems.length) {
+        keepGoing = false
+        break
+      }
+
+      await this.showCurrentItems()
 
       this.ctx = await this.conversation.waitFor("message:text")
       const text = this.ctx.msg?.text || ""
@@ -299,21 +323,6 @@ export class MenuBlock {
       //   "conversationProps",
       //   JSON.stringify(this.current.conversationProps)
       // )
-
-      try {
-        if (this.current.conversation) {
-          const botConversation = BotConversations.getByName(
-            this.current.conversation
-          )
-          if (botConversation) {
-            await this.showConversation(botConversation)
-          }
-        }
-      } catch (e) {
-        this.conversation.log("Произошла ошибка", e)
-      } finally {
-        keepGoing = true
-      }
     } while (keepGoing)
   }
 

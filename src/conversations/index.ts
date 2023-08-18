@@ -4,6 +4,7 @@ import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 import { addSession } from "./psychologist/addSession"
 import { DeleteSession } from "./psychologist/deleteSession"
 import { EditClient } from "./psychologist/editClient"
+import { DeleteClient } from "./psychologist/deleteClient"
 // import { QuizProgress } from "./quizProgress"
 import { MiddlewareFn } from "grammy"
 import { MyContext } from "../common/types/myContext"
@@ -20,6 +21,7 @@ export const BotConversations = {
       SelectQiuz,
       SelectMenuItem,
       EditClient,
+      DeleteClient,
       addSession,
       DeleteSession,
     ]
