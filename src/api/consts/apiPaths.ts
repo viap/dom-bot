@@ -1,23 +1,56 @@
-export const API_PATHS = {
+import { ApiPaths } from "../type/apiPaths"
+
+export const API_PATHS: ApiPaths = {
   auth: {
-    checkToken: "/auth/check-token",
-    loginByTelegram: "/auth/login/telegram",
+    GET: {
+      loginByTelegram: "/auth/login/telegram",
+      checkToken: "/auth/check-token",
+    },
+    POST: {},
+    PUT: {},
+    DELETE: {},
   },
   users: {
-    all: "/users",
-    me: "/users/me",
-    one: "/users/:id",
+    GET: {
+      all: "/users",
+      one: "/users/:userId",
+    },
+    POST: {},
+    PUT: {},
+    DELETE: {},
   },
   psychologists: {
-    all: "/psychologists",
-    me: "/psychologists/me",
-    one: "/psychologists/:id",
-    myClients: "/psychologists/me/clients",
-    addMyNewClient: "/psychologists/me/add-new-client",
+    GET: {
+      all: "/psychologists",
+      one: "/psychologists/:psychologistId",
+      clients: "/psychologists/:psychologistId/clients",
+    },
+    POST: {
+      newClient: "/psychologists/:psychologistId/add-new-client",
+    },
+    PUT: {
+      editClient: "/psychologists/:psychologistId/edit-client/:userId",
+    },
+    DELETE: {
+      one: "/psychologists/:psychologistId",
+      client: "/psychologists/:psychologistId/delete-client/:userId",
+    },
   },
   therapySessions: {
-    all: "/therapy-sessions",
-    my: "/therapy-sessions/my",
-    one: "/therapy-sessions/:id",
+    GET: {
+      all: "/therapy-sessions",
+      one: "/therapy-sessions/:therapySessionId",
+      forPsychologist: "/therapy-sessions/psychologist/:psychologistId",
+      forPsychologistWithClient:
+        "/therapy-sessions/psychologist/:psychologistId/client/:userId",
+    },
+    POST: {
+      create: "/therapy-sessions",
+      createForPsychologist: "/therapy-sessions/:psychologistId",
+    },
+    PUT: {},
+    DELETE: {
+      one: "/therapy-sessions/:therapySessionId",
+    },
   },
 }

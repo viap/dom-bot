@@ -1,4 +1,4 @@
-import { MyContext } from "../types/myContext"
+import { MyContext } from "../common/types/myContext"
 import { postRequest } from "./common/postRequest"
 import { API_PATHS } from "./consts/apiPaths"
 import { LoginByTelegramDto } from "./dto/loginByTelegram.dto"
@@ -14,7 +14,7 @@ export async function loginByTelegram(
 
   return postRequest<LoginByTelegramDto>(
     ctx,
-    API_PATHS.auth.loginByTelegram,
+    API_PATHS.auth.GET.loginByTelegram,
     undefined,
     {
       apiClient: {

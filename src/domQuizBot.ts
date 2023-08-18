@@ -11,10 +11,10 @@ import { BOT_TEXTS } from "./common/enums/botTexts.enum"
 import { BotConversations } from "./conversations"
 import { CONVERSATION_NAMES } from "./conversations/enums/conversationNames.enum"
 
+import { MyContext } from "./common/types/myContext"
+import { SessionData } from "./common/types/sessionData"
 import { ReplyMarkup } from "./common/utils/replyMarkup"
 import { DbConnection, getSessions } from "./services/db/connectDB"
-import { MyContext } from "./types/myContext"
-import { SessionData } from "./types/sessionData"
 
 import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
 

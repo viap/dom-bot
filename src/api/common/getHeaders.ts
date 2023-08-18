@@ -1,5 +1,5 @@
 import { AxiosHeaders, AxiosRequestConfig } from "axios"
-import { MyContext } from "../../types/myContext"
+import { MyContext } from "../../common/types/myContext"
 
 export function getHeaders(
   ctx: MyContext,
