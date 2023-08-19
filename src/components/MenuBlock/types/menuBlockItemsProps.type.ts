@@ -5,11 +5,12 @@ import { MenuBlockOptions } from "./menuBlockOptions.type"
 
 export type MenuBlockItemsProps = {
   name: string
+  parent?: MenuBlockItemsProps
   content?: string | ((...props: Array<unknown>) => string)
   roles?: Array<ROLES>
   options?: Partial<MenuBlockOptions>
   items?: Array<MenuBlockItemsProps>
   submenu?: SUBMENU_TYPES
   conversation?: CONVERSATION_NAMES
-  conversationProps?: Array<unknown>
+  props?: Array<unknown>
 }

@@ -8,7 +8,6 @@ import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enum"
 import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
 import { Form } from "../../components/Form/form"
-import { getClientMenuItem } from "../../components/MenuBlock/submenus/getClientsMenuItems"
 import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
@@ -22,7 +21,7 @@ export const EditClient: BotConversation = {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
-    ): Promise<ConversationResult> => {
+    ): Promise<ConversationResult | undefined> => {
       const inputs = [
         {
           name: "descr",
@@ -37,7 +36,7 @@ export const EditClient: BotConversation = {
 
       const clientResult = { ...client }
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
-        let result
+        let result = false
         try {
           result = await conversation.external(async () => {
             return await editClient(ctx, client.user._id, {
@@ -57,10 +56,12 @@ export const EditClient: BotConversation = {
             )
           }
         }
-      }
 
-      return {
-        parent: getClientMenuItem(clientResult, sessions),
+        return result
+          ? {
+              stepsBack: 2,
+            }
+          : undefined
       }
     }
   },

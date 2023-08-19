@@ -26,18 +26,22 @@ export const DeleteClient: BotConversation = {
         })
       } catch {
         result = false
-      }
-
-      if (result) {
-        await ctx.reply("*Клиент удален*", ReplyMarkup.parseModeV2)
-
-        return {
-          goTo: "Клиенты",
-          goToFromTheTop: true,
+      } finally {
+        if (result) {
+          await ctx.reply("*Клиент удален*", ReplyMarkup.parseModeV2)
+        } else {
+          await ctx.reply(
+            "*Клиента удалить не удалось*",
+            ReplyMarkup.parseModeV2
+          )
         }
-      } else {
-        await ctx.reply("*Клиента удалить не удалось*", ReplyMarkup.parseModeV2)
       }
+
+      return result
+        ? {
+            stepsBack: 2,
+          }
+        : undefined
     }
   },
 }

@@ -24,21 +24,24 @@ export const DeleteSession: BotConversation = {
         result = await conversation.external(async () => {
           return await deleteTherapySession(ctx, session._id)
         })
-        // result = await deleteTherapySession(ctx, session)
       } catch {
         result = false
-      }
-
-      if (result) {
-        await ctx.reply("*Сессия удалена*", ReplyMarkup.parseModeV2)
-
-        return {
-          goTo: "Клиенты",
-          goToFromTheTop: true,
+      } finally {
+        if (result) {
+          await ctx.reply("*Сессия удалена*", ReplyMarkup.parseModeV2)
+        } else {
+          await ctx.reply(
+            "*Сессию удалить не удалось*",
+            ReplyMarkup.parseModeV2
+          )
         }
-      } else {
-        await ctx.reply("*Сессию удалить не удалось*", ReplyMarkup.parseModeV2)
       }
+
+      return result
+        ? {
+            stepsBack: 2,
+          }
+        : undefined
     }
   },
 }

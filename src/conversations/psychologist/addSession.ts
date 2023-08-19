@@ -2,6 +2,7 @@ import { Conversation } from "@grammyjs/conversations"
 import { addTherapySession } from "../../api/addTherapySession"
 import { currentUserAlias } from "../../common/consts/currentUserAlias"
 import { numberOfCommissionHours } from "../../common/consts/numberOfCommissionHours"
+import { therapySessionDurations } from "../../common/consts/therapySessionDurations"
 import { ClientDto } from "../../common/dto/client.dto"
 import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
@@ -12,7 +13,6 @@ import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enu
 import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
 import { Form } from "../../components/Form/form"
 import { FormInputProps } from "../../components/Form/types/formInputProps"
-import { getClientMenuItem } from "../../components/MenuBlock/submenus/getClientsMenuItems"
 import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
@@ -26,7 +26,7 @@ export const addSession: BotConversation = {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
-    ): Promise<ConversationResult> => {
+    ): Promise<ConversationResult | undefined> => {
       // NOTICE: duration in minutes
       const hoursSpent =
         sessions.reduce((acc, session) => {
@@ -50,11 +50,7 @@ export const addSession: BotConversation = {
           name: "duration",
           alias: "Продолжительность",
           type: FORM_INPUT_TYPES.SELECT,
-          values: [
-            { text: "один час", value: 60 },
-            { text: "полтора часа", value: 90 },
-            { text: "два часа", value: 120 },
-          ],
+          values: therapySessionDurations,
         },
         {
           name: "priceCurrency",
@@ -103,7 +99,7 @@ export const addSession: BotConversation = {
         try {
           result = await conversation.external(async () => {
             const session = await addTherapySession(ctx, {
-              date: new Date().toLocaleDateString(),
+              date: new Date().toLocaleDateString("ge"),
               psychologist: currentUserAlias,
               client: client.user._id,
               duration: formResult.data.duration,
@@ -136,22 +132,15 @@ export const addSession: BotConversation = {
             )
           }
         }
-      }
 
-      // conversation.log("resultSessions", resultSessions.length)
-      // conversation.log("client", client)
-      // conversation.log(
-      //   "getClientMenuItem(client, resultSessions)",
-      //   getClientMenuItem(client, resultSessions)
-      // )
-
-      // FIXME: goto => parent.name makes some problem
-      // on click "Список сессий" menu goes to the top because it can't find required item in current
-      const parent = getClientMenuItem(client, resultSessions)
-      return {
-        parent,
-        goTo: parent.name,
-        goToFromTheTop: true,
+        return result
+          ? {
+              stepsBack: 2,
+            }
+          : // {
+            //   parentProps: [client, resultSessions],
+            // }
+            undefined
       }
     }
   },

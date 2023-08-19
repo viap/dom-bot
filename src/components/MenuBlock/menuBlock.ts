@@ -12,8 +12,14 @@ import { BotConversations } from "../../conversations/index"
 import { ConversationResult } from "../../conversations/types/conversationResult"
 import { defaultRoles } from "./consts/defaultRoles"
 import { SUBMENU_TYPES } from "./enums/submenuTypes.enum"
-import { loadClientsMenuItems } from "./submenus/getClientsMenuItems"
-import { loadTherapySessionsMenuItems } from "./submenus/getTherapySessionsMenuItems"
+import {
+  getClientMenuItem,
+  loadClientsMenuItems,
+} from "./submenus/getClientsMenuItems"
+import {
+  getTherapySessionMenuItem,
+  loadTherapySessionsMenuItems,
+} from "./submenus/getTherapySessionsMenuItems"
 import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
@@ -28,11 +34,8 @@ const defaultOptions: MenuBlockOptions = {
   withNavigationButtons: true,
   columns: 1,
 }
-
 export class MenuBlock {
   private current: MenuBlockItemsProps
-  private parent?: MenuBlockItemsProps
-
   private menu: MenuBlockItemsProps
 
   private options: MenuBlockOptions = defaultOptions
@@ -50,10 +53,17 @@ export class MenuBlock {
     options?: Partial<MenuBlockOptions>
   ) {
     let preparedMenu = { ...menu }
-    preparedMenu = this.getMenuWithRoles(preparedMenu)
-    preparedMenu = this.getMenuFilteredByRoles(preparedMenu)
+    // preparedMenu = MenuBlock.getMenuWithRoles(preparedMenu)
+    preparedMenu = MenuBlock.getPreparedMenu(preparedMenu)
+    preparedMenu = MenuBlock.getMenuFilteredByRoles(
+      preparedMenu,
+      user.roles.length ? user.roles : undefined
+    )
 
     this.menu = preparedMenu
+
+    // this.conversation.log("MENU", JSON.stringify(this.menu))
+
     this.current = this.menu
     this.options = Object.assign(
       {},
@@ -65,55 +75,35 @@ export class MenuBlock {
     this.setDefaultItemsParams()
   }
 
-  getCurrent(): MenuBlockItemsProps {
-    return this.current
-  }
-
-  getParent(): MenuBlockItemsProps | undefined {
-    return this.parent
-  }
-
-  set currentItems(items: Array<MenuBlockItemsProps>) {
-    this.current.items = items
-  }
-
-  get currentItems() {
-    return this.current.items || []
-  }
-
-  get parentName(): string | undefined {
-    return this.parent ? this.parent.name : undefined
-  }
-
-  get currentOptions(): MenuBlockOptions {
-    return this.current.options
-      ? Object.assign({}, this.options, this.current.options)
-      : this.options
-  }
-
-  private getMenuWithRoles(
+  static getPreparedMenu(
     item: MenuBlockItemsProps,
+    parent?: MenuBlockItemsProps,
     roles: Array<ROLES> = defaultRoles
   ) {
-    const menu = { ...item }
-    menu.roles = menu.roles || roles
-    if (menu.items) {
-      menu.items.map((item) => {
-        this.getMenuWithRoles(item, item.roles || menu.roles)
-      })
-    }
+    const menu = { ...item, parent }
+    menu.roles = menu.roles || parent?.roles || roles
+
+    const items = menu.items
+      ? menu.items.map((item) => {
+          return this.getPreparedMenu(item, menu, item.roles || menu.roles)
+        })
+      : []
+    menu.items = items
 
     return menu
   }
 
-  private getMenuFilteredByRoles(item?: MenuBlockItemsProps) {
-    const menu = { ...(item || this.menu) }
+  static getMenuFilteredByRoles(
+    item: MenuBlockItemsProps,
+    availableRoles: Array<ROLES> = defaultRoles
+  ) {
+    const menu = { ...item }
     const items = menu.items || []
     const menuRoles = menu.roles || []
 
     menu.items = items.filter((item) => {
       return (item.roles || menuRoles).find((role) =>
-        this.user.roles.includes(role)
+        availableRoles.includes(role)
       )
     })
 
@@ -124,45 +114,18 @@ export class MenuBlock {
     return menu
   }
 
-  private setDefaultItemsParams() {
-    this.itemsParams.pageNumber = defaultItemsParams.pageNumber
-    this.itemsParams.pagesCount = defaultItemsParams.pagesCount
+  set currentItems(items: Array<MenuBlockItemsProps>) {
+    this.current.items = items
   }
 
-  private updateItemsParams() {
-    this.itemsParams.pagesCount = Math.ceil(
-      this.currentItems.length / this.currentOptions.maxItemsOnScreen
-    )
-
-    this.itemsParams.pageNumber =
-      this.itemsParams.pageNumber >= 0 &&
-      this.itemsParams.pageNumber < this.itemsParams.pagesCount
-        ? this.itemsParams.pageNumber
-        : 0
+  get currentItems() {
+    return this.current.items || []
   }
 
-  private findItemAndParent(
-    itemName?: string,
-    item?: MenuBlockItemsProps,
-    ancestor?: MenuBlockItemsProps
-  ):
-    | { item: MenuBlockItemsProps; parent: MenuBlockItemsProps | undefined }
-    | undefined {
-    const menu = item || this.menu
-    const parent = ancestor || undefined
-
-    if (menu.name === itemName || !itemName) {
-      return { item: menu, parent }
-    } else {
-      let result = undefined
-
-      ;(menu.items || []).find((child) => {
-        result = this.findItemAndParent(itemName, child, menu)
-        return !!result
-      })
-
-      return result
-    }
+  get currentOptions(): MenuBlockOptions {
+    return this.current.options
+      ? Object.assign({}, this.options, this.current.options)
+      : this.options
   }
 
   private get navigationKeyboard(): Keyboard {
@@ -203,6 +166,41 @@ export class MenuBlock {
     return bottomButtonsKeyboard
   }
 
+  private setDefaultItemsParams() {
+    this.itemsParams.pageNumber = defaultItemsParams.pageNumber
+    this.itemsParams.pagesCount = defaultItemsParams.pagesCount
+  }
+
+  private updateItemsParams() {
+    this.itemsParams.pagesCount = Math.ceil(
+      this.currentItems.length / this.currentOptions.maxItemsOnScreen
+    )
+
+    this.itemsParams.pageNumber =
+      this.itemsParams.pageNumber >= 0 &&
+      this.itemsParams.pageNumber < this.itemsParams.pagesCount
+        ? this.itemsParams.pageNumber
+        : 0
+  }
+
+  private findItem(
+    itemName?: string,
+    item?: MenuBlockItemsProps,
+    direction: "up" | "down" = "down"
+  ): MenuBlockItemsProps | undefined {
+    const menu = item || this.menu
+
+    if (menu.name === itemName || !itemName) {
+      return menu
+    } else if (direction === "down") {
+      return (menu.items || []).find((child) => {
+        return this.findItem(itemName, child, direction)
+      })
+    } else if (direction === "up" && menu.parent) {
+      return this.findItem(itemName, menu.parent, direction)
+    }
+  }
+
   private async makeAction(text: string) {
     switch (text) {
       case ACTION_BUTTON_TEXTS.NEXT:
@@ -212,12 +210,16 @@ export class MenuBlock {
         this.prevPage()
         break
       case ACTION_BUTTON_TEXTS.BACK:
-        this.selectItem(this.parentName, true)
+        this.selectParent()
         break
       case ACTION_BUTTON_TEXTS.MAIN_MENU:
         this.selectRoot()
         break
       default:
+        this.conversation.log(
+          "****************************************** 1",
+          this.current
+        )
         this.selectItem(text)
         break
     }
@@ -233,10 +235,29 @@ export class MenuBlock {
         return await loadTherapySessionsMenuItems(
           this.ctx,
           this.current,
-          this.current.conversationProps as [ClientDto, TherapySessionDto[]]
+          this.current.props as [ClientDto, TherapySessionDto[]]
         )
       default:
         return []
+    }
+  }
+
+  private getSubmenuItem(
+    submenuType: SUBMENU_TYPES,
+    parent: MenuBlockItemsProps,
+    props: Array<unknown> = []
+  ): MenuBlockItemsProps {
+    switch (submenuType) {
+      case SUBMENU_TYPES.CLIENTS:
+        return getClientMenuItem(
+          parent,
+          ...(props as [ClientDto, Array<TherapySessionDto>])
+        )
+      case SUBMENU_TYPES.THERAPY_SESSIONS:
+        return getTherapySessionMenuItem(
+          parent,
+          ...(props as [ClientDto, TherapySessionDto])
+        )
     }
   }
 
@@ -250,7 +271,7 @@ export class MenuBlock {
       await this.ctx.reply(
         typeof item.content === "string"
           ? item.content
-          : item.content(...(item.conversationProps || [])),
+          : item.content(...(item.props || [])),
         ReplyMarkup.parseModeV2
       )
     }
@@ -270,8 +291,6 @@ export class MenuBlock {
 
     let keepGoing = true
     do {
-      console.log("SHOW(CURRENT)", this.current)
-
       await this.printItemContent()
 
       try {
@@ -298,8 +317,8 @@ export class MenuBlock {
         })
       }
 
-      if (!this.currentItems.length && this.parentName) {
-        this.selectItem(this.parentName, true)
+      if (!this.currentItems.length && this.current.parent) {
+        this.selectParent()
         continue
       }
 
@@ -314,15 +333,6 @@ export class MenuBlock {
       const text = this.ctx.msg?.text || ""
 
       this.makeAction(text)
-
-      // this.conversation.log("------------------------------")
-      // this.conversation.log("text", text)
-      // this.conversation.log("current", this.current)
-      // this.conversation.log("parent", this.parent)
-      // this.conversation.log(
-      //   "conversationProps",
-      //   JSON.stringify(this.current.conversationProps)
-      // )
     } while (keepGoing)
   }
 
@@ -332,17 +342,23 @@ export class MenuBlock {
         "\r\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\n"
       )
     }
-    const tab = "   "
-    this.conversation.log(new Array(depth).fill(tab).join("") + curItem.name)
+    const isCurrent =
+      curItem.name === this.current.name &&
+      curItem.parent?.name === this.current.parent?.name
+    const tab = isCurrent ? "---" : "   "
+    this.conversation.log(
+      new Array(depth).fill(tab).join("") +
+        (curItem.parent ? `[ ${curItem.parent.name} ] => ` : "") +
+        curItem.name +
+        ` < ${(curItem.roles || []).join(" | ")} >`
+    )
     ;(curItem.items || []).forEach((item) => {
       this.printMenuStructure(item, depth + 1)
     })
   }
 
   private async showConversation(botConversation: BotConversation) {
-    const props = this.current.conversationProps
-      ? this.current.conversationProps
-      : []
+    const props = this.current.props || []
 
     const conversationResult = (await botConversation.getConversation(...props)(
       this.conversation,
@@ -352,85 +368,121 @@ export class MenuBlock {
     this.conversation.log("conversationResult", conversationResult)
 
     if (conversationResult) {
+      // -------------------------- Might need to be removed:start --------------------------------- //
       if (conversationResult.current) {
         Object.assign(this.current, conversationResult.current)
         this.conversation.log("UPDATE_CURRENT", this.current)
       }
 
       if (conversationResult.currentProps) {
-        Object.assign(this.current, {
-          conversationProps: conversationResult.currentProps,
-        })
-        this.conversation.log("UPDATE_PARENT_PROPS", this.parent)
+        this.conversation.log("UPDATE_CURRENT_PROPS:before", this.current)
+        this.current = this.updateItemByProps(
+          this.current,
+          conversationResult.currentProps
+        )
+        this.conversation.log("UPDATE_CURRENT_PROPS:after", this.current)
       }
 
-      if (this.parent) {
+      if (this.current.parent) {
         if (conversationResult.parent) {
-          Object.assign(this.parent, conversationResult.parent)
-          this.conversation.log("UPDATE_CURRENT", this.current)
+          this.conversation.log("UPDATE_PARENT:before", this.current.parent)
+          Object.assign(this.current.parent, conversationResult.parent)
+          this.conversation.log("UPDATE_PARENT:after", this.current.parent)
         }
 
         if (conversationResult.parentProps) {
-          Object.assign(this.parent, {
-            conversationProps: conversationResult.parentProps,
+          this.conversation.log(
+            "UPDATE_PARENT_PROPS:before",
+            this.current.parent
+          )
+
+          // NOTICE: something going wrong after assign NAME prop
+          // conversation stuck on waitFor step and nothing happens
+          Object.assign(this.current.parent, {
+            ...this.updateItemByProps(
+              this.current.parent,
+              conversationResult.parentProps
+            ),
           })
-          this.conversation.log("UPDATE_PARENT_PROPS", this.parent)
+
+          this.conversation.log(
+            "UPDATE_PARENT_PROPS:after",
+            this.current.parent
+          )
         }
       }
+      // -------------------------- Might need to be removed:end --------------------------------- //
 
-      if (conversationResult.goTo) {
+      if (conversationResult.stepsBack) {
+        const item = this.getItemOnStepsBack(conversationResult.stepsBack)
+        if (item) {
+          this.selectItem(item.name, false, "up")
+          return
+        }
+      } else if (conversationResult.goTo) {
         this.selectItem(
           conversationResult.goTo,
-          conversationResult.goToFromTheTop
+          conversationResult.goToFromTheTop,
+          conversationResult.goToDirection
         )
+        return
       }
+    }
+
+    this.selectParent()
+  }
+
+  private updateItemByProps(item: MenuBlockItemsProps, props: Array<unknown>) {
+    if (item.parent?.submenu) {
+      return this.getSubmenuItem(item.parent.submenu, item.parent, props)
+    } else {
+      return { ...item, props }
     }
   }
 
+  getItemOnStepsBack(
+    steps = 1,
+    item: MenuBlockItemsProps = this.current
+  ): MenuBlockItemsProps | undefined {
+    if (steps > 0) {
+      return item.parent
+        ? this.getItemOnStepsBack(steps - 1, item.parent)
+        : undefined
+    } else {
+      return item
+    }
+  }
   selectRoot() {
     return this.selectItem(undefined, true)
   }
 
-  selectItem(itemName?: string, fromTheTop = false) {
-    this.conversation.log("SelectItem", itemName, fromTheTop)
-    this.conversation.log("Current", this.current.name)
+  selectParent() {
+    if (this.current.parent) {
+      this.current = this.current.parent
+    }
+  }
+  selectItem(
+    itemName?: string,
+    fromTheTop = false,
+    direction: "up" | "down" = "down"
+  ) {
+    this.conversation.log("PARAMS", itemName, fromTheTop, direction)
+    this.conversation.log("Current", this.current)
+
+    const resultDirection = fromTheTop ? "down" : direction
+    const item = fromTheTop ? this.menu : this.current
+
+    const result = this.findItem(itemName, item, resultDirection)
+    this.current = result ? result : this.menu
+
     this.conversation.log(
-      "CurrentItems",
-      this.currentItems.map((item) => item.name).join("|")
+      "result",
+      this.current.name,
+      this.current.parent?.name
     )
     this.printMenuStructure()
 
-    const item = fromTheTop ? this.menu : this.current
-    const parent = fromTheTop ? undefined : this.parent
-
-    this.printMenuStructure(item)
-
-    const result = this.findItemAndParent(itemName, item, parent)
-
-    this.conversation.log(
-      "FIND: ",
-      itemName + " in " + item.name + "(" + parent?.name + ")"
-    )
-    if (result) {
-      this.conversation.log(
-        "UPDATE current",
-        this.current.name + " => " + result.item.name
-      )
-    } else {
-      this.conversation.log("Empty result for")
-    }
-
-    if (result) {
-      this.current = result.item
-      this.parent = result.parent
-    } else {
-      this.parent = undefined
-      this.current = this.menu
-    }
-
     this.setDefaultItemsParams()
-
-    this.conversation.log("CURRENT", this.current)
   }
 
   nextPage() {

@@ -2,7 +2,6 @@ import { getPsychologistClients } from "../../../api/getPsychologistClients"
 import { getTherapySessions } from "../../../api/getTherapySessions"
 import { ClientDto } from "../../../common/dto/client.dto"
 import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
-import { ROLES } from "../../../common/enums/roles.enum"
 import { MyContext } from "../../../common/types/myContext"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { groupBy } from "../../../common/utils/groupBy"
@@ -18,15 +17,16 @@ export async function loadClientsMenuItems(
     await getTherapySessions(ctx),
     (ts: TherapySessionDto) => ts.client._id
   )
+
   const menuItems: Array<MenuBlockItemsProps> = (
     await getPsychologistClients(ctx)
   )
     .reverse()
     .map((client) =>
       getClientMenuItem(
+        current,
         client,
-        therapySessionsByClient[client.user._id],
-        current.roles
+        therapySessionsByClient[client.user._id]
       )
     )
 
@@ -34,20 +34,15 @@ export async function loadClientsMenuItems(
 }
 
 export function getClientMenuItem(
+  parent: MenuBlockItemsProps,
   client: ClientDto,
-  sessions: Array<TherapySessionDto> = [],
-  roles?: Array<ROLES>
+  sessions: Array<TherapySessionDto> = []
 ): MenuBlockItemsProps {
-  const conversationProps = [client, sessions]
+  const props = [client, sessions]
   const result = {
     name: client.user.name + " | " + sessions.length,
-    // content: (clientData: ClientDto) => {
-    //   return getTextOfData(
-    //     "Клиент",
-    //     { name: clientData.user.name, descr: clientData.descr },
-    //     { name: "Имя", descr: "Описание" }
-    //   )
-    // },
+    parent,
+    roles: parent?.roles,
     content: getTextOfData(
       "Клиент",
       {
@@ -57,42 +52,44 @@ export function getClientMenuItem(
       },
       { name: "Имя", descr: "Описание", sessionsCount: "Количество сессий" }
     ),
-    items: [
-      {
-        name: "Добавить сессию",
-        conversationProps,
-        conversation: CONVERSATION_NAMES.THERAPY_SESSION_ADD,
-      },
-      sessions.length > 0
-        ? {
-            name: "Список сессий",
-            conversationProps,
-            conversation: CONVERSATION_NAMES.CLIENT_THERAPY_SESSIONS_LIST,
-            submenu: SUBMENU_TYPES.THERAPY_SESSIONS,
-            options: {
-              columns: 2,
-            },
-          }
-        : undefined,
-      {
-        name: "Редактировать описание",
-        conversationProps,
-        conversation: CONVERSATION_NAMES.CLIENT_EDIT,
-      },
-      sessions.length === 0
-        ? {
-            name: "Удалить",
-            conversationProps,
-            conversation: CONVERSATION_NAMES.CLIENT_DELETE,
-          }
-        : undefined,
-    ].filter((item) => !!item),
-    conversationProps,
+    props: props,
   } as MenuBlockItemsProps
 
-  if (roles) {
-    result.roles = roles
-  }
+  result.items = [
+    {
+      name: "Добавить сессию",
+      conversation: CONVERSATION_NAMES.THERAPY_SESSION_ADD,
+    },
+    sessions.length > 0
+      ? {
+          name: "Список сессий",
+          conversation: CONVERSATION_NAMES.CLIENT_THERAPY_SESSIONS_LIST,
+          submenu: SUBMENU_TYPES.THERAPY_SESSIONS,
+          options: {
+            columns: 2,
+          },
+        }
+      : undefined,
+    {
+      name: "Редактировать описание",
+      conversation: CONVERSATION_NAMES.CLIENT_EDIT,
+    },
+    sessions.length === 0
+      ? {
+          name: "Удалить",
+          conversation: CONVERSATION_NAMES.CLIENT_DELETE,
+        }
+      : undefined,
+  ]
+    .filter((item) => !!item)
+    .map((item) => {
+      return {
+        ...item,
+        parent: result,
+        roles: result?.roles,
+        props,
+      }
+    }) as Array<MenuBlockItemsProps>
 
   return result
 }
