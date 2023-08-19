@@ -1,8 +1,8 @@
 import { createConversation } from "@grammyjs/conversations"
 import { AddClient } from "./psychologist/addClient"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
-import { addSession } from "./psychologist/addSession"
-import { DeleteSession } from "./psychologist/deleteSession"
+import { AddTherapySession } from "./psychologist/addTherapySession"
+import { DeleteTherapySession } from "./psychologist/deleteTherapySession"
 import { EditClient } from "./psychologist/editClient"
 import { DeleteClient } from "./psychologist/deleteClient"
 // import { QuizProgress } from "./quizProgress"
@@ -22,8 +22,8 @@ export const BotConversations = {
       SelectMenuItem,
       EditClient,
       DeleteClient,
-      addSession,
-      DeleteSession,
+      AddTherapySession,
+      DeleteTherapySession,
     ]
   },
 

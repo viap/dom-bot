@@ -17,7 +17,7 @@ import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-export const addSession: BotConversation = {
+export const AddTherapySession: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.THERAPY_SESSION_ADD
   },
