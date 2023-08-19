@@ -369,48 +369,48 @@ export class MenuBlock {
 
     if (conversationResult) {
       // -------------------------- Might need to be removed:start --------------------------------- //
-      if (conversationResult.current) {
-        Object.assign(this.current, conversationResult.current)
-        this.conversation.log("UPDATE_CURRENT", this.current)
-      }
+      // if (conversationResult.current) {
+      //   Object.assign(this.current, conversationResult.current)
+      //   this.conversation.log("UPDATE_CURRENT", this.current)
+      // }
 
-      if (conversationResult.currentProps) {
-        this.conversation.log("UPDATE_CURRENT_PROPS:before", this.current)
-        this.current = this.updateItemByProps(
-          this.current,
-          conversationResult.currentProps
-        )
-        this.conversation.log("UPDATE_CURRENT_PROPS:after", this.current)
-      }
+      // if (conversationResult.currentProps) {
+      //   this.conversation.log("UPDATE_CURRENT_PROPS:before", this.current)
+      //   this.current = this.updateItemByProps(
+      //     this.current,
+      //     conversationResult.currentProps
+      //   )
+      //   this.conversation.log("UPDATE_CURRENT_PROPS:after", this.current)
+      // }
 
-      if (this.current.parent) {
-        if (conversationResult.parent) {
-          this.conversation.log("UPDATE_PARENT:before", this.current.parent)
-          Object.assign(this.current.parent, conversationResult.parent)
-          this.conversation.log("UPDATE_PARENT:after", this.current.parent)
-        }
+      // if (this.current.parent) {
+      //   if (conversationResult.parent) {
+      //     this.conversation.log("UPDATE_PARENT:before", this.current.parent)
+      //     Object.assign(this.current.parent, conversationResult.parent)
+      //     this.conversation.log("UPDATE_PARENT:after", this.current.parent)
+      //   }
 
-        if (conversationResult.parentProps) {
-          this.conversation.log(
-            "UPDATE_PARENT_PROPS:before",
-            this.current.parent
-          )
+      //   if (conversationResult.parentProps) {
+      //     this.conversation.log(
+      //       "UPDATE_PARENT_PROPS:before",
+      //       this.current.parent
+      //     )
 
-          // NOTICE: something going wrong after assign NAME prop
-          // conversation stuck on waitFor step and nothing happens
-          Object.assign(this.current.parent, {
-            ...this.updateItemByProps(
-              this.current.parent,
-              conversationResult.parentProps
-            ),
-          })
+      //     // NOTICE: something going wrong after assign NAME prop
+      //     // conversation stuck on waitFor step and nothing happens
+      //     Object.assign(this.current.parent, {
+      //       ...this.updateItemByProps(
+      //         this.current.parent,
+      //         conversationResult.parentProps
+      //       ),
+      //     })
 
-          this.conversation.log(
-            "UPDATE_PARENT_PROPS:after",
-            this.current.parent
-          )
-        }
-      }
+      //     this.conversation.log(
+      //       "UPDATE_PARENT_PROPS:after",
+      //       this.current.parent
+      //     )
+      //   }
+      // }
       // -------------------------- Might need to be removed:end --------------------------------- //
 
       if (conversationResult.stepsBack) {

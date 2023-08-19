@@ -39,7 +39,7 @@ export const DeleteSession: BotConversation = {
 
       return result
         ? {
-            stepsBack: 2,
+            stepsBack: 4,
           }
         : undefined
     }

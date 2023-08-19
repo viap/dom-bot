@@ -136,11 +136,9 @@ export const addSession: BotConversation = {
         return result
           ? {
               stepsBack: 2,
+              // parentProps: [client, resultSessions],
             }
-          : // {
-            //   parentProps: [client, resultSessions],
-            // }
-            undefined
+          : undefined
       }
     }
   },

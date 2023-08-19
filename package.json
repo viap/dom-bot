@@ -14,7 +14,7 @@
     "copy-env-prod": "cp ./src/config/.env.prod ./dist/config/.env",
     "build": "yarn tsc && yarn copy-env-dev && yarn copy-assets",
     "build-prod": "yarn tsc && yarn copy-env-prod && yarn copy-assets",
-    "start": "node --es-module-specifier-resolution=node dist/index.js",
+    "start": "node --inspect --es-module-specifier-resolution=node dist/index.js",
     "restart": "yarn build && yarn start"
   },
   "author": "",
