@@ -20,6 +20,10 @@ import {
   getTherapySessionMenuItem,
   loadTherapySessionsMenuItems,
 } from "./submenus/getTherapySessionsMenuItems"
+import {
+  loadUsersMenuItems,
+  getUserMenuItem,
+} from "./submenus/getUsersMenuItems"
 import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
@@ -237,6 +241,8 @@ export class MenuBlock {
           this.current,
           this.current.props as [ClientDto, TherapySessionDto[]]
         )
+      case SUBMENU_TYPES.USERS:
+        return await loadUsersMenuItems(this.ctx, this.current)
       default:
         return []
     }
@@ -258,6 +264,9 @@ export class MenuBlock {
           parent,
           ...(props as [ClientDto, TherapySessionDto])
         )
+
+      case SUBMENU_TYPES.USERS:
+        return getUserMenuItem(parent, ...(props as [UserDto]))
     }
   }
 

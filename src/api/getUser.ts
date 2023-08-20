@@ -7,6 +7,6 @@ import { currentUserAlias } from "../common/consts/currentUserAlias"
 export async function getUser(
   ctx: MyContext,
   userId: string = currentUserAlias
-): Promise<UserDto> | never {
+): Promise<UserDto> {
   return getRequest<UserDto>(ctx, API_PATHS.users.GET.one, { userId })
 }

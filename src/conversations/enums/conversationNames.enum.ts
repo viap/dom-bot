@@ -10,4 +10,7 @@ export enum CONVERSATION_NAMES {
   CLIENT_THERAPY_SESSIONS_LIST = "client_therapy_sessions_list",
   THERAPY_SESSION_ADD = "therapy_session_add",
   THERAPY_SESSION_DELETE = "therapy_session_delete",
+  // FOR EDITORS
+  USER_EDIT = "user_edit",
+  USER_TO_PSYCHOLOGIST = "user_to_psychologist",
 }

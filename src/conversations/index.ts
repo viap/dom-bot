@@ -5,6 +5,8 @@ import { AddTherapySession } from "./psychologist/addTherapySession"
 import { DeleteTherapySession } from "./psychologist/deleteTherapySession"
 import { EditClient } from "./psychologist/editClient"
 import { DeleteClient } from "./psychologist/deleteClient"
+import { EditUser } from "./editor/editUser"
+import { CreatePsychologistFromUser } from "./editor/createPsychologistFromUser"
 // import { QuizProgress } from "./quizProgress"
 import { MiddlewareFn } from "grammy"
 import { MyContext } from "../common/types/myContext"
@@ -21,6 +23,8 @@ export const BotConversations = {
       SelectQiuz,
       SelectMenuItem,
       EditClient,
+      EditUser,
+      CreatePsychologistFromUser,
       DeleteClient,
       AddTherapySession,
       DeleteTherapySession,

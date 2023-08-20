@@ -16,7 +16,9 @@ export const API_PATHS: ApiPaths = {
       one: "/users/:userId",
     },
     POST: {},
-    PUT: {},
+    PUT: {
+      edit: "/users/:userId",
+    },
     DELETE: {},
   },
   psychologists: {
@@ -26,6 +28,7 @@ export const API_PATHS: ApiPaths = {
       clients: "/psychologists/:psychologistId/clients",
     },
     POST: {
+      create: "/psychologists",
       newClient: "/psychologists/:psychologistId/add-new-client",
     },
     PUT: {

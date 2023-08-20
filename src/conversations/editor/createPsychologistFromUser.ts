@@ -1,20 +1,19 @@
 import { Conversation } from "@grammyjs/conversations"
-import { deleteClient } from "../../api/deleteClient"
-import { ClientDto } from "../../common/dto/client.dto"
-import { TherapySessionDto } from "../../common/dto/therapySession.dto"
+import { createPsychologistFromUser } from "../../api/createPsychologistFromUser"
+import { UserDto } from "../../common/dto/user.dto"
+import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 
-export const DeleteClient: BotConversation = {
+export const CreatePsychologistFromUser: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.CLIENT_DELETE
+    return CONVERSATION_NAMES.USER_TO_PSYCHOLOGIST
   },
 
-  getConversation(client: ClientDto, sessions: Array<TherapySessionDto>) {
+  getConversation(user: UserDto) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
@@ -22,17 +21,20 @@ export const DeleteClient: BotConversation = {
       let result = false
 
       try {
-        result = await conversation.external(async () => {
-          return await deleteClient(ctx, client.user._id)
-        })
+        result = !!(await conversation.external(async () => {
+          return await createPsychologistFromUser(ctx, { userId: user._id })
+        }))
       } catch (e) {
         conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {
         if (result) {
-          await ctx.reply("*Клиент удален*", ReplyMarkup.parseModeV2)
+          await ctx.reply(
+            "*Добавлены права психолога*",
+            ReplyMarkup.parseModeV2
+          )
         } else {
           await ctx.reply(
-            "*Клиента удалить не удалось*",
+            "*Не удалось добавить права психолога*",
             ReplyMarkup.parseModeV2
           )
         }

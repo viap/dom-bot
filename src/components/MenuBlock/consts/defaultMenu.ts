@@ -18,16 +18,28 @@ export const DefaultMenu: MenuBlockItemsProps = {
     },
     {
       name: "Личный кабинет",
-      roles: [ROLES.PSYCHOLOGIST],
+      roles: [ROLES.ADMIN, ROLES.EDITOR, ROLES.PSYCHOLOGIST],
       items: [
+        // FOR ADMINS:
+        // ---
+        // FOR EDITORS:
+        {
+          name: "Пользователи",
+          submenu: SUBMENU_TYPES.USERS,
+          options: { columns: 2 },
+          roles: [ROLES.ADMIN, ROLES.EDITOR],
+        },
+        // FOR PSYCHOLOGIST:
         {
           name: "Клиенты",
           submenu: SUBMENU_TYPES.CLIENTS,
           options: { columns: 2 },
+          roles: [ROLES.PSYCHOLOGIST],
         },
         {
           name: "Добавить клиента",
           conversation: CONVERSATION_NAMES.CLIENT_ADD,
+          roles: [ROLES.PSYCHOLOGIST],
         },
       ],
     },
