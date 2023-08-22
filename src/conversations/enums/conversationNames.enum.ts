@@ -15,4 +15,5 @@ export enum CONVERSATION_NAMES {
   // FOR EDITORS
   USER_EDIT = "user_edit",
   USER_TO_PSYCHOLOGIST = "user_to_psychologist",
+  PSYCHOLOGIST_TO_USER = "psychologist_to_user",
 }

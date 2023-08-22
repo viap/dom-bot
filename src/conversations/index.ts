@@ -7,6 +7,7 @@ import { DeleteTherapySession } from "./rolePsychologist/deleteTherapySession"
 import { EditClient } from "./rolePsychologist/editClient"
 import { DeleteClient } from "./rolePsychologist/deleteClient"
 import { EditUser } from "./roleEditor/editUser"
+import { RemoveFromPsychologists } from "./roleEditor/removeFromPsychologists"
 import { CreatePsychologistFromUser } from "./roleEditor/createPsychologistFromUser"
 // import { QuizProgress } from "./quizProgress"
 import { MiddlewareFn } from "grammy"
@@ -26,6 +27,7 @@ export const BotConversations = {
       EditClient,
       EditUser,
       CreatePsychologistFromUser,
+      RemoveFromPsychologists,
       DeleteClient,
       AddTherapySession,
       DeleteTherapySession,

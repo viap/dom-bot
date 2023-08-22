@@ -65,7 +65,7 @@ export const API_PATHS: ApiPaths = {
       create: "/therapy-requests",
     },
     PUT: {
-      update: "/therapy-sessions/:therapyRequestId",
+      edit: "/therapy-sessions/:therapyRequestId",
     },
     DELETE: {
       one: "/therapy-sessions/:therapyRequestId",

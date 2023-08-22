@@ -17,24 +17,13 @@ export const DefaultMenu: MenuBlockItemsProps = {
       content: "Забронировать кабинет",
     },
     {
-      name: "Личный кабинет",
-      roles: [ROLES.ADMIN, ROLES.EDITOR, ROLES.PSYCHOLOGIST],
+      name: "Клиенты",
+      roles: [ROLES.PSYCHOLOGIST],
       items: [
-        // FOR ADMINS:
-        // ---
-        // FOR EDITORS:
         {
-          name: "Пользователи",
-          submenu: SUBMENU_TYPES.USERS,
-          options: { columns: 2 },
-          roles: [ROLES.ADMIN, ROLES.EDITOR],
-        },
-        // FOR PSYCHOLOGIST:
-        {
-          name: "Клиенты",
+          name: "Список клиентов",
           submenu: SUBMENU_TYPES.CLIENTS,
           options: { columns: 2 },
-          roles: [ROLES.PSYCHOLOGIST],
         },
         {
           name: "Добавить клиента",
@@ -43,6 +32,16 @@ export const DefaultMenu: MenuBlockItemsProps = {
         },
       ],
     },
+    {
+      name: "Пользователи",
+      submenu: SUBMENU_TYPES.USERS,
+      options: { columns: 2 },
+      roles: [ROLES.ADMIN, ROLES.EDITOR],
+    },
+    // {
+    //   name: "Личный кабинет",
+    //   roles: [ROLES.ADMIN, ROLES.EDITOR, ROLES.PSYCHOLOGIST],
+    // },
     {
       name: "Оставить заявку",
       content: "Опишите пожалуйста ваш запрос",

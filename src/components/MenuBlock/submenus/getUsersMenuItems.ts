@@ -48,7 +48,10 @@ export function getUserMenuItem(
           name: "Дать права психолога",
           conversation: CONVERSATION_NAMES.USER_TO_PSYCHOLOGIST,
         }
-      : undefined,
+      : {
+          name: "Убрать права психолога",
+          conversation: CONVERSATION_NAMES.PSYCHOLOGIST_TO_USER,
+        },
   ]
     .filter((item) => !!item)
     .map((item) => {
