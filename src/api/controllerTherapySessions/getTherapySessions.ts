@@ -1,8 +1,8 @@
-import { MyContext } from "../common/types/myContext"
-import { getRequest } from "./common/getRequest"
-import { API_PATHS } from "./consts/apiPaths"
-import { TherapySessionDto } from "../common/dto/therapySession.dto"
-import { currentUserAlias } from "../common/consts/currentUserAlias"
+import { MyContext } from "../../common/types/myContext"
+import { getRequest } from "../common/getRequest"
+import { API_PATHS } from "../consts/apiPaths"
+import { TherapySessionDto } from "../../common/dto/therapySession.dto"
+import { currentUserAlias } from "../../common/consts/currentUserAlias"
 
 export async function getTherapySessions(
   ctx: MyContext,

@@ -1,5 +1,5 @@
 import { Conversation } from "@grammyjs/conversations"
-import { createPsychologistFromUser } from "../../api/createPsychologistFromUser"
+import { createPsychologistFromUser } from "../../api/controllerPsychologists/createPsychologistFromUser"
 import { UserDto } from "../../common/dto/user.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { MyContext } from "../../common/types/myContext"

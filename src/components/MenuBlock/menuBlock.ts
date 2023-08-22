@@ -33,16 +33,17 @@ const defaultItemsParams: MenuBlockItemsParams = {
   pagesCount: 1,
 }
 
-const defaultOptions: MenuBlockOptions = {
+const defaultMenuOptions: MenuBlockOptions = {
   maxItemsOnScreen: 100,
   withNavigationButtons: true,
   columns: 1,
+  withSearch: false,
 }
 export class MenuBlock {
   private current: MenuBlockItemsProps
   private menu: MenuBlockItemsProps
 
-  private options: MenuBlockOptions = defaultOptions
+  private options: MenuBlockOptions = defaultMenuOptions
 
   private itemsParams: MenuBlockItemsParams = {
     pageNumber: defaultItemsParams.pageNumber,
@@ -57,7 +58,6 @@ export class MenuBlock {
     options?: Partial<MenuBlockOptions>
   ) {
     let preparedMenu = { ...menu }
-    // preparedMenu = MenuBlock.getMenuWithRoles(preparedMenu)
     preparedMenu = MenuBlock.getPreparedMenu(preparedMenu)
     preparedMenu = MenuBlock.getMenuFilteredByRoles(
       preparedMenu,
@@ -66,12 +66,10 @@ export class MenuBlock {
 
     this.menu = preparedMenu
 
-    // this.conversation.log("MENU", JSON.stringify(this.menu))
-
     this.current = this.menu
     this.options = Object.assign(
       {},
-      defaultOptions,
+      defaultMenuOptions,
       this.current.options,
       options
     )
@@ -148,6 +146,16 @@ export class MenuBlock {
     return topButtonsKeyboard
   }
 
+  private get filterKeyboard(): Keyboard {
+    const filterKeyboard = new Keyboard()
+
+    if (this.currentOptions.withSearch && this.currentItems.length > 0) {
+      filterKeyboard.row({ text: ACTION_BUTTON_TEXTS.SEARCH })
+    }
+
+    return filterKeyboard
+  }
+
   private get paginationKeyboard(): Keyboard {
     const bottomButtonsKeyboard = new Keyboard()
 
@@ -207,6 +215,9 @@ export class MenuBlock {
 
   private async makeAction(text: string) {
     switch (text) {
+      case ACTION_BUTTON_TEXTS.SEARCH:
+        // this.nextPage()
+        break
       case ACTION_BUTTON_TEXTS.NEXT:
         this.nextPage()
         break

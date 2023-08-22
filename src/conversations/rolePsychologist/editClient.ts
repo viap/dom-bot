@@ -1,6 +1,7 @@
 import { Conversation } from "@grammyjs/conversations"
-import { editUser } from "../../api/editUser"
-import { UserDto } from "../../common/dto/user.dto"
+import { editClient } from "../../api/controllerPsychologists/editClient"
+import { ClientDto } from "../../common/dto/client.dto"
+import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
@@ -11,41 +12,34 @@ import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-export const EditUser: BotConversation = {
+export const EditClient: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.USER_EDIT
+    return CONVERSATION_NAMES.CLIENT_EDIT
   },
 
-  getConversation(user: UserDto) {
+  getConversation(client: ClientDto, sessions: Array<TherapySessionDto>) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
       const inputs = [
         {
-          name: "name",
-          alias: "имя",
-          type: FORM_INPUT_TYPES.STRING,
-          owner: user.name,
-        },
-        {
           name: "descr",
           alias: "описание",
           type: FORM_INPUT_TYPES.STRING,
-          owner: user.name,
+          owner: client.user.name,
         },
       ]
-      type resultType = { name: string; descr: string }
+      type resultType = { descr: string }
       const form = new Form<resultType>(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
-      const userResult = { ...user }
+      const clientResult = { ...client }
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
         let result = false
         try {
           result = await conversation.external(async () => {
-            return await editUser(ctx, user._id, {
-              name: formResult.data.name,
+            return await editClient(ctx, client.user._id, {
               descr: formResult.data.descr,
             })
           })
@@ -53,14 +47,11 @@ export const EditUser: BotConversation = {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
           if (result) {
-            Object.assign(userResult, formResult.data)
-            await ctx.reply(
-              "*Данные пользователя изменены*",
-              ReplyMarkup.parseModeV2
-            )
+            Object.assign(clientResult, formResult.data)
+            await ctx.reply("*Описание изменено*", ReplyMarkup.parseModeV2)
           } else {
             await ctx.reply(
-              "*Не удалось изменить данные пользователя*",
+              "*Не удалось изменить описание*",
               ReplyMarkup.parseModeV2
             )
           }

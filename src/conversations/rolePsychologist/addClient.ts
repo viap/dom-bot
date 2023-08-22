@@ -1,8 +1,5 @@
 import { Conversation } from "@grammyjs/conversations"
-import { editClient } from "../../api/editClient"
-import { ClientDto } from "../../common/dto/client.dto"
-import { TherapySessionDto } from "../../common/dto/therapySession.dto"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
+import { addNewClient } from "../../api/controllerPsychologists/addNewClient"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enum"
@@ -10,36 +7,46 @@ import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStat
 import { Form } from "../../components/Form/form"
 import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
-import { ConversationResult } from "../types/conversationResult"
+import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 
-export const EditClient: BotConversation = {
+export const AddClient: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.CLIENT_EDIT
+    return CONVERSATION_NAMES.CLIENT_ADD
   },
+  getConversation() {
+    return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
+      await ctx.reply("*Добавление клиента*", {
+        ...ReplyMarkup.parseModeV2,
+        ...ReplyMarkup.emptyKeyboard,
+      })
 
-  getConversation(client: ClientDto, sessions: Array<TherapySessionDto>) {
-    return async (
-      conversation: Conversation<MyContext>,
-      ctx: MyContext
-    ): Promise<ConversationResult | undefined> => {
       const inputs = [
+        {
+          name: "name",
+          alias: "имя",
+          type: FORM_INPUT_TYPES.STRING,
+          owner: "клиентa",
+        },
         {
           name: "descr",
           alias: "описание",
           type: FORM_INPUT_TYPES.STRING,
-          owner: client.user.name,
+          owner: "клиентa",
         },
       ]
-      type resultType = { descr: string }
+
+      type resultType = { name: string; descr: string }
+
       const form = new Form<resultType>(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
-      const clientResult = { ...client }
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
-        let result = false
+        let result
+
         try {
           result = await conversation.external(async () => {
-            return await editClient(ctx, client.user._id, {
+            return await addNewClient(ctx, {
+              name: formResult.data.name,
               descr: formResult.data.descr,
             })
           })
@@ -47,21 +54,14 @@ export const EditClient: BotConversation = {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
           if (result) {
-            Object.assign(clientResult, formResult.data)
-            await ctx.reply("*Описание изменено*", ReplyMarkup.parseModeV2)
+            await ctx.reply("*Добавлен новый клиент*", ReplyMarkup.parseModeV2)
           } else {
             await ctx.reply(
-              "*Не удалось изменить описание*",
+              "*Не удалось добавить клиента*",
               ReplyMarkup.parseModeV2
             )
           }
         }
-
-        return result
-          ? {
-              stepsBack: 2,
-            }
-          : undefined
       }
     }
   },

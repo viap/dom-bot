@@ -1,5 +1,5 @@
 import { Conversation } from "@grammyjs/conversations"
-import { addTherapySession } from "../../api/addTherapySession"
+import { addTherapySession } from "../../api/controllerTherapySessions/addTherapySession"
 import { currentUserAlias } from "../../common/consts/currentUserAlias"
 import { numberOfCommissionHours } from "../../common/consts/numberOfCommissionHours"
 import { therapySessionDurations } from "../../common/consts/therapySessionDurations"

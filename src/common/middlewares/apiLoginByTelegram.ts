@@ -1,6 +1,6 @@
 import { MyContext } from "../../common/types/myContext"
-import { isValidToken } from "../../api/isValidToken"
-import { loginByTelegram } from "../../api/loginByTelegram"
+import { isValidToken } from "../../api/controllerAuth/isValidToken"
+import { loginByTelegram } from "../../api/controllerAuth/loginByTelegram"
 import { TelegramUserDto } from "../dto/telegramUser.dto"
 import { BOT_TEXTS } from "../enums/botTexts.enum"
 import { NextFunction } from "grammy"

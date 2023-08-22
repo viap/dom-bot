@@ -1,8 +1,8 @@
-import { currentUserAlias } from "../common/consts/currentUserAlias"
-import { MyContext } from "../common/types/myContext"
-import { putRequest } from "./common/putRequest"
-import { API_PATHS } from "./consts/apiPaths"
-import { EditClientDto } from "./dto/editClient.dto"
+import { currentUserAlias } from "../../common/consts/currentUserAlias"
+import { MyContext } from "../../common/types/myContext"
+import { putRequest } from "../common/putRequest"
+import { API_PATHS } from "../consts/apiPaths"
+import { EditClientDto } from "../dto/editClient.dto"
 
 export async function editClient(
   ctx: MyContext,

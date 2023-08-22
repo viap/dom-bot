@@ -1,5 +1,5 @@
-import { getPsychologistClients } from "../../../api/getPsychologistClients"
-import { getTherapySessions } from "../../../api/getTherapySessions"
+import { getPsychologistClients } from "../../../api/controllerPsychologists/getPsychologistClients"
+import { getTherapySessions } from "../../../api/controllerTherapySessions/getTherapySessions"
 import { ClientDto } from "../../../common/dto/client.dto"
 import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
 import { MyContext } from "../../../common/types/myContext"

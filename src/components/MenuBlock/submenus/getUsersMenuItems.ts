@@ -1,4 +1,4 @@
-import { getAllUsers } from "../../../api/getAllUsers"
+import { getAllUsers } from "../../../api/controllerUsers/getAllUsers"
 import { UserDto } from "../../../common/dto/user.dto"
 import { ROLES } from "../../../common/enums/roles.enum"
 import { MyContext } from "../../../common/types/myContext"

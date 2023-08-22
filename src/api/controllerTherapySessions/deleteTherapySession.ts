@@ -1,6 +1,6 @@
-import { MyContext } from "../common/types/myContext"
-import { deleteRequest } from "./common/deleteRequest"
-import { API_PATHS } from "./consts/apiPaths"
+import { MyContext } from "../../common/types/myContext"
+import { deleteRequest } from "../common/deleteRequest"
+import { API_PATHS } from ".././consts/apiPaths"
 
 export async function deleteTherapySession(
   ctx: MyContext,

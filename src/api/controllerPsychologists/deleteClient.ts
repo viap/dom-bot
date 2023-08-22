@@ -1,7 +1,7 @@
-import { MyContext } from "../common/types/myContext"
-import { deleteRequest } from "./common/deleteRequest"
-import { API_PATHS } from "./consts/apiPaths"
-import { currentUserAlias } from "../common/consts/currentUserAlias"
+import { MyContext } from "../../common/types/myContext"
+import { deleteRequest } from "../common/deleteRequest"
+import { API_PATHS } from "../consts/apiPaths"
+import { currentUserAlias } from "../../common/consts/currentUserAlias"
 
 export async function deleteClient(
   ctx: MyContext,

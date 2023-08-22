@@ -1,5 +1,5 @@
 import { Conversation } from "@grammyjs/conversations"
-import { deleteClient } from "../../api/deleteClient"
+import { deleteTherapySession } from "../../api/controllerTherapySessions/deleteTherapySession"
 import { ClientDto } from "../../common/dto/client.dto"
 import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { MyContext } from "../../common/types/myContext"
@@ -7,14 +7,13 @@ import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 
-export const DeleteClient: BotConversation = {
+export const DeleteTherapySession: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.CLIENT_DELETE
+    return CONVERSATION_NAMES.THERAPY_SESSION_DELETE
   },
 
-  getConversation(client: ClientDto, sessions: Array<TherapySessionDto>) {
+  getConversation(client: ClientDto, session: TherapySessionDto) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
@@ -23,16 +22,16 @@ export const DeleteClient: BotConversation = {
 
       try {
         result = await conversation.external(async () => {
-          return await deleteClient(ctx, client.user._id)
+          return await deleteTherapySession(ctx, session._id)
         })
-      } catch (e) {
-        conversation.log(BOT_ERRORS.REQUEST, e)
+      } catch {
+        result = false
       } finally {
         if (result) {
-          await ctx.reply("*Клиент удален*", ReplyMarkup.parseModeV2)
+          await ctx.reply("*Сессия удалена*", ReplyMarkup.parseModeV2)
         } else {
           await ctx.reply(
-            "*Клиента удалить не удалось*",
+            "*Сессию удалить не удалось*",
             ReplyMarkup.parseModeV2
           )
         }
@@ -40,7 +39,7 @@ export const DeleteClient: BotConversation = {
 
       return result
         ? {
-            stepsBack: 2,
+            stepsBack: 4,
           }
         : undefined
     }

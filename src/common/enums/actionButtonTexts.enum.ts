@@ -5,4 +5,6 @@ export enum ACTION_BUTTON_TEXTS {
   MAIN_MENU = "Основное меню",
   BACK = "Назад",
   REJECT = "Отмена",
+
+  SEARCH = "ПОИСК",
 }

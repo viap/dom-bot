@@ -1,7 +1,7 @@
 import { Conversation } from "@grammyjs/conversations"
 import { MenuBlock } from "../components/MenuBlock/menuBlock"
 
-import { getUser } from "../api/getUser"
+import { getUser } from "../api/controllerUsers/getUser"
 import { DefaultMenu } from "../components/MenuBlock/consts/defaultMenu"
 import { MyContext } from "../common/types/myContext"
 import { CONVERSATION_ERRORS } from "./enums/conversationErrors.enum"
