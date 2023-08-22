@@ -61,14 +61,17 @@ export class Form<T extends ObjectWithPrimitiveValues> {
             case FORM_BUTTON_ACTIONS.PREV:
               if (this.prevInput)
                 text = `${text} ${
-                  this.prevInput.alias || this.prevInput.name || "Завершить"
-                }`
+                  this.prevInput.alias || this.prevInput.name
+                }`.toLowerCase()
               break
             case FORM_BUTTON_ACTIONS.NEXT:
-              if (this.nextInput)
+              if (this.nextInput) {
                 text = `${
-                  this.nextInput.alias || this.nextInput.name || "Завершить"
-                } ${text}`
+                  this.nextInput.alias || this.nextInput.name
+                } ${text}`.toLowerCase()
+              } else {
+                text = "Завершить"
+              }
               break
           }
           return {
@@ -158,11 +161,9 @@ export class Form<T extends ObjectWithPrimitiveValues> {
 
         const curKeyboard = selectKeyboard
           ? this.keyboard
-            ? selectKeyboard.append(this.keyboard)
+            ? this.keyboard.append(selectKeyboard)
             : selectKeyboard
           : this.keyboard
-          ? this.keyboard
-          : undefined
 
         await this.showText(
           FORM_TEXT_TYPES.BEFORE_INPUT,

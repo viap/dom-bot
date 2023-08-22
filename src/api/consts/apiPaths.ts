@@ -56,4 +56,19 @@ export const API_PATHS: ApiPaths = {
       one: "/therapy-sessions/:therapySessionId",
     },
   },
+  therapyRequests: {
+    GET: {
+      all: "/therapy-requests",
+      one: "/therapy-sessions/:therapyRequestId",
+    },
+    POST: {
+      create: "/therapy-requests",
+    },
+    PUT: {
+      update: "/therapy-sessions/:therapyRequestId",
+    },
+    DELETE: {
+      one: "/therapy-sessions/:therapyRequestId",
+    },
+  },
 }

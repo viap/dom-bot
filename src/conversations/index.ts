@@ -2,6 +2,7 @@ import { createConversation } from "@grammyjs/conversations"
 import { AddClient } from "./rolePsychologist/addClient"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 import { AddTherapySession } from "./rolePsychologist/addTherapySession"
+import { AddTherapyRequest } from "./roleUser/addTherapyRequest"
 import { DeleteTherapySession } from "./rolePsychologist/deleteTherapySession"
 import { EditClient } from "./rolePsychologist/editClient"
 import { DeleteClient } from "./rolePsychologist/deleteClient"
@@ -28,6 +29,7 @@ export const BotConversations = {
       DeleteClient,
       AddTherapySession,
       DeleteTherapySession,
+      AddTherapyRequest,
     ]
   },
 

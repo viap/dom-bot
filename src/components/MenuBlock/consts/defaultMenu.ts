@@ -44,6 +44,11 @@ export const DefaultMenu: MenuBlockItemsProps = {
       ],
     },
     {
+      name: "Оставить заявку",
+      content: "Опишите пожалуйста ваш запрос",
+      conversation: CONVERSATION_NAMES.THERAPY_REQUEST_ADD,
+    },
+    {
       name: "О пространстве",
       content: "Описание пространства",
     },

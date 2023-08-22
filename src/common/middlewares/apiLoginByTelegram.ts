@@ -9,7 +9,7 @@ export const apiLoginByTelegram = async (
   ctx: MyContext,
   next: NextFunction
 ) => {
-  if (ctx.from) {
+  if (ctx.from && !ctx.from.is_bot) {
     if (!(await isValidToken(ctx))) {
       delete ctx.session.token
     }
