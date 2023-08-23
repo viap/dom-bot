@@ -8,6 +8,7 @@ import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { CURRENCIES } from "../../common/enums/currencies.enum"
 import { MyContext } from "../../common/types/myContext"
+import { getCurrentDateString } from "../../common/utils/getCurrentDateString"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enum"
 import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
@@ -99,7 +100,7 @@ export const AddTherapySession: BotConversation = {
         try {
           result = await conversation.external(async () => {
             const session = await addTherapySession(ctx, {
-              date: new Date().toLocaleDateString("ge"),
+              date: getCurrentDateString(await conversation.now()),
               psychologist: currentUserAlias,
               client: client.user._id,
               duration: formResult.data.duration,

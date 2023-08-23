@@ -1,14 +1,18 @@
 import { createConversation } from "@grammyjs/conversations"
-import { AddClient } from "./rolePsychologist/addClient"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
-import { AddTherapySession } from "./rolePsychologist/addTherapySession"
-import { AddTherapyRequest } from "./roleUser/addTherapyRequest"
-import { DeleteTherapySession } from "./rolePsychologist/deleteTherapySession"
-import { EditClient } from "./rolePsychologist/editClient"
-import { DeleteClient } from "./rolePsychologist/deleteClient"
+import { CreatePsychologistFromUser } from "./roleEditor/createPsychologistFromUser"
+import { DeleteTherapyRequest } from "./roleEditor/deleteTherapyRequest"
 import { EditUser } from "./roleEditor/editUser"
 import { RemoveFromPsychologists } from "./roleEditor/removeFromPsychologists"
-import { CreatePsychologistFromUser } from "./roleEditor/createPsychologistFromUser"
+import { TransferTherapyRequest } from "./roleEditor/transferTherapyRequest"
+import { AddClient } from "./rolePsychologist/addClient"
+import { AddTherapySession } from "./rolePsychologist/addTherapySession"
+import { DeleteClient } from "./rolePsychologist/deleteClient"
+import { DeleteTherapySession } from "./rolePsychologist/deleteTherapySession"
+import { EditClient } from "./rolePsychologist/editClient"
+import { AcceptTherapyRequest } from "./rolePsychologist/acceptTherapyRequest"
+import { RejectTherapyRequest } from "./rolePsychologist/rejectTherapyRequest"
+import { AddTherapyRequest } from "./roleUser/addTherapyRequest"
 // import { QuizProgress } from "./quizProgress"
 import { MiddlewareFn } from "grammy"
 import { MyContext } from "../common/types/myContext"
@@ -27,6 +31,10 @@ export const BotConversations = {
       EditClient,
       EditUser,
       CreatePsychologistFromUser,
+      DeleteTherapyRequest,
+      TransferTherapyRequest,
+      AcceptTherapyRequest,
+      RejectTherapyRequest,
       RemoveFromPsychologists,
       DeleteClient,
       AddTherapySession,

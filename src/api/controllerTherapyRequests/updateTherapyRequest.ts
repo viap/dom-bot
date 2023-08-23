@@ -1,6 +1,6 @@
 import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../common/types/myContext"
-import { postRequest } from "../common/postRequest"
+import { putRequest } from "../common/putRequest"
 import { API_PATHS } from "../consts/apiPaths"
 import { UpdateTherapyRequestDto } from "../dto/updateTherapyRequest.dto"
 
@@ -9,9 +9,9 @@ export async function updateTherapyRequest(
   therapyRequestId: string,
   updateData: UpdateTherapyRequestDto
 ): Promise<TherapyRequestDto> {
-  return postRequest(
+  return putRequest(
     ctx,
-    API_PATHS.therapyRequests.PUT.update,
+    API_PATHS.therapyRequests.PUT.edit,
     { therapyRequestId },
     updateData
   )

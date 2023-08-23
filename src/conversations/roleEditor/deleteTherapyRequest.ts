@@ -1,7 +1,6 @@
 import { Conversation } from "@grammyjs/conversations"
-import { deleteTherapySession } from "../../api/controllerTherapySessions/deleteTherapySession"
-import { ClientDto } from "../../common/dto/client.dto"
-import { TherapySessionDto } from "../../common/dto/therapySession.dto"
+import { deleteTherapyRequest } from "../../api/controllerTherapyRequests/deleteTherapyRequest"
+import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
@@ -9,12 +8,12 @@ import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-export const DeleteTherapySession: BotConversation = {
+export const DeleteTherapyRequest: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.THERAPY_SESSION_DELETE
+    return CONVERSATION_NAMES.THERAPY_REQUEST_DELETE
   },
 
-  getConversation(client: ClientDto, session: TherapySessionDto) {
+  getConversation(therapyRequest: TherapyRequestDto) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
@@ -23,16 +22,16 @@ export const DeleteTherapySession: BotConversation = {
 
       try {
         result = await conversation.external(async () => {
-          return await deleteTherapySession(ctx, session._id)
+          return await deleteTherapyRequest(ctx, therapyRequest._id)
         })
       } catch (e) {
         console.log(BOT_ERRORS.REQUEST, e)
       } finally {
         if (result) {
-          await ctx.reply("*Сессия удалена*", ReplyMarkup.parseModeV2)
+          await ctx.reply("*Заявка удалена*", ReplyMarkup.parseModeV2)
         } else {
           await ctx.reply(
-            "*Сессию удалить не удалось*",
+            "*Заявку удалить не удалось*",
             ReplyMarkup.parseModeV2
           )
         }
@@ -40,7 +39,7 @@ export const DeleteTherapySession: BotConversation = {
 
       return result
         ? {
-            stepsBack: 4,
+            stepsBack: 2,
           }
         : undefined
     }

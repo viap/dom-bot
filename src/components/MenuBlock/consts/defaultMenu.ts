@@ -22,7 +22,7 @@ export const DefaultMenu: MenuBlockItemsProps = {
       items: [
         {
           name: "Список клиентов",
-          submenu: SUBMENU_TYPES.CLIENTS,
+          submenu: SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS,
           options: { columns: 2 },
         },
         {
@@ -33,15 +33,30 @@ export const DefaultMenu: MenuBlockItemsProps = {
       ],
     },
     {
+      name: "Мои заявки",
+      roles: [ROLES.PSYCHOLOGIST],
+      submenu: SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS,
+      options: {
+        columns: 2,
+      },
+    },
+    {
       name: "Пользователи",
-      submenu: SUBMENU_TYPES.USERS,
+      submenu: SUBMENU_TYPES.ALL_USERS,
       options: { columns: 2 },
       roles: [ROLES.ADMIN, ROLES.EDITOR],
     },
-    // {
-    //   name: "Личный кабинет",
-    //   roles: [ROLES.ADMIN, ROLES.EDITOR, ROLES.PSYCHOLOGIST],
-    // },
+    {
+      name: "Заявки",
+      roles: [ROLES.ADMIN, ROLES.EDITOR],
+      items: [
+        {
+          name: "Список заявок",
+          options: { columns: 2 },
+          submenu: SUBMENU_TYPES.ALL_THERAPY_REQUESTS,
+        },
+      ],
+    },
     {
       name: "Оставить заявку",
       content: "Опишите пожалуйста ваш запрос",

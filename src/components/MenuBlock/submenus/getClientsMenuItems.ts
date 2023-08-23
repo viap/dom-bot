@@ -56,20 +56,20 @@ export function getClientMenuItem(
   } as MenuBlockItemsProps
 
   result.items = [
-    {
-      name: "Добавить сессию",
-      conversation: CONVERSATION_NAMES.THERAPY_SESSION_ADD,
-    },
     sessions.length > 0
       ? {
           name: "Список сессий",
           conversation: CONVERSATION_NAMES.CLIENT_THERAPY_SESSIONS_LIST,
-          submenu: SUBMENU_TYPES.THERAPY_SESSIONS,
+          submenu: SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS,
           options: {
             columns: 2,
           },
         }
       : undefined,
+    {
+      name: "Добавить сессию",
+      conversation: CONVERSATION_NAMES.THERAPY_SESSION_ADD,
+    },
     {
       name: "Редактировать описание",
       conversation: CONVERSATION_NAMES.CLIENT_EDIT,

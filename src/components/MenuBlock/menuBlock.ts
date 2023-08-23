@@ -21,12 +21,21 @@ import {
   loadTherapySessionsMenuItems,
 } from "./submenus/getTherapySessionsMenuItems"
 import {
+  getTherapyRequestMenuItem,
+  loadTherapyRequestsMenuItems,
+} from "./submenus/getTherapyRequestsMenuItems"
+import {
+  getPsychologistTherapyRequestMenuItem,
+  loadPsychologistTherapyRequestsMenuItems,
+} from "./submenus/getPsychologistTherapyRequestsMenuItems"
+import {
   loadUsersMenuItems,
   getUserMenuItem,
 } from "./submenus/getUsersMenuItems"
 import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
+import { TherapyRequestDto } from "common/dto/therapyRequest.dto"
 
 const defaultItemsParams: MenuBlockItemsParams = {
   pageNumber: 0,
@@ -244,16 +253,26 @@ export class MenuBlock {
     submenuType: SUBMENU_TYPES
   ): Promise<Array<MenuBlockItemsProps>> {
     switch (submenuType) {
-      case SUBMENU_TYPES.CLIENTS:
+      case SUBMENU_TYPES.ALL_USERS:
+        return await loadUsersMenuItems(this.ctx, this.current)
+
+      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
         return await loadClientsMenuItems(this.ctx, this.current)
-      case SUBMENU_TYPES.THERAPY_SESSIONS:
+
+      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
         return await loadTherapySessionsMenuItems(
           this.ctx,
           this.current,
           this.current.props as [ClientDto, TherapySessionDto[]]
         )
-      case SUBMENU_TYPES.USERS:
-        return await loadUsersMenuItems(this.ctx, this.current)
+      case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
+        return await loadTherapyRequestsMenuItems(this.ctx, this.current)
+
+      case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
+        return await loadPsychologistTherapyRequestsMenuItems(
+          this.ctx,
+          this.current
+        )
       default:
         return []
     }
@@ -265,19 +284,31 @@ export class MenuBlock {
     props: Array<unknown> = []
   ): MenuBlockItemsProps {
     switch (submenuType) {
-      case SUBMENU_TYPES.CLIENTS:
+      case SUBMENU_TYPES.ALL_USERS:
+        return getUserMenuItem(parent, ...(props as [UserDto]))
+
+      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
         return getClientMenuItem(
           parent,
           ...(props as [ClientDto, Array<TherapySessionDto>])
         )
-      case SUBMENU_TYPES.THERAPY_SESSIONS:
+      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
         return getTherapySessionMenuItem(
           parent,
           ...(props as [ClientDto, TherapySessionDto])
         )
 
-      case SUBMENU_TYPES.USERS:
-        return getUserMenuItem(parent, ...(props as [UserDto]))
+      case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
+        return getTherapyRequestMenuItem(
+          parent,
+          ...(props as [TherapyRequestDto])
+        )
+
+      case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
+        return getPsychologistTherapyRequestMenuItem(
+          parent,
+          ...(props as [TherapyRequestDto])
+        )
     }
   }
 

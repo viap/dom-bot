@@ -1,4 +1,3 @@
-import { emoji } from "../../../common/consts/emoji"
 import { oneDayInMilliseconds } from "../../../common/consts/oneDayInMilliseconds"
 import { ClientDto } from "../../../common/dto/client.dto"
 import { TherapySessionDto } from "../../../common/dto/therapySession.dto"

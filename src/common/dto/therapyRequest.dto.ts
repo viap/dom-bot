@@ -14,4 +14,6 @@ export type TherapyRequestDto = {
   psychologist?: PsychologistDto
 
   contacts: Array<ContactDto>
+
+  accepted: boolean
 }

@@ -5,5 +5,5 @@ export type UpdateTherapyRequestDto = {
   psychologist?: string
   user?: string
   descr?: string
-  contacts: Array<ContactDto>
+  contacts?: Array<ContactDto>
 }

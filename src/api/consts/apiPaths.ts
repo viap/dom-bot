@@ -59,16 +59,19 @@ export const API_PATHS: ApiPaths = {
   therapyRequests: {
     GET: {
       all: "/therapy-requests",
-      one: "/therapy-sessions/:therapyRequestId",
+      one: "/therapy-requests/:therapyRequestId",
+      forPsychologist: "/therapy-requests/psychologist/:psychologistId",
     },
     POST: {
       create: "/therapy-requests",
+      accept: "/therapy-requests/:therapyRequestId/accept",
+      reject: "/therapy-requests/:therapyRequestId/reject",
     },
     PUT: {
-      edit: "/therapy-sessions/:therapyRequestId",
+      edit: "/therapy-requests/:therapyRequestId",
     },
     DELETE: {
-      one: "/therapy-sessions/:therapyRequestId",
+      one: "/therapy-requests/:therapyRequestId",
     },
   },
 }
