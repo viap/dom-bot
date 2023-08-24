@@ -9,6 +9,7 @@ import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { CURRENCIES } from "../../common/enums/currencies.enum"
 import { MyContext } from "../../common/types/myContext"
 import { getCurrentDateString } from "../../common/utils/getCurrentDateString"
+import { notEmpty } from "../../common/utils/notEmpty"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enum"
 import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
@@ -119,7 +120,7 @@ export const AddTherapySession: BotConversation = {
               resultSessions.push(session)
             }
 
-            return !!session
+            return notEmpty(session)
           })
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)

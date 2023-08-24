@@ -3,6 +3,7 @@ import { ClientDto } from "../../../common/dto/client.dto"
 import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
 import { MyContext } from "../../../common/types/myContext"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
+import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
@@ -64,7 +65,7 @@ export function getTherapySessionMenuItem(
         }
       : undefined,
   ]
-    .filter((item) => !!item)
+    .filter(notEmpty)
     .map((item) => {
       return { ...item, parent: result, roles: result?.roles }
     }) as Array<MenuBlockItemsProps>

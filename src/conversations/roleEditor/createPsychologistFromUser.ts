@@ -3,6 +3,7 @@ import { createPsychologistFromUser } from "../../api/controllerPsychologists/cr
 import { UserDto } from "../../common/dto/user.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { MyContext } from "../../common/types/myContext"
+import { notEmpty } from "../../common/utils/notEmpty"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
@@ -21,9 +22,11 @@ export const CreatePsychologistFromUser: BotConversation = {
       let result = false
 
       try {
-        result = !!(await conversation.external(async () => {
-          return await createPsychologistFromUser(ctx, { userId: user._id })
-        }))
+        result = notEmpty(
+          await conversation.external(async () => {
+            return await createPsychologistFromUser(ctx, { userId: user._id })
+          })
+        )
       } catch (e) {
         conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {

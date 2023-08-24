@@ -1,3 +1,4 @@
+import { notEmpty } from "../../../common/utils/notEmpty"
 import { getAllTherapyRequests } from "../../../api/controllerTherapyRequests/getAllTherapyRequests"
 import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../../common/types/myContext"
@@ -69,7 +70,7 @@ export function getTherapyRequestMenuItem(
         }
       : undefined,
   ]
-    .filter((item) => !!item)
+    .filter(notEmpty)
     .map((item) => {
       return { ...item, props, parent: result, roles: result?.roles }
     }) as Array<MenuBlockItemsProps>

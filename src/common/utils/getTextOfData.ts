@@ -1,5 +1,6 @@
 import { DataStructure } from "../types/dataStructure"
 import { ReplyMarkup } from "./replyMarkup"
+import { notEmpty } from "./notEmpty"
 
 export function getTextOfData(
   title: string,
@@ -14,27 +15,32 @@ export function getTextOfData(
   }
 
   result.push(
-    ...Object.entries(data).map((entry) => {
-      const curProjection = projection?.[entry[0]]
-      const propTitle = curProjection || entry[0]
+    ...Object.entries(data)
+      .map((entry) => {
+        const curProjection = projection?.[entry[0]]
+        const propTitle = curProjection || entry[0]
+        const propValue = entry[1]
 
-      if (typeof entry[1] === "object") {
-        return getTextOfData(
-          propTitle.toString(),
-          entry[1],
-          typeof curProjection === "object" ? curProjection : projection
-        )
-          .split("\n")
-          .map((line) => {
-            return tab + line.trim()
-          })
-          .join("\r\n")
-      } else {
-        return `*${ReplyMarkup.escapeForParseModeV2(
-          propTitle
-        )}* ${ReplyMarkup.escapeForParseModeV2(`- ${entry[1]}`)}`
-      }
-    })
+        if (typeof propValue === "object") {
+          return getTextOfData(
+            propTitle.toString(),
+            propValue,
+            typeof curProjection === "object" ? curProjection : projection
+          )
+            .split("\n")
+            .map((line) => {
+              return tab + line.trim()
+            })
+            .join("\r\n")
+        } else if (propValue !== undefined) {
+          return `*${ReplyMarkup.escapeForParseModeV2(
+            propTitle
+          )}* ${ReplyMarkup.escapeForParseModeV2(`- ${propValue}`)}`
+        } else {
+          return ""
+        }
+      })
+      .filter(notEmpty)
   )
 
   return result.join("\r\n")

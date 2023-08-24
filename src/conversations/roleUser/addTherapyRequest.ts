@@ -3,8 +3,10 @@ import { getAllPsychologists } from "../../api/controllerPsychologists/getAllPsy
 import { createTherapyRequest } from "../../api/controllerTherapyRequests/createTherapyRequest"
 import { TelegramUserDto } from "../../common/dto/telegramUser.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
+import { ROLES } from "../../common/enums/roles.enum"
 import { SocialNetworks } from "../../common/enums/socialNetworks.enum"
 import { MyContext } from "../../common/types/myContext"
+import { notEmpty } from "../../common/utils/notEmpty"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enum"
 import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
@@ -13,7 +15,6 @@ import { FormInputProps } from "../../components/Form/types/formInputProps"
 import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
-import { ROLES } from "common/enums/roles.enum"
 
 export const AddTherapyRequest: BotConversation = {
   getName() {
@@ -45,13 +46,13 @@ export const AddTherapyRequest: BotConversation = {
       const inputs: Array<FormInputProps> = [
         {
           name: "name",
-          alias: "Ваше имя",
+          alias: "имя",
           type: FORM_INPUT_TYPES.STRING,
           optional: true,
         },
         {
           name: "descr",
-          alias: "Ваш запрос",
+          alias: "запрос",
           type: FORM_INPUT_TYPES.STRING,
         },
         {
@@ -66,47 +67,56 @@ export const AddTherapyRequest: BotConversation = {
             }
           }),
         },
-        ctx.user.roles.includes(ROLES.EDITOR)
+        ctx.user.roles.includes(ROLES.EDITOR) ||
+        ctx.user.roles.includes(ROLES.ADMIN)
           ? {
               name: "telegramUser",
               alias: "логин в телеграм",
               type: FORM_INPUT_TYPES.STRING,
+              optional: true,
             }
           : undefined,
-      ].filter((input) => !!input) as Array<FormInputProps>
+      ].filter(notEmpty) as Array<FormInputProps>
 
       type resultType = {
         name: string
         descr: string
         psychologist?: string
+        telegramUser?: string
       }
       const form = new Form<resultType>(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
         let result = false
+        const enteredTelegramUser = (formResult.data.telegramUser || "")
+          .trim()
+          .replace("@", "")
         try {
           result = telegramUser
             ? await conversation.external(async () => {
-                return !!(await createTherapyRequest(ctx, {
-                  name:
-                    formResult.data.name ||
-                    [telegramUser.last_name, telegramUser.first_name]
-                      .filter((part) => !!part)
-                      .join(" ") ||
-                    telegramUser.username ||
-                    "",
-                  descr: formResult.data.descr,
-                  user: ctx.user._id,
-                  psychologist: formResult.data.psychologist,
-                  contacts: [
-                    {
-                      id: telegramUser.id,
-                      network: SocialNetworks.Telegram,
-                      username: telegramUser.username || "",
-                    },
-                  ],
-                }))
+                return notEmpty(
+                  await createTherapyRequest(ctx, {
+                    name:
+                      formResult.data.name ||
+                      [telegramUser.last_name, telegramUser.first_name]
+                        .filter(notEmpty)
+                        .join(" ") ||
+                      telegramUser.username ||
+                      "",
+                    descr: formResult.data.descr,
+                    user: ctx.user._id,
+                    psychologist: formResult.data.psychologist,
+                    contacts: [
+                      {
+                        id: enteredTelegramUser ? undefined : telegramUser.id,
+                        network: SocialNetworks.Telegram,
+                        username:
+                          enteredTelegramUser || telegramUser.username || "",
+                      },
+                    ],
+                  })
+                )
               })
             : false
         } catch (e) {

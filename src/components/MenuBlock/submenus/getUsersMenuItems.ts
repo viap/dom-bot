@@ -2,7 +2,9 @@ import { getAllUsers } from "../../../api/controllerUsers/getAllUsers"
 import { UserDto } from "../../../common/dto/user.dto"
 import { ROLES } from "../../../common/enums/roles.enum"
 import { MyContext } from "../../../common/types/myContext"
+import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
+import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
@@ -22,11 +24,9 @@ export function getUserMenuItem(
   user: UserDto
 ): MenuBlockItemsProps {
   const props = [user]
-  const result = {
-    name: user.name,
-    parent,
-    roles: parent?.roles,
-    content: getTextOfData(
+
+  const content: string = [
+    getTextOfData(
       "Пользователь",
       {
         name: user.name,
@@ -35,6 +35,16 @@ export function getUserMenuItem(
       },
       { name: "имя", descr: "описание", roles: "права" }
     ),
+    getTextOfContactsData(user.contacts),
+  ]
+    .filter(notEmpty)
+    .join("\r\n\r\n")
+
+  const result = {
+    name: user.name,
+    parent,
+    roles: parent?.roles,
+    content,
     props: props,
   } as MenuBlockItemsProps
 
@@ -53,7 +63,7 @@ export function getUserMenuItem(
           conversation: CONVERSATION_NAMES.PSYCHOLOGIST_TO_USER,
         },
   ]
-    .filter((item) => !!item)
+    .filter(notEmpty)
     .map((item) => {
       return {
         ...item,

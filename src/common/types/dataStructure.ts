@@ -1,3 +1,3 @@
 export type DataStructure = {
-  [key: string]: number | boolean | string | DataStructure
+  [key: string]: number | boolean | string | undefined | DataStructure
 }

@@ -3,7 +3,9 @@ import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../../common/types/myContext"
 import { getCurrentDateString } from "../../../common/utils/getCurrentDateString"
 import { getCurrentTimeString } from "../../../common/utils/getCurrentTimeString"
+import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
+import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
@@ -32,11 +34,8 @@ export function getPsychologistTherapyRequestMenuItem(
   const requestDate = getCurrentDateString(therapyRequest.timestamp)
   const requestTime = getCurrentTimeString(therapyRequest.timestamp)
 
-  const result = {
-    name: `Заявка от ${requestDate} в ${requestTime}`,
-    parent,
-    roles: parent?.roles,
-    content: getTextOfData(
+  const content: string = [
+    getTextOfData(
       "",
       {
         dateTime: `${requestDate} в ${requestTime}`,
@@ -55,6 +54,16 @@ export function getPsychologistTherapyRequestMenuItem(
         accepted: "принята",
       }
     ),
+    getTextOfContactsData(therapyRequest.contacts),
+  ]
+    .filter(notEmpty)
+    .join("\r\n\r\n")
+
+  const result = {
+    name: `Заявка от ${requestDate} в ${requestTime}`,
+    parent,
+    roles: parent?.roles,
+    content,
     props,
   } as MenuBlockItemsProps
 
@@ -72,7 +81,7 @@ export function getPsychologistTherapyRequestMenuItem(
         }
       : undefined,
   ]
-    .filter((item) => !!item)
+    .filter(notEmpty)
     .map((item) => {
       return { ...item, props, parent: result, roles: result?.roles }
     }) as Array<MenuBlockItemsProps>

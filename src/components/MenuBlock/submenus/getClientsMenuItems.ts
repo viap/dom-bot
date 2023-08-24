@@ -3,8 +3,10 @@ import { getTherapySessions } from "../../../api/controllerTherapySessions/getTh
 import { ClientDto } from "../../../common/dto/client.dto"
 import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
 import { MyContext } from "../../../common/types/myContext"
+import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { groupBy } from "../../../common/utils/groupBy"
+import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
@@ -39,19 +41,36 @@ export function getClientMenuItem(
   sessions: Array<TherapySessionDto> = []
 ): MenuBlockItemsProps {
   const props = [client, sessions]
+
+  const content: string = [
+    getTextOfData(
+      "клиент",
+      {
+        name: client.user.name,
+        therapyRequest:
+          client.therapyRequest && client.therapyRequest.descr
+            ? client.therapyRequest.descr
+            : undefined,
+        descr: client.descr,
+        sessionsCount: sessions.length,
+      },
+      {
+        name: "имя",
+        descr: "описание",
+        therapyRequest: "запрос",
+        sessionsCount: "количество сессий",
+      }
+    ),
+    getTextOfContactsData(client.user.contacts),
+  ]
+    .filter(notEmpty)
+    .join("\r\n\r\n")
+
   const result = {
     name: client.user.name + " | " + sessions.length,
     parent,
     roles: parent?.roles,
-    content: getTextOfData(
-      "Клиент",
-      {
-        name: client.user.name,
-        descr: client.descr,
-        sessionsCount: sessions.length,
-      },
-      { name: "Имя", descr: "Описание", sessionsCount: "Количество сессий" }
-    ),
+    content,
     props: props,
   } as MenuBlockItemsProps
 
@@ -81,7 +100,7 @@ export function getClientMenuItem(
         }
       : undefined,
   ]
-    .filter((item) => !!item)
+    .filter(notEmpty)
     .map((item) => {
       return {
         ...item,

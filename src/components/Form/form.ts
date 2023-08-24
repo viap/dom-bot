@@ -4,6 +4,7 @@ import { ReplyKeyboardMarkup, ReplyKeyboardRemove } from "grammy/types"
 import { MyContext } from "../../common/types/myContext"
 import { ObjectWithPrimitiveValues } from "../../common/types/objectWithPrimitiveValues"
 import { PrimitiveValues } from "../../common/types/primitiveValues"
+import { notEmpty } from "../../common/utils/notEmpty"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { defaultButtonsRow } from "./consts/defaultButtonsRow"
 import { defaultTexts } from "./consts/defaultTexts"
@@ -13,10 +14,10 @@ import { FORM_RESULT_STATUSES } from "./enums/formResultStatuses.enum"
 import { FORM_TEXT_TYPES } from "./enums/formTextTypes.enum"
 import { FormButtonProps } from "./types/formButtonProps"
 import { FormInputProps } from "./types/formInputProps"
+import { FromInputValue } from "./types/formInputValue"
 import { FormOptions } from "./types/formOptions"
 import { FormResultProps } from "./types/formResultProps"
 import { inputValueToString } from "./utils/inputValueToString"
-import { FromInputValue } from "./types/formInputValue"
 
 export class Form<T extends ObjectWithPrimitiveValues> {
   private status: FORM_RESULT_STATUSES
@@ -48,9 +49,9 @@ export class Form<T extends ObjectWithPrimitiveValues> {
         .filter((button) => {
           switch (button.action) {
             case FORM_BUTTON_ACTIONS.PREV:
-              return !!this.prevInput
+              return notEmpty(this.prevInput)
             case FORM_BUTTON_ACTIONS.NEXT:
-              return !!(this.input && this.input.optional)
+              return notEmpty(this.input && this.input.optional)
             default:
               return true
           }

@@ -8,16 +8,37 @@ export const DefaultMenu: MenuBlockItemsProps = {
   name: "Меню",
   roles: defaultRoles,
   items: [
+    // {
+    //   name: "Расписание",
+    //   content: "Расписание кабинетов DOM'а",
+    // },
+    // {
+    //   name: "Забронировать кабинет",
+    //   content: "Забронировать кабинет",
+    // },
+    // {
+    //   name: "О пространстве",
+    //   content: "Описание пространства",
+    // },
     {
-      name: "Расписание",
-      content: "Расписание кабинетов DOM'а",
+      name: "Пользователи",
+      submenu: SUBMENU_TYPES.ALL_USERS,
+      options: { columns: 2 },
+      roles: [ROLES.ADMIN, ROLES.EDITOR],
     },
     {
-      name: "Забронировать кабинет",
-      content: "Забронировать кабинет",
+      name: "Заявки",
+      roles: [ROLES.ADMIN, ROLES.EDITOR],
+      items: [
+        {
+          name: "Список заявок",
+          options: { columns: 2 },
+          submenu: SUBMENU_TYPES.ALL_THERAPY_REQUESTS,
+        },
+      ],
     },
     {
-      name: "Клиенты",
+      name: "Мои клиенты",
       roles: [ROLES.PSYCHOLOGIST],
       items: [
         {
@@ -41,30 +62,9 @@ export const DefaultMenu: MenuBlockItemsProps = {
       },
     },
     {
-      name: "Пользователи",
-      submenu: SUBMENU_TYPES.ALL_USERS,
-      options: { columns: 2 },
-      roles: [ROLES.ADMIN, ROLES.EDITOR],
-    },
-    {
-      name: "Заявки",
-      roles: [ROLES.ADMIN, ROLES.EDITOR],
-      items: [
-        {
-          name: "Список заявок",
-          options: { columns: 2 },
-          submenu: SUBMENU_TYPES.ALL_THERAPY_REQUESTS,
-        },
-      ],
-    },
-    {
       name: "Оставить заявку",
       content: "Опишите пожалуйста ваш запрос",
       conversation: CONVERSATION_NAMES.THERAPY_REQUEST_ADD,
-    },
-    {
-      name: "О пространстве",
-      content: "Описание пространства",
     },
   ],
 }
