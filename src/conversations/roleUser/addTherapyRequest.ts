@@ -1,7 +1,6 @@
 import { Conversation } from "@grammyjs/conversations"
 import { getAllPsychologists } from "../../api/controllerPsychologists/getAllPsychologists"
 import { createTherapyRequest } from "../../api/controllerTherapyRequests/createTherapyRequest"
-import { getUser } from "../../api/controllerUsers/getUser"
 import { TelegramUserDto } from "../../common/dto/telegramUser.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { SocialNetworks } from "../../common/enums/socialNetworks.enum"
@@ -14,6 +13,7 @@ import { FormInputProps } from "../../components/Form/types/formInputProps"
 import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
+import { ROLES } from "common/enums/roles.enum"
 
 export const AddTherapyRequest: BotConversation = {
   getName() {
@@ -25,7 +25,6 @@ export const AddTherapyRequest: BotConversation = {
       conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
-      const me = await getUser(ctx)
       const allPsychologists = await getAllPsychologists(ctx)
       const telegramUser: TelegramUserDto | undefined =
         ctx.from && !ctx.from.is_bot
@@ -35,7 +34,7 @@ export const AddTherapyRequest: BotConversation = {
             }
           : undefined
 
-      if (!(me && telegramUser)) {
+      if (!(ctx.user && telegramUser)) {
         await ctx.reply(
           "*Не возможно отправить заявку*",
           ReplyMarkup.parseModeV2
@@ -67,7 +66,14 @@ export const AddTherapyRequest: BotConversation = {
             }
           }),
         },
-      ]
+        ctx.user.roles.includes(ROLES.EDITOR)
+          ? {
+              name: "telegramUser",
+              alias: "логин в телеграм",
+              type: FORM_INPUT_TYPES.STRING,
+            }
+          : undefined,
+      ].filter((input) => !!input) as Array<FormInputProps>
 
       type resultType = {
         name: string
@@ -91,7 +97,7 @@ export const AddTherapyRequest: BotConversation = {
                     telegramUser.username ||
                     "",
                   descr: formResult.data.descr,
-                  user: me._id,
+                  user: ctx.user._id,
                   psychologist: formResult.data.psychologist,
                   contacts: [
                     {
@@ -115,12 +121,6 @@ export const AddTherapyRequest: BotConversation = {
             )
           }
         }
-
-        // return result
-        //   ? {
-        //       stepsBack: 1,
-        //     }
-        //   : undefined
       }
     }
   },

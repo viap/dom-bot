@@ -4,6 +4,8 @@ import { loginByTelegram } from "../../api/controllerAuth/loginByTelegram"
 import { TelegramUserDto } from "../dto/telegramUser.dto"
 import { BOT_TEXTS } from "../enums/botTexts.enum"
 import { NextFunction } from "grammy"
+import { getUser } from "../../api/controllerUsers/getUser"
+import { getPsychologist } from "../../api/controllerPsychologists/getPsychologist"
 
 export const apiLoginByTelegram = async (
   ctx: MyContext,
@@ -19,6 +21,11 @@ export const apiLoginByTelegram = async (
         ...ctx.from,
         id: ctx.from.id + "",
       } as TelegramUserDto)
+    }
+
+    if (ctx.session.token) {
+      ctx.user = await getUser(ctx)
+      ctx.psychologist = await getPsychologist(ctx)
     }
   }
 

@@ -62,7 +62,6 @@ export class MenuBlock {
   constructor(
     private conversation: Conversation<MyContext>,
     private ctx: MyContext,
-    private user: UserDto,
     menu: MenuBlockItemsProps,
     options?: Partial<MenuBlockOptions>
   ) {
@@ -70,7 +69,7 @@ export class MenuBlock {
     preparedMenu = MenuBlock.getPreparedMenu(preparedMenu)
     preparedMenu = MenuBlock.getMenuFilteredByRoles(
       preparedMenu,
-      user.roles.length ? user.roles : undefined
+      ctx.user.roles.length ? ctx.user.roles : undefined
     )
 
     this.menu = preparedMenu
