@@ -7,6 +7,7 @@ import { getCurrentTimeString } from "../../../common/utils/getCurrentTimeString
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 
 export async function loadTherapyRequestsMenuItems(
   ctx: MyContext,
@@ -30,11 +31,8 @@ export function getTherapyRequestMenuItem(
   const requestDate = getCurrentDateString(therapyRequest.timestamp)
   const requestTime = getCurrentTimeString(therapyRequest.timestamp)
 
-  const result = {
-    name: `Заявка от ${requestDate} в ${requestTime}`,
-    parent,
-    roles: parent?.roles,
-    content: getTextOfData(
+  const content: string = [
+    getTextOfData(
       "",
       {
         dateTime: `${requestDate} в ${requestTime}`,
@@ -53,6 +51,16 @@ export function getTherapyRequestMenuItem(
         accepted: "принята",
       }
     ),
+    getTextOfContactsData(therapyRequest.contacts),
+  ]
+    .filter(notEmpty)
+    .join("\r\n\r\n")
+
+  const result = {
+    name: `Заявка от ${requestDate} в ${requestTime}`,
+    parent,
+    roles: parent?.roles,
+    content,
     props,
   } as MenuBlockItemsProps
 

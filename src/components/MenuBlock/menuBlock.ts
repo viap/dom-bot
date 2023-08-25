@@ -1,10 +1,12 @@
 import { Conversation } from "@grammyjs/conversations"
-import { ClientDto } from "common/dto/client.dto"
-import { TherapySessionDto } from "common/dto/therapySession.dto"
-import { BotConversation } from "conversations/types/botConversation"
+import { ClientDto } from "../../common/dto/client.dto"
+import { TherapySessionDto } from "../../common/dto/therapySession.dto"
+import { BotConversation } from "../../conversations/types/botConversation"
 import { Keyboard } from "grammy"
+import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
 import { UserDto } from "../../common/dto/user.dto"
 import { ACTION_BUTTON_TEXTS } from "../../common/enums/actionButtonTexts.enum"
+import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { ROLES } from "../../common/enums/roles.enum"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
@@ -17,25 +19,24 @@ import {
   loadClientsMenuItems,
 } from "./submenus/getClientsMenuItems"
 import {
-  getTherapySessionMenuItem,
-  loadTherapySessionsMenuItems,
-} from "./submenus/getTherapySessionsMenuItems"
+  getPsychologistTherapyRequestMenuItem,
+  loadPsychologistTherapyRequestsMenuItems,
+} from "./submenus/getPsychologistTherapyRequestsMenuItems"
 import {
   getTherapyRequestMenuItem,
   loadTherapyRequestsMenuItems,
 } from "./submenus/getTherapyRequestsMenuItems"
 import {
-  getPsychologistTherapyRequestMenuItem,
-  loadPsychologistTherapyRequestsMenuItems,
-} from "./submenus/getPsychologistTherapyRequestsMenuItems"
+  getTherapySessionMenuItem,
+  loadTherapySessionsMenuItems,
+} from "./submenus/getTherapySessionsMenuItems"
 import {
-  loadUsersMenuItems,
   getUserMenuItem,
+  loadUsersMenuItems,
 } from "./submenus/getUsersMenuItems"
 import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
-import { TherapyRequestDto } from "common/dto/therapyRequest.dto"
 
 const defaultItemsParams: MenuBlockItemsParams = {
   pageNumber: 0,
@@ -354,7 +355,7 @@ export class MenuBlock {
           }
         }
       } catch (e) {
-        this.conversation.log("Произошла ошибка в conversation", e)
+        this.conversation.log(BOT_ERRORS.CONVERSATION, e)
       } finally {
         keepGoing = true
       }
@@ -413,7 +414,7 @@ export class MenuBlock {
     const conversationResult = (await botConversation.getConversation(...props)(
       this.conversation,
       this.ctx
-    )) as ConversationResult
+    )) as ConversationResult | undefined
 
     this.conversation.log("conversationResult", conversationResult)
 
@@ -502,6 +503,7 @@ export class MenuBlock {
       return item
     }
   }
+
   selectRoot() {
     return this.selectItem(undefined, true)
   }
@@ -516,8 +518,8 @@ export class MenuBlock {
     fromTheTop = false,
     direction: "up" | "down" = "down"
   ) {
-    this.conversation.log("PARAMS", itemName, fromTheTop, direction)
-    this.conversation.log("Current", this.current)
+    // this.conversation.log("PARAMS", itemName, fromTheTop, direction)
+    // this.conversation.log("Current", this.current)
 
     const resultDirection = fromTheTop ? "down" : direction
     const item = fromTheTop ? this.menu : this.current
@@ -525,11 +527,11 @@ export class MenuBlock {
     const result = this.findItem(itemName, item, resultDirection)
     this.current = result ? result : this.menu
 
-    this.conversation.log(
-      "result",
-      this.current.name,
-      this.current.parent?.name
-    )
+    // this.conversation.log(
+    //   "result",
+    //   this.current.name,
+    //   this.current.parent?.name
+    // )
     this.printMenuStructure()
 
     this.setDefaultItemsParams()

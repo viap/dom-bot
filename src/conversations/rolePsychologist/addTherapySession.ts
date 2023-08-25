@@ -95,33 +95,30 @@ export const AddTherapySession: BotConversation = {
       const form = new Form<resultType>(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
-      const resultSessions = [...sessions]
+      let result = false
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
-        let result = false
         try {
-          result = await conversation.external(async () => {
-            const session = await addTherapySession(ctx, {
-              date: getCurrentDateString(await conversation.now()),
-              psychologist: currentUserAlias,
-              client: client.user._id,
-              duration: formResult.data.duration,
-              price: {
-                currency: formResult.data.priceCurrency,
-                value: formResult.data.priceValue,
-              },
-              comission: {
-                currency: formResult.data.comissionCurrency,
-                value: formResult.data.comissionValue,
-              },
-              descr: formResult.data.descr || undefined,
+          // NOTICE: don't use conversation.now inside of conversation.external !!!!
+          const now = await conversation.now()
+          result = notEmpty(
+            await conversation.external(async () => {
+              return addTherapySession(ctx, {
+                date: getCurrentDateString(now),
+                psychologist: currentUserAlias,
+                client: client.user._id,
+                duration: formResult.data.duration,
+                price: {
+                  currency: formResult.data.priceCurrency,
+                  value: formResult.data.priceValue,
+                },
+                comission: {
+                  currency: formResult.data.comissionCurrency,
+                  value: formResult.data.comissionValue,
+                },
+                descr: formResult.data.descr || undefined,
+              })
             })
-
-            if (session) {
-              resultSessions.push(session)
-            }
-
-            return notEmpty(session)
-          })
+          )
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
@@ -134,14 +131,13 @@ export const AddTherapySession: BotConversation = {
             )
           }
         }
-
-        return result
-          ? {
-              stepsBack: 2,
-              // parentProps: [client, resultSessions],
-            }
-          : undefined
       }
+
+      return result
+        ? {
+            stepsBack: 2,
+          }
+        : undefined
     }
   },
 }
