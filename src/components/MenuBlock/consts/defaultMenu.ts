@@ -4,7 +4,7 @@ import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 import { defaultRoles } from "./defaultRoles"
 
-export const DefaultMenu: MenuBlockItemsProps = {
+const defaultMenu = {
   name: "Меню",
   roles: defaultRoles,
   items: [
@@ -67,4 +67,6 @@ export const DefaultMenu: MenuBlockItemsProps = {
       conversation: CONVERSATION_NAMES.THERAPY_REQUEST_ADD,
     },
   ],
-}
+} as Partial<MenuBlockItemsProps>
+
+export default defaultMenu

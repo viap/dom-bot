@@ -37,6 +37,7 @@ import {
 import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
+import { randomUUID } from "crypto"
 
 const defaultItemsParams: MenuBlockItemsParams = {
   pageNumber: 0,
@@ -63,17 +64,13 @@ export class MenuBlock {
   constructor(
     private conversation: Conversation<MyContext>,
     private ctx: MyContext,
-    menu: MenuBlockItemsProps,
+    menu: Partial<MenuBlockItemsProps>,
     options?: Partial<MenuBlockOptions>
   ) {
-    let preparedMenu = { ...menu }
-    preparedMenu = MenuBlock.getPreparedMenu(preparedMenu)
-    preparedMenu = MenuBlock.getMenuFilteredByRoles(
-      preparedMenu,
+    this.menu = MenuBlock.getMenuFilteredByRoles(
+      MenuBlock.getPreparedMenu(menu),
       ctx.user.roles.length ? ctx.user.roles : undefined
     )
-
-    this.menu = preparedMenu
 
     this.current = this.menu
     this.options = Object.assign(
@@ -87,11 +84,15 @@ export class MenuBlock {
   }
 
   static getPreparedMenu(
-    item: MenuBlockItemsProps,
+    item: Partial<MenuBlockItemsProps>,
     parent?: MenuBlockItemsProps,
     roles: Array<ROLES> = defaultRoles
-  ) {
-    const menu = { ...item, parent }
+  ): MenuBlockItemsProps {
+    const menu = {
+      ...item,
+      key: item.key || randomUUID(), // `${item.name}_${randomUUID()}`
+      parent,
+    } as MenuBlockItemsProps
     menu.roles = menu.roles || parent?.roles || roles
 
     const items = menu.items
@@ -119,7 +120,7 @@ export class MenuBlock {
     })
 
     menu.items.map((item) => {
-      return this.getMenuFilteredByRoles(item)
+      return this.getMenuFilteredByRoles(item, availableRoles)
     })
 
     return menu
@@ -205,20 +206,20 @@ export class MenuBlock {
   }
 
   private findItem(
-    itemName?: string,
+    itemKey?: string,
     item?: MenuBlockItemsProps,
     direction: "up" | "down" = "down"
   ): MenuBlockItemsProps | undefined {
     const menu = item || this.menu
 
-    if (menu.name === itemName || !itemName) {
+    if (menu.key === itemKey || !itemKey) {
       return menu
     } else if (direction === "down") {
       return (menu.items || []).find((child) => {
-        return this.findItem(itemName, child, direction)
+        return this.findItem(itemKey, child, direction)
       })
     } else if (direction === "up" && menu.parent) {
-      return this.findItem(itemName, menu.parent, direction)
+      return this.findItem(itemKey, menu.parent, direction)
     }
   }
 
@@ -240,16 +241,12 @@ export class MenuBlock {
         this.selectRoot()
         break
       default:
-        this.conversation.log(
-          "****************************************** 1",
-          this.current
-        )
-        this.selectItem(text)
+        this.selectItem(this.getKeyByName(text))
         break
     }
   }
 
-  private async getSubmenuItems(
+  private async loadSubmenuItems(
     submenuType: SUBMENU_TYPES
   ): Promise<Array<MenuBlockItemsProps>> {
     switch (submenuType) {
@@ -337,8 +334,8 @@ export class MenuBlock {
       })
     }
   }
-  async show(itemName?: string) {
-    this.selectItem(itemName, true)
+  async show() {
+    this.selectItem(undefined, true)
 
     let keepGoing = true
     do {
@@ -363,7 +360,9 @@ export class MenuBlock {
       if (this.current.submenu) {
         this.currentItems = await this.conversation.external(async () => {
           return this.current.submenu
-            ? await this.getSubmenuItems(this.current.submenu)
+            ? (await this.loadSubmenuItems(this.current.submenu)).map((item) =>
+                MenuBlock.getPreparedMenu(item)
+              )
             : []
         })
       }
@@ -467,7 +466,7 @@ export class MenuBlock {
       if (conversationResult.stepsBack) {
         const item = this.getItemOnStepsBack(conversationResult.stepsBack)
         if (item) {
-          this.selectItem(item.name, false, "up")
+          this.selectItem(item.key, false, "up")
           return
         }
       } else if (conversationResult.goTo) {
@@ -485,7 +484,9 @@ export class MenuBlock {
 
   private updateItemByProps(item: MenuBlockItemsProps, props: Array<unknown>) {
     if (item.parent?.submenu) {
-      return this.getSubmenuItem(item.parent.submenu, item.parent, props)
+      return MenuBlock.getPreparedMenu(
+        this.getSubmenuItem(item.parent.submenu, item.parent, props)
+      )
     } else {
       return { ...item, props }
     }
@@ -513,8 +514,15 @@ export class MenuBlock {
       this.current = this.current.parent
     }
   }
+
+  getKeyByName(itemName?: string): string | undefined {
+    return itemName
+      ? this.currentItems.find((item) => item.name === itemName)?.key
+      : undefined
+  }
+
   selectItem(
-    itemName?: string,
+    itemKey?: string,
     fromTheTop = false,
     direction: "up" | "down" = "down"
   ) {
@@ -524,7 +532,7 @@ export class MenuBlock {
     const resultDirection = fromTheTop ? "down" : direction
     const item = fromTheTop ? this.menu : this.current
 
-    const result = this.findItem(itemName, item, resultDirection)
+    const result = this.findItem(itemKey, item, resultDirection)
     this.current = result ? result : this.menu
 
     // this.conversation.log(

@@ -4,13 +4,18 @@ import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import { MenuBlockOptions } from "./menuBlockOptions.type"
 
 export type MenuBlockItemsProps = {
+  key: string
   name: string
   parent?: MenuBlockItemsProps
-  content?: string | ((...props: Array<unknown>) => string)
   roles?: Array<ROLES>
-  options?: Partial<MenuBlockOptions>
+
+  content?: string | ((...props: Array<unknown>) => string)
   items?: Array<MenuBlockItemsProps>
+  options?: Partial<MenuBlockOptions>
+
+  submenuPreload?: boolean
   submenu?: SUBMENU_TYPES
+
   conversation?: CONVERSATION_NAMES
   props?: Array<unknown>
 }
