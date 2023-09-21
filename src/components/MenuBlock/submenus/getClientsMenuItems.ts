@@ -9,6 +9,7 @@ import { groupBy } from "../../../common/utils/groupBy"
 import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
+import MenuBlock from "../menuBlock"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
 export async function loadClientsMenuItems(
@@ -66,13 +67,14 @@ export function getClientMenuItem(
     .filter(notEmpty)
     .join("\r\n\r\n")
 
-  const result = {
-    name: client.user.name + " | " + sessions.length,
-    parent,
-    roles: parent?.roles,
-    content,
-    props: props,
-  } as MenuBlockItemsProps
+  const result = MenuBlock.getPreparedMenu(
+    {
+      name: client.user.name + " | " + sessions.length,
+      content,
+      props: props,
+    },
+    parent
+  )
 
   result.items = [
     sessions.length > 0
@@ -102,13 +104,14 @@ export function getClientMenuItem(
   ]
     .filter(notEmpty)
     .map((item) => {
-      return {
-        ...item,
-        parent: result,
-        roles: result?.roles,
-        props,
-      }
-    }) as Array<MenuBlockItemsProps>
+      return MenuBlock.getPreparedMenu(
+        {
+          ...item,
+          props,
+        },
+        result
+      )
+    })
 
   return result
 }

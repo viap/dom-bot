@@ -5,6 +5,7 @@ import { DeleteTherapyRequest } from "./roleEditor/deleteTherapyRequest"
 import { EditUser } from "./roleEditor/editUser"
 import { RemoveFromPsychologists } from "./roleEditor/removeFromPsychologists"
 import { TransferTherapyRequest } from "./roleEditor/transferTherapyRequest"
+import EditTherapyRequest from "./roleEditor/editTherapyRequest"
 import { AddClient } from "./rolePsychologist/addClient"
 import { AddTherapySession } from "./rolePsychologist/addTherapySession"
 import { DeleteClient } from "./rolePsychologist/deleteClient"
@@ -33,6 +34,7 @@ export const BotConversations = {
       CreatePsychologistFromUser,
       DeleteTherapyRequest,
       TransferTherapyRequest,
+      EditTherapyRequest,
       AcceptTherapyRequest,
       RejectTherapyRequest,
       RemoveFromPsychologists,

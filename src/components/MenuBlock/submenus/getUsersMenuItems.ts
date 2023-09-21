@@ -6,6 +6,7 @@ import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsDa
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import MenuBlock from "../menuBlock"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
 export async function loadUsersMenuItems(
@@ -40,13 +41,14 @@ export function getUserMenuItem(
     .filter(notEmpty)
     .join("\r\n\r\n")
 
-  const result = {
-    name: user.name,
-    parent,
-    roles: parent?.roles,
-    content,
-    props: props,
-  } as MenuBlockItemsProps
+  const result = MenuBlock.getPreparedMenu(
+    {
+      name: user.name,
+      content,
+      props: props,
+    },
+    parent
+  )
 
   result.items = [
     {
@@ -65,13 +67,14 @@ export function getUserMenuItem(
   ]
     .filter(notEmpty)
     .map((item) => {
-      return {
-        ...item,
-        parent: result,
-        roles: result?.roles,
-        props,
-      }
-    }) as Array<MenuBlockItemsProps>
+      return MenuBlock.getPreparedMenu(
+        {
+          ...item,
+          props,
+        },
+        result
+      )
+    })
 
   return result
 }

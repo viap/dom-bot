@@ -50,7 +50,7 @@ const defaultMenuOptions: MenuBlockOptions = {
   columns: 1,
   withSearch: false,
 }
-export class MenuBlock {
+export default class MenuBlock {
   private current: MenuBlockItemsProps
   private menu: MenuBlockItemsProps
 
@@ -90,17 +90,14 @@ export class MenuBlock {
   ): MenuBlockItemsProps {
     const menu = {
       ...item,
-      key: item.key || randomUUID(), // `${item.name}_${randomUUID()}`
-      parent,
+      key: item.key || `${item.name}_${randomUUID()}`,
+      parent: item.parent || parent,
+      roles: item.roles || parent?.roles || roles,
     } as MenuBlockItemsProps
-    menu.roles = menu.roles || parent?.roles || roles
 
-    const items = menu.items
-      ? menu.items.map((item) => {
-          return this.getPreparedMenu(item, menu, item.roles || menu.roles)
-        })
-      : []
-    menu.items = items
+    menu.items = (menu.items || []).map((item) => {
+      return this.getPreparedMenu(item, menu, item.roles || menu.roles)
+    })
 
     return menu
   }
@@ -110,18 +107,15 @@ export class MenuBlock {
     availableRoles: Array<ROLES> = defaultRoles
   ) {
     const menu = { ...item }
-    const items = menu.items || []
-    const menuRoles = menu.roles || []
-
-    menu.items = items.filter((item) => {
-      return (item.roles || menuRoles).find((role) =>
-        availableRoles.includes(role)
-      )
-    })
-
-    menu.items.map((item) => {
-      return this.getMenuFilteredByRoles(item, availableRoles)
-    })
+    menu.items = (menu.items || [])
+      .filter((item) => {
+        return (item.roles || menu.roles || []).find((role) =>
+          availableRoles.includes(role)
+        )
+      })
+      .map((item) => {
+        return this.getMenuFilteredByRoles(item, availableRoles)
+      })
 
     return menu
   }
@@ -130,7 +124,7 @@ export class MenuBlock {
     this.current.items = items
   }
 
-  get currentItems() {
+  get currentItems(): Array<MenuBlockItemsProps> {
     return this.current.items || []
   }
 
@@ -360,9 +354,7 @@ export class MenuBlock {
       if (this.current.submenu) {
         this.currentItems = await this.conversation.external(async () => {
           return this.current.submenu
-            ? (await this.loadSubmenuItems(this.current.submenu)).map((item) =>
-                MenuBlock.getPreparedMenu(item)
-              )
+            ? await this.loadSubmenuItems(this.current.submenu)
             : []
         })
       }
@@ -393,13 +385,14 @@ export class MenuBlock {
       )
     }
     const isCurrent =
-      curItem.name === this.current.name &&
-      curItem.parent?.name === this.current.parent?.name
+      curItem.key === this.current.key &&
+      curItem.parent?.key === this.current.parent?.key
     const tab = isCurrent ? "---" : "   "
+
     this.conversation.log(
       new Array(depth).fill(tab).join("") +
         (curItem.parent ? `[ ${curItem.parent.name} ] => ` : "") +
-        curItem.name +
+        curItem.key +
         ` < ${(curItem.roles || []).join(" | ")} >`
     )
     ;(curItem.items || []).forEach((item) => {
@@ -484,9 +477,7 @@ export class MenuBlock {
 
   private updateItemByProps(item: MenuBlockItemsProps, props: Array<unknown>) {
     if (item.parent?.submenu) {
-      return MenuBlock.getPreparedMenu(
-        this.getSubmenuItem(item.parent.submenu, item.parent, props)
-      )
+      this.getSubmenuItem(item.parent.submenu, item.parent, props)
     } else {
       return { ...item, props }
     }

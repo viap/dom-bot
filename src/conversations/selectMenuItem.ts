@@ -1,5 +1,5 @@
 import { Conversation } from "@grammyjs/conversations"
-import { MenuBlock } from "../components/MenuBlock/menuBlock"
+import MenuBlock from "../components/MenuBlock/menuBlock"
 
 import { MyContext } from "../common/types/myContext"
 import defaultMenu from "../components/MenuBlock/consts/defaultMenu"

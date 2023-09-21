@@ -8,6 +8,7 @@ import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
+import MenuBlock from "../menuBlock"
 
 export async function loadTherapyRequestsMenuItems(
   ctx: MyContext,
@@ -56,19 +57,26 @@ export function getTherapyRequestMenuItem(
     .filter(notEmpty)
     .join("\r\n\r\n")
 
-  const result = {
-    name: `Заявка от ${requestDate} в ${requestTime}`,
-    parent,
-    roles: parent?.roles,
-    content,
-    props,
-  } as MenuBlockItemsProps
+  const result = MenuBlock.getPreparedMenu(
+    {
+      name: `Заявка от ${requestDate} в ${requestTime}`,
+      content,
+      props,
+    },
+    parent
+  )
 
   result.items = [
     !therapyRequest.accepted
       ? {
           name: "Перенаправить заявку",
           conversation: CONVERSATION_NAMES.THERAPY_REQUEST_TRANSFER,
+        }
+      : undefined,
+    !therapyRequest.accepted
+      ? {
+          name: "Редактировать заявку",
+          conversation: CONVERSATION_NAMES.THERAPY_REQUEST_EDIT,
         }
       : undefined,
     !therapyRequest.accepted
@@ -80,7 +88,7 @@ export function getTherapyRequestMenuItem(
   ]
     .filter(notEmpty)
     .map((item) => {
-      return { ...item, props, parent: result, roles: result?.roles }
+      return MenuBlock.getPreparedMenu({ ...item, props }, result)
     }) as Array<MenuBlockItemsProps>
 
   return result

@@ -92,6 +92,7 @@ export const AddTherapyRequest: BotConversation = {
         const enteredTelegramUser = (formResult.data.telegramUser || "")
           .trim()
           .replace("@", "")
+
         try {
           result = telegramUser
             ? await conversation.external(async () => {

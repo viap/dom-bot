@@ -7,6 +7,7 @@ import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsDa
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import MenuBlock from "../menuBlock"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
 export async function loadPsychologistTherapyRequestsMenuItems(
@@ -59,13 +60,14 @@ export function getPsychologistTherapyRequestMenuItem(
     .filter(notEmpty)
     .join("\r\n\r\n")
 
-  const result = {
-    name: `Заявка от ${requestDate} в ${requestTime}`,
-    parent,
-    roles: parent?.roles,
-    content,
-    props,
-  } as MenuBlockItemsProps
+  const result = MenuBlock.getPreparedMenu(
+    {
+      name: `Заявка от ${requestDate} в ${requestTime}`,
+      content,
+      props,
+    },
+    parent
+  )
 
   result.items = [
     !therapyRequest.accepted
@@ -83,7 +85,7 @@ export function getPsychologistTherapyRequestMenuItem(
   ]
     .filter(notEmpty)
     .map((item) => {
-      return { ...item, props, parent: result, roles: result?.roles }
+      return MenuBlock.getPreparedMenu({ ...item, props }, result)
     }) as Array<MenuBlockItemsProps>
 
   return result

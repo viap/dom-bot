@@ -20,4 +20,5 @@ export enum CONVERSATION_NAMES {
   PSYCHOLOGIST_TO_USER = "psychologist_to_user",
   THERAPY_REQUEST_TRANSFER = "therapy_request_transfer",
   THERAPY_REQUEST_DELETE = "therapy_request_delete",
+  THERAPY_REQUEST_EDIT = "therapy_request_edit",
 }

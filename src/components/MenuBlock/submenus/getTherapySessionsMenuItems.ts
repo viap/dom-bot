@@ -5,6 +5,7 @@ import { MyContext } from "../../../common/types/myContext"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import MenuBlock from "../menuBlock"
 import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
 export async function loadTherapySessionsMenuItems(
@@ -27,34 +28,37 @@ export function getTherapySessionMenuItem(
 ): MenuBlockItemsProps {
   const props = [client, session]
 
+  const content = getTextOfData(
+    "",
+    {
+      descr: session.descr,
+      date: session.date,
+      duration: session.duration,
+      price: [session.price.value, session.price.currency].join(" "),
+      comission: session.comission
+        ? [session.comission.value, session.price.currency].join(" ")
+        : "",
+    },
+    {
+      descr: "описание",
+      date: "дата",
+      duration: "продолжительность",
+      price: "цена",
+      comission: "комиссия",
+    }
+  )
+
+  const result = MenuBlock.getPreparedMenu(
+    {
+      name: `Сессия от ${session.date}`,
+      content,
+      props,
+    },
+    parent
+  )
+
   const deletionIsAvailable =
     Date.now() - session.timestamp < oneDayInMilliseconds
-
-  const result = {
-    name: `Сессия от ${session.date}`,
-    parent,
-    roles: parent?.roles,
-    content: getTextOfData(
-      "",
-      {
-        descr: session.descr,
-        date: session.date,
-        duration: session.duration,
-        price: [session.price.value, session.price.currency].join(" "),
-        comission: session.comission
-          ? [session.comission.value, session.price.currency].join(" ")
-          : "",
-      },
-      {
-        descr: "описание",
-        date: "дата",
-        duration: "продолжительность",
-        price: "цена",
-        comission: "комиссия",
-      }
-    ),
-    props,
-  } as MenuBlockItemsProps
 
   result.items = [
     deletionIsAvailable
@@ -67,7 +71,7 @@ export function getTherapySessionMenuItem(
   ]
     .filter(notEmpty)
     .map((item) => {
-      return { ...item, parent: result, roles: result?.roles }
+      return MenuBlock.getPreparedMenu(item as MenuBlockItemsProps, result)
     }) as Array<MenuBlockItemsProps>
 
   return result

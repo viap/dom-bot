@@ -174,7 +174,7 @@ export class Form<T extends ObjectWithPrimitiveValues> {
         )
 
         this.ctx = await this.conversation.waitFor("message:text")
-        const text = this.ctx.msg?.text || ""
+        const text = this.ctx.msg?.text || this.input.default || ""
         const buttonAction = this.getButtonAction(text)
 
         this.conversation.log("text", text)
