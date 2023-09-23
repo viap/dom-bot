@@ -31,9 +31,18 @@ const defaultMenu = {
       roles: [ROLES.ADMIN, ROLES.EDITOR],
       items: [
         {
-          name: "Список заявок",
+          name: "Новые заяки",
           options: { columns: 2 },
           submenu: SUBMENU_TYPES.ALL_THERAPY_REQUESTS,
+          // submenuPreload: true,
+          props: [{ accepted: false }],
+        },
+        {
+          name: "Принятые заявки",
+          options: { columns: 2 },
+          submenu: SUBMENU_TYPES.ALL_THERAPY_REQUESTS,
+          // submenuPreload: true,
+          props: [{ accepted: true }],
         },
       ],
     },
@@ -56,10 +65,22 @@ const defaultMenu = {
     {
       name: "Мои заявки",
       roles: [ROLES.PSYCHOLOGIST],
-      submenu: SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS,
-      options: {
-        columns: 2,
-      },
+      items: [
+        {
+          name: "Новые заяки",
+          options: { columns: 2 },
+          submenu: SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS,
+          // submenuPreload: true,
+          props: [{ accepted: false }],
+        },
+        {
+          name: "Принятые заявки",
+          options: { columns: 2 },
+          submenu: SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS,
+          // submenuPreload: true,
+          props: [{ accepted: true }],
+        },
+      ],
     },
     {
       name: "Оставить заявку",

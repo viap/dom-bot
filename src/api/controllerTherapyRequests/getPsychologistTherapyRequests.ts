@@ -1,3 +1,4 @@
+import { ObjectWithPrimitiveValues } from "common/types/objectWithPrimitiveValues"
 import { currentUserAlias } from "../../common/consts/currentUserAlias"
 import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../common/types/myContext"
@@ -6,9 +7,15 @@ import { API_PATHS } from "../consts/apiPaths"
 
 export async function getPsychologistTherapyRequests(
   ctx: MyContext,
+  params?: ObjectWithPrimitiveValues,
   psychologistId: string = currentUserAlias
 ): Promise<Array<TherapyRequestDto>> {
-  return getRequest(ctx, API_PATHS.therapyRequests.GET.forPsychologist, {
-    psychologistId,
-  })
+  return getRequest(
+    ctx,
+    API_PATHS.therapyRequests.GET.forPsychologist,
+    {
+      psychologistId,
+    },
+    { params }
+  )
 }

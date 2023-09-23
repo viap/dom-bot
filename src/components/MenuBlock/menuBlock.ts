@@ -241,29 +241,24 @@ export default class MenuBlock {
   }
 
   private async loadSubmenuItems(
-    submenuType: SUBMENU_TYPES
+    submenuType: SUBMENU_TYPES,
+    item: MenuBlockItemsProps
   ): Promise<Array<MenuBlockItemsProps>> {
     switch (submenuType) {
       case SUBMENU_TYPES.ALL_USERS:
-        return await loadUsersMenuItems(this.ctx, this.current)
+        return await loadUsersMenuItems(this.ctx, item)
 
       case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
-        return await loadClientsMenuItems(this.ctx, this.current)
+        return await loadClientsMenuItems(this.ctx, item)
 
       case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
-        return await loadTherapySessionsMenuItems(
-          this.ctx,
-          this.current,
-          this.current.props as [ClientDto, TherapySessionDto[]]
-        )
+        return await loadTherapySessionsMenuItems(this.ctx, item)
+
       case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
-        return await loadTherapyRequestsMenuItems(this.ctx, this.current)
+        return await loadTherapyRequestsMenuItems(this.ctx, item)
 
       case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
-        return await loadPsychologistTherapyRequestsMenuItems(
-          this.ctx,
-          this.current
-        )
+        return await loadPsychologistTherapyRequestsMenuItems(this.ctx, item)
       default:
         return []
     }
@@ -322,7 +317,7 @@ export default class MenuBlock {
   async showCurrentItems() {
     if (this.currentItems.length) {
       await this.ctx.reply(ReplyMarkup.escapeForParseModeV2(`[ ... ]`), {
-        ...ReplyMarkup.keyboard(this.getKeyboard()),
+        ...ReplyMarkup.keyboard(await this.getCurrentKeyboard()),
         ...ReplyMarkup.oneTime,
         ...ReplyMarkup.parseModeV2,
       })
@@ -351,10 +346,10 @@ export default class MenuBlock {
         keepGoing = true
       }
 
-      if (this.current.submenu) {
+      if (this.current.submenu && !this.current.submenuPreload) {
         this.currentItems = await this.conversation.external(async () => {
           return this.current.submenu
-            ? await this.loadSubmenuItems(this.current.submenu)
+            ? await this.loadSubmenuItems(this.current.submenu, this.current)
             : []
         })
       }
@@ -548,10 +543,26 @@ export default class MenuBlock {
       this.itemsParams.pageNumber > 0 ? this.itemsParams.pageNumber - 1 : 0
   }
 
-  getKeyboard(): Keyboard {
+  async getCurrentKeyboard(): Promise<Keyboard> {
     this.updateItemsParams()
 
-    const currentItems = this.currentItems.slice(
+    const availableItems = []
+    for (let i = 0; i < this.currentItems.length; i++) {
+      const item = this.currentItems[i]
+      if (item.submenu && item.submenuPreload) {
+        item.items = await this.conversation.external(
+          async () =>
+            await this.loadSubmenuItems(item.submenu as SUBMENU_TYPES, item)
+        )
+
+        if (!item.items.length) {
+          continue
+        }
+      }
+      availableItems.push(item)
+    }
+
+    const currentItems = availableItems.slice(
       this.itemsParams.pageNumber * this.currentOptions.maxItemsOnScreen,
       this.itemsParams.pageNumber * this.currentOptions.maxItemsOnScreen +
         this.currentOptions.maxItemsOnScreen

@@ -6,11 +6,11 @@ import { getUrl } from "./getUrl"
 export function getRequest<T>(
   ctx: MyContext,
   url: string,
-  params?: object,
+  urlParams?: object,
   config?: AxiosRequestConfig
 ): Promise<T> | never {
   return axios
-    .get(getUrl(url, params), {
+    .get(getUrl(url, urlParams), {
       ...config,
       headers: getHeaders(ctx, config),
     })
