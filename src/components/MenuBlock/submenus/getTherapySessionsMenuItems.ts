@@ -10,9 +10,9 @@ import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
 export async function loadTherapySessionsMenuItems(
   ctx: MyContext,
-  current: MenuBlockItemsProps,
-  props: [ClientDto, TherapySessionDto[]]
+  current: MenuBlockItemsProps
 ): Promise<Array<MenuBlockItemsProps>> {
+  const props = current.props as [ClientDto, TherapySessionDto[]]
   const [client, sessions] = props
   const menuItems: Array<MenuBlockItemsProps> = [...(sessions || [])]
     .reverse()

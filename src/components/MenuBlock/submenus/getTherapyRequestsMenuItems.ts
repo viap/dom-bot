@@ -1,20 +1,22 @@
-import { notEmpty } from "../../../common/utils/notEmpty"
 import { getAllTherapyRequests } from "../../../api/controllerTherapyRequests/getAllTherapyRequests"
 import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../../common/types/myContext"
+import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
 import { getCurrentDateString } from "../../../common/utils/getCurrentDateString"
 import { getCurrentTimeString } from "../../../common/utils/getCurrentTimeString"
-import { getTextOfData } from "../../../common/utils/getTextOfData"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
-import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
+import { getTextOfData } from "../../../common/utils/getTextOfData"
+import { notEmpty } from "../../../common/utils/notEmpty"
+import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import MenuBlock from "../menuBlock"
+import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 
 export async function loadTherapyRequestsMenuItems(
   ctx: MyContext,
   current: MenuBlockItemsProps
 ): Promise<Array<MenuBlockItemsProps>> {
-  const therapyRequests = await getAllTherapyRequests(ctx)
+  const [params] = current.props as [ObjectWithPrimitiveValues]
+  const therapyRequests = await getAllTherapyRequests(ctx, params)
 
   const menuItems: Array<MenuBlockItemsProps> = therapyRequests
     .reverse()

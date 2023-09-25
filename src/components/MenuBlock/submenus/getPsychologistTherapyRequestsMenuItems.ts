@@ -1,6 +1,7 @@
 import { getPsychologistTherapyRequests } from "../../../api/controllerTherapyRequests/getPsychologistTherapyRequests"
 import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../../common/types/myContext"
+import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
 import { getCurrentDateString } from "../../../common/utils/getCurrentDateString"
 import { getCurrentTimeString } from "../../../common/utils/getCurrentTimeString"
 import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
@@ -14,11 +15,11 @@ export async function loadPsychologistTherapyRequestsMenuItems(
   ctx: MyContext,
   current: MenuBlockItemsProps
 ): Promise<Array<MenuBlockItemsProps>> {
-  const therapyRequests = await getPsychologistTherapyRequests(ctx)
+  const [params] = current.props as [ObjectWithPrimitiveValues]
+  const therapyRequests = await getPsychologistTherapyRequests(ctx, params)
 
   const menuItems: Array<MenuBlockItemsProps> = therapyRequests
     .reverse()
-    .filter((therapyRequest) => !therapyRequest.accepted)
     .map((therapyRequest) =>
       getPsychologistTherapyRequestMenuItem(current, therapyRequest)
     )
@@ -80,6 +81,12 @@ export function getPsychologistTherapyRequestMenuItem(
       ? {
           name: "Отклонить заявку",
           conversation: CONVERSATION_NAMES.THERAPY_REQUEST_REJECT,
+        }
+      : undefined,
+    !therapyRequest.accepted
+      ? {
+          name: "Перенаправить заявку",
+          conversation: CONVERSATION_NAMES.THERAPY_REQUEST_TRANSFER,
         }
       : undefined,
   ]

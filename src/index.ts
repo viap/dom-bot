@@ -1,4 +1,4 @@
-// import "module-alias/register"
+// import "./tsConfigBootstrap"
 
 import { run } from "@grammyjs/runner"
 import { domBot } from "./domQuizBot"

@@ -76,7 +76,7 @@ export const TransferTherapyRequest: BotConversation = {
 
         return result
           ? {
-              stepsBack: ctx.user.roles.includes(ROLES.PSYCHOLOGIST) ? 3 : 2,
+              stepsBack: 3,
             }
           : undefined
       }
