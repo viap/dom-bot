@@ -55,6 +55,22 @@ function getSessionKey(ctx: Context): string | undefined {
     : `${ctx.from.id}/${ctx.chat.id}`
 }
 
+// let intervalId: NodeJS.Timer | undefined = undefined
+// domBot.fork(async (ctx: MyContext, next) => {
+//   let count = 0
+
+//   if (intervalId) {
+//     clearInterval(intervalId)
+//   }
+
+//   intervalId = setInterval(async () => {
+//     await ctx.reply(`Счетчик: ${count}`)
+//     count++
+//   }, 3000)
+
+//   return next()
+// })
+
 domBot.use(
   session({
     getSessionKey,
