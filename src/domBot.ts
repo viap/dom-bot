@@ -31,7 +31,8 @@ const sessions = getSessions(connection)
 
 /** BOT */
 
-export const domBot = new Bot<MyContext>(process.env.TOKEN || "")
+const domBot = new Bot<MyContext>(process.env.TOKEN || "")
+export default domBot
 // const privateBot = domBot.chatType("private")
 
 /** COMMANDS */

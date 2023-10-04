@@ -1,7 +1,7 @@
 // import "./tsConfigBootstrap"
 
 import { run } from "@grammyjs/runner"
-import { domBot } from "./domQuizBot"
+import domBot from "./domBot"
 
 const runner = run(domBot)
 if (runner.isRunning()) {

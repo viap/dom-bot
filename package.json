@@ -1,9 +1,9 @@
 {
-  "name": "dom-test-bot",
+  "name": "dom-bot",
   "type": "module",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "copy-assets": "cp -r ./src/assets ./dist/assets",
@@ -12,13 +12,15 @@
     "build": "yarn tsc && yarn copy-env-dev && yarn copy-assets",
     "build-prod": "yarn tsc && yarn copy-env-prod && yarn copy-assets",
     "start": "node --inspect --es-module-specifier-resolution=node dist/index.js",
-    "restart": "yarn build && yarn start"
+    "restart": "yarn build && yarn start",
+    "dev": "nodemon"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@grammyjs/types": "^2.12.1",
     "@types/node": "^18.14.1",
+    "nodemon": "^3.0.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^4.9.5"
   },
