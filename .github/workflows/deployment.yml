@@ -24,7 +24,7 @@ jobs:
       - name: Init the project
         run: npm install
       - name: Build the project
-        run: yarn build
+        run: npm run build
       - name: Run tests
         run: echo 'There will be tests'
       - name: Deploy to server
@@ -44,7 +44,7 @@ jobs:
             npm install && 
             pm2 delete domBot 2 > /dev/null
             npm run build &&
-            pm2 start npm --name domApi -- start
+            pm2 start npm --name domBot -- start
           host: ${{secrets.REMOTE_HOST}}
           user: ${{secrets.REMOTE_USER}}
           key: ${{secrets.SSH_PRIVATE_KEY}}
