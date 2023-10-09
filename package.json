@@ -32,7 +32,7 @@
     "eslint": "^8.35.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "grammy": "^1.14.1",
+    "grammy": "^1.19.1",
     "mongoose": "^7.0.1",
     "prettier": "^2.8.4"
   }

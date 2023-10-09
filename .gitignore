@@ -12,6 +12,7 @@
 yarn.lock
 yarn-error.log
 
-#
+#others
 .DS_Store
 .vscode
+package-lock.json
