@@ -1,9 +1,10 @@
 name: Deployment
-on: 
+on:
   push:
     branches:
       - master
-    paths-ignore: - '.github/workflows/*'
+    paths-ignore:
+      - ".github/workflows/*"
 jobs:
   deploy:
     runs-on: ubuntu-latest
