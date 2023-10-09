@@ -1,11 +1,11 @@
 #dist
-dist/*
+/dist
 
 #ENV
 .env.prod
 
 #node_modules
-node_modules/*
+/node_modules
 
 #yarn
 .yarn/
@@ -14,3 +14,4 @@ yarn-error.log
 
 #
 .DS_Store
+.vscode
