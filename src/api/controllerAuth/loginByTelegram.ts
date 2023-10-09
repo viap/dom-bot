@@ -19,7 +19,7 @@ export async function loginByTelegram(
     {
       apiClient: {
         name: process.env.API_CLIENT_NAME || "",
-        password: process.env.API_PASSWORD || "",
+        password: process.env.API_CLIENT_PASSWORD || "",
       },
       telegram: {
         id: telegramUser.id,

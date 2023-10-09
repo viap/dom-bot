@@ -23,11 +23,14 @@ export class DbConnection {
 
   public static async getConnection() {
     if (!DbConnection.connection) {
-      const connectionPromise = mongoose.connect(process.env.DB_URL || "", {
-        dbName: process.env.DB_NAME || "",
-        user: process.env.DB_USER || "",
-        pass: process.env.DB_PASS || "",
-      })
+      const connectionPromise = mongoose.connect(
+        process.env.MONGO_DB_URL || "",
+        {
+          dbName: process.env.MONGO_DB_NAME || "",
+          user: process.env.MONGO_DB_USER || "",
+          pass: process.env.MONGO_DB_PASSWORD || "",
+        }
+      )
       DbConnection.connection = mongoose.connection
       DbConnection.initHandlers()
 

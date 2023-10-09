@@ -1,6 +1,9 @@
 #dist
 dist/*
 
+#ENV
+.env.prod
+
 #node_modules
 node_modules/*
 

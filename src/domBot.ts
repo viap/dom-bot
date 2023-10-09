@@ -17,12 +17,10 @@ import { ReplyMarkup } from "./common/utils/replyMarkup"
 import { DbConnection, getSessions } from "./services/db/connectDB"
 
 import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
+import { cwd } from "process"
 
 /** ENVIROMENT */
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-dotenv.config({ path: __dirname + "/config/.env" })
+dotenv.config({ path: cwd() + "/config/.env" })
 
 /** DB CONNECTION */
 

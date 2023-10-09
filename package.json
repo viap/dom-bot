@@ -7,10 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "copy-assets": "cp -r ./src/assets ./dist/assets",
-    "copy-env-dev": "mkdir -p ./dist/config && cp ./src/config/.env.dev ./dist/config/.env",
-    "copy-env-prod": "mkdir -p ./dist/config && cp ./src/config/.env.prod ./dist/config/.env",
-    "build": "yarn tsc && yarn copy-env-dev && yarn copy-assets",
-    "build-prod": "yarn tsc && yarn copy-env-prod && yarn copy-assets",
+    "build": "yarn tsc && yarn copy-assets",
     "start": "node --inspect --es-module-specifier-resolution=node dist/index.js",
     "restart": "yarn build && yarn start",
     "dev": "nodemon"
