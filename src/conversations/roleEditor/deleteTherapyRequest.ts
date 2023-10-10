@@ -25,7 +25,7 @@ export const DeleteTherapyRequest: BotConversation = {
           return await deleteTherapyRequest(ctx, therapyRequest._id)
         })
       } catch (e) {
-        console.log(BOT_ERRORS.REQUEST, e)
+        conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {
         if (result) {
           await ctx.reply("*Заявка удалена*", ReplyMarkup.parseModeV2)

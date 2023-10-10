@@ -88,7 +88,6 @@ domBot.use(conversations())
 
 /** COMMAND HANDLERS: start */
 domBot.command(BOT_COMMANDS.START, async (ctx) => {
-  console.log("BOT_COMMANDS.START")
   await ctx.conversation.exit()
   await ctx.reply(BOT_TEXTS.WELCOME, ReplyMarkup.emptyKeyboard)
 })
@@ -101,28 +100,7 @@ domBot.use(
 
 /** COMMAND HANDLERS */
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
-  console.log("BOT_COMMANDS.MENU")
-  // await ctx.conversation.exit(CONVERSATION_NAMES.SELECT_MENU_ITEM)
   await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
-
-  // const middleware = await BotConversations.getMiddlewareByName(
-  //   CONVERSATION_NAMES.TERMS_AGREEMENT
-  // )
-
-  // console.log("middleware", middleware)
-
-  // if (middleware) {
-  //   const composer = domBot.use(middleware)
-  //   console.log("composer", composer)
-
-  //   console.log("conversation 2", ctx.conversation)
-
-  //   // await ctx.conversation.enter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
-  //   // return await middleware(ctx, async () => {
-  //   //   console.log("-------")
-  //   //   return
-  //   // })
-  // }
 })
 
 /** MESSAGE HANDLERS */

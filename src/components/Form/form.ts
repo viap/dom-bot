@@ -177,8 +177,8 @@ export class Form<T extends ObjectWithPrimitiveValues> {
         const text = this.ctx.msg?.text || this.input.default || ""
         const buttonAction = this.getButtonAction(text)
 
-        this.conversation.log("text", text)
-        this.conversation.log("buttonAction", buttonAction)
+        // this.conversation.log("text", text)
+        // this.conversation.log("buttonAction", buttonAction)
 
         if (buttonAction) {
           switch (buttonAction.action) {

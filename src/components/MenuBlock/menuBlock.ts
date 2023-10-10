@@ -526,7 +526,10 @@ export default class MenuBlock {
     //   this.current.name,
     //   this.current.parent?.name
     // )
-    this.printMenuStructure()
+
+    if (process.env.NODE_ENV === "dev") {
+      this.printMenuStructure()
+    }
 
     this.setDefaultItemsParams()
   }

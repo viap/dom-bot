@@ -26,7 +26,7 @@ export const DeleteTherapySession: BotConversation = {
           return await deleteTherapySession(ctx, session._id)
         })
       } catch (e) {
-        console.log(BOT_ERRORS.REQUEST, e)
+        conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {
         if (result) {
           await ctx.reply("*Сессия удалена*", ReplyMarkup.parseModeV2)
