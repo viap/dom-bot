@@ -2,8 +2,6 @@ import { conversations } from "@grammyjs/conversations"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import dotenv from "dotenv"
 import { Bot, Context, GrammyError, HttpError, session } from "grammy"
-import path from "path"
-import { fileURLToPath } from "url"
 import { BOT_COMMANDS } from "./common/enums/botCommands.enum"
 import { BOT_COMMANDS_DESCR } from "./common/enums/botCommandsDescr.enum"
 import { BOT_ERRORS } from "./common/enums/botErrors.enum"
@@ -16,8 +14,9 @@ import { SessionData } from "./common/types/sessionData"
 import { ReplyMarkup } from "./common/utils/replyMarkup"
 import { DbConnection, getSessions } from "./services/db/connectDB"
 
-import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
 import { cwd } from "process"
+import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
+import NotificationListener from "./components/NotificationListener/notificationListener"
 
 /** ENVIROMENT */
 dotenv.config({ path: cwd() + "/config/.env" })
@@ -54,22 +53,6 @@ function getSessionKey(ctx: Context): string | undefined {
     : `${ctx.from.id}/${ctx.chat.id}`
 }
 
-// let intervalId: NodeJS.Timer | undefined = undefined
-// domBot.fork(async (ctx: MyContext, next) => {
-//   let count = 0
-
-//   if (intervalId) {
-//     clearInterval(intervalId)
-//   }
-
-//   intervalId = setInterval(async () => {
-//     await ctx.reply(`Счетчик: ${count}`)
-//     count++
-//   }, 3000)
-
-//   return next()
-// })
-
 domBot.use(
   session({
     getSessionKey,
@@ -85,6 +68,13 @@ domBot.use(apiLoginByTelegram)
 
 /** CONVERSATIONS: init */
 domBot.use(conversations())
+
+// NOTICE: connection to the api websocket for listening events and show notifications
+domBot.fork(async (ctx: MyContext, next) => {
+  NotificationListener.start(ctx)
+
+  return next()
+})
 
 /** COMMAND HANDLERS: start */
 domBot.command(BOT_COMMANDS.START, async (ctx) => {
