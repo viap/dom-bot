@@ -6,6 +6,7 @@ import { BOT_TEXTS } from "../enums/botTexts.enum"
 import { NextFunction } from "grammy"
 import { getUser } from "../../api/controllerUsers/getUser"
 import { getPsychologist } from "../../api/controllerPsychologists/getPsychologist"
+import { ROLES } from "../enums/roles.enum"
 
 export const apiLoginByTelegram = async (
   ctx: MyContext,
@@ -20,12 +21,14 @@ export const apiLoginByTelegram = async (
       await loginByTelegram(ctx, {
         ...ctx.from,
         id: ctx.from.id + "",
-      } as TelegramUserDto)
+      } as TelegramUserDto).catch()
     }
 
     if (ctx.session.token) {
       ctx.user = await getUser(ctx)
-      ctx.psychologist = await getPsychologist(ctx)
+      if (ctx.user.roles.includes(ROLES.PSYCHOLOGIST)) {
+        ctx.psychologist = await getPsychologist(ctx).catch(() => undefined)
+      }
     }
   }
 
