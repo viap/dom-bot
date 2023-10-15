@@ -67,9 +67,11 @@ export default class MenuBlock {
     menu: Partial<MenuBlockItemsProps>,
     options?: Partial<MenuBlockOptions>
   ) {
-    this.menu = MenuBlock.getMenuFilteredByRoles(
-      MenuBlock.getPreparedMenu(menu),
-      ctx.user.roles.length ? ctx.user.roles : undefined
+    this.menu = MenuBlock.getPreparedMenu(
+      MenuBlock.getMenuFilteredByRoles(
+        menu as MenuBlockItemsProps,
+        ctx.user.roles.length ? ctx.user.roles : undefined
+      )
     )
 
     this.current = this.menu
@@ -84,15 +86,15 @@ export default class MenuBlock {
   }
 
   static getPreparedMenu(
-    item: Partial<MenuBlockItemsProps>,
+    sourceMenu: Partial<MenuBlockItemsProps>,
     parent?: MenuBlockItemsProps,
     roles: Array<ROLES> = defaultRoles
   ): MenuBlockItemsProps {
     const menu = {
-      ...item,
-      key: item.key || `${item.name}_${randomUUID()}`,
-      parent: item.parent || parent,
-      roles: item.roles || parent?.roles || roles,
+      ...sourceMenu,
+      key: sourceMenu.key || `${sourceMenu.name}_${randomUUID()}`,
+      parent: sourceMenu.parent || parent,
+      roles: sourceMenu.roles || parent?.roles || roles,
     } as MenuBlockItemsProps
 
     menu.items = (menu.items || []).map((item) => {
@@ -103,19 +105,21 @@ export default class MenuBlock {
   }
 
   static getMenuFilteredByRoles(
-    item: MenuBlockItemsProps,
+    sourceMenu: Partial<MenuBlockItemsProps>,
     availableRoles: Array<ROLES> = defaultRoles
   ) {
-    const menu = { ...item }
-    menu.items = (menu.items || [])
-      .filter((item) => {
-        return (item.roles || menu.roles || []).find((role) =>
-          availableRoles.includes(role)
-        )
-      })
-      .map((item) => {
-        return this.getMenuFilteredByRoles(item, availableRoles)
-      })
+    const menu = {
+      ...sourceMenu,
+      items: (sourceMenu.items || [])
+        .filter((item) => {
+          return (item.roles || sourceMenu.roles || []).find((role) =>
+            availableRoles.includes(role)
+          )
+        })
+        .map((item) => {
+          return this.getMenuFilteredByRoles(item, availableRoles)
+        }),
+    } as MenuBlockItemsProps
 
     return menu
   }

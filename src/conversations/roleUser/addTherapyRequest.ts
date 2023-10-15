@@ -48,7 +48,6 @@ export const AddTherapyRequest: BotConversation = {
           name: "name",
           alias: "имя",
           type: FORM_INPUT_TYPES.STRING,
-          optional: true,
         },
         {
           name: "descr",
@@ -68,7 +67,8 @@ export const AddTherapyRequest: BotConversation = {
           }),
         },
         ctx.user.roles.includes(ROLES.EDITOR) ||
-        ctx.user.roles.includes(ROLES.ADMIN)
+        ctx.user.roles.includes(ROLES.ADMIN) ||
+        ctx.user.roles.includes(ROLES.PSYCHOLOGIST)
           ? {
               name: "telegramUser",
               alias: "логин в телеграм",
