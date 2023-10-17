@@ -302,25 +302,41 @@ export default class MenuBlock {
     }
   }
 
-  async printItemContent(item: MenuBlockItemsProps = this.current) {
-    await this.ctx.reply(
+  getItemContent(item: MenuBlockItemsProps = this.current) {
+    const itemContent = [
       ReplyMarkup.escapeForParseModeV2(`[ ${item.name.toUpperCase()} ]`),
-      ReplyMarkup.parseModeV2
-    )
+    ]
 
     if (item.content) {
-      await this.ctx.reply(
+      itemContent.push(
         typeof item.content === "string"
           ? item.content
-          : item.content(...(item.props || [])),
-        ReplyMarkup.parseModeV2
+          : item.content(...(item.props || []))
       )
+    } else if (!(this.currentItems.length || this.current.conversation)) {
+      itemContent.push("*ПУСТО*")
+    }
+
+    return itemContent
+  }
+
+  async printItemContent(itemContent: Array<string> = this.getItemContent()) {
+    if (itemContent.length) {
+      for (let i = 0; i < itemContent.length; i++) {
+        await this.ctx.reply(itemContent[i], ReplyMarkup.parseModeV2)
+      }
     }
   }
 
   async showCurrentItems() {
+    const itemContent = this.getItemContent()
+    const replyContentWithButtons =
+      itemContent.pop() || ReplyMarkup.escapeForParseModeV2(`[ ... ]`)
+
+    await this.printItemContent(itemContent)
+
     if (this.currentItems.length) {
-      await this.ctx.reply(ReplyMarkup.escapeForParseModeV2(`[ ... ]`), {
+      await this.ctx.reply(replyContentWithButtons, {
         ...ReplyMarkup.keyboard(await this.getCurrentKeyboard()),
         ...ReplyMarkup.oneTime,
         ...ReplyMarkup.parseModeV2,
@@ -332,24 +348,24 @@ export default class MenuBlock {
 
     let keepGoing = true
     do {
-      await this.printItemContent()
-
-      try {
-        if (this.current.conversation) {
+      // NOTICE: fall inside a conversation
+      if (this.current.conversation) {
+        try {
+          await this.printItemContent()
           const botConversation = BotConversations.getByName(
             this.current.conversation
           )
           if (botConversation) {
             await this.showConversation(botConversation)
-            continue
           }
+        } catch (e) {
+          this.conversation.log(BOT_ERRORS.CONVERSATION, e)
         }
-      } catch (e) {
-        this.conversation.log(BOT_ERRORS.CONVERSATION, e)
-      } finally {
-        keepGoing = true
+
+        continue
       }
 
+      // NOTICE: load currentItems if they were not preloaded
       if (this.current.submenu && !this.current.submenuPreload) {
         this.currentItems = await this.conversation.external(async () => {
           return this.current.submenu
@@ -358,17 +374,18 @@ export default class MenuBlock {
         })
       }
 
-      if (!this.currentItems.length && this.current.parent) {
-        this.selectParent()
-        continue
+      if (this.currentItems.length) {
+        await this.showCurrentItems()
+      } else {
+        if (this.current.parent) {
+          await this.printItemContent()
+          this.selectParent()
+          continue
+        } else {
+          keepGoing = false
+          break
+        }
       }
-
-      if (!this.currentItems.length) {
-        keepGoing = false
-        break
-      }
-
-      await this.showCurrentItems()
 
       this.ctx = await this.conversation.waitFor("message:text")
       const text = this.ctx.msg?.text || ""
@@ -458,7 +475,7 @@ export default class MenuBlock {
       if (conversationResult.stepsBack) {
         const item = this.getItemOnStepsBack(conversationResult.stepsBack)
         if (item) {
-          this.selectItem(item.key, false, "up")
+          this.selectItem(item.key, true, "down")
           return
         }
       } else if (conversationResult.goTo) {
