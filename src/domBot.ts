@@ -80,6 +80,11 @@ domBot.fork(async (ctx: MyContext, next) => {
 domBot.command(BOT_COMMANDS.START, async (ctx) => {
   await ctx.conversation.exit()
   await ctx.reply(BOT_TEXTS.WELCOME, ReplyMarkup.emptyKeyboard)
+  await ctx.reply(
+    `Показать меню - /${BOT_COMMANDS.MENU}`,
+    // `Показать меню - /${BOT_COMMANDS.MENU}`,
+    ReplyMarkup.emptyKeyboard
+  )
 })
 
 /** CONVERSATIONS: use */

@@ -9,7 +9,6 @@ export enum CONVERSATION_NAMES {
   CLIENT_ADD = "client_add",
   CLIENT_EDIT = "client_edit",
   CLIENT_DELETE = "client_delete",
-  CLIENT_THERAPY_SESSIONS_LIST = "client_therapy_sessions_list",
   THERAPY_SESSION_ADD = "therapy_session_add",
   THERAPY_SESSION_DELETE = "therapy_session_delete",
   THERAPY_REQUEST_ACCEPT = "therapy_request_accept",

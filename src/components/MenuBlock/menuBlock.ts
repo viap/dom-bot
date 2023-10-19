@@ -38,6 +38,7 @@ import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
 import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
 import { randomUUID } from "crypto"
+import toFirstCapitalLetter from "../../common/utils/toFirstCapitalLetter"
 
 const defaultItemsParams: MenuBlockItemsParams = {
   pageNumber: 0,
@@ -302,9 +303,21 @@ export default class MenuBlock {
     }
   }
 
+  getItemBreadCrumbsString(item: MenuBlockItemsProps = this.current): string {
+    const result = [item.name]
+
+    let parent = item.parent
+    while (parent) {
+      result.push(parent.name)
+      parent = parent.parent
+    }
+
+    return result.reverse().map(toFirstCapitalLetter).join(" > ")
+  }
+
   getItemContent(item: MenuBlockItemsProps = this.current) {
     const itemContent = [
-      ReplyMarkup.escapeForParseModeV2(`[ ${item.name.toUpperCase()} ]`),
+      ReplyMarkup.escapeForParseModeV2(`${toFirstCapitalLetter(item.name)}:`),
     ]
 
     if (item.content) {
@@ -361,8 +374,6 @@ export default class MenuBlock {
         } catch (e) {
           this.conversation.log(BOT_ERRORS.CONVERSATION, e)
         }
-
-        continue
       }
 
       // NOTICE: load currentItems if they were not preloaded

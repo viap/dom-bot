@@ -80,7 +80,6 @@ export function getClientMenuItem(
     sessions.length > 0
       ? {
           name: "Список сессий",
-          conversation: CONVERSATION_NAMES.CLIENT_THERAPY_SESSIONS_LIST,
           submenu: SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS,
           options: {
             columns: 2,
