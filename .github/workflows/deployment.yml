@@ -20,11 +20,13 @@ jobs:
           fail_on_empty: true
           envkey_NODE_ENV: prod
           envkey_TOKEN: ${{secrets.TOKEN}}
+          envkey_POLING_DELAY: ${{secrets.POLING_DELAY}}
           envkey_MONGO_DB_URL: ${{secrets.MONGO_DB_URL}}
           envkey_MONGO_DB_NAME: ${{secrets.MONGO_DB_NAME}}
           envkey_MONGO_DB_USER: ${{secrets.MONGO_DB_USER}}
           envkey_MONGO_DB_PASSWORD: ${{secrets.MONGO_DB_PASSWORD}}
           envkey_API_URL: ${{secrets.API_URL}}
+          envkey_API_WEBSOCKET_URL: ${{secrets.API_WEBSOCKET_URL}}
           envkey_API_CLIENT_NAME: ${{secrets.API_CLIENT_NAME}}
           envkey_API_CLIENT_PASSWORD: ${{secrets.API_CLIENT_PASSWORD}}
       - name: Init the project
