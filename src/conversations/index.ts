@@ -19,13 +19,13 @@ import { MyContext } from "common/types/myContext"
 import { MiddlewareFn } from "grammy"
 import { SelectMenuItem } from "./selectMenuItem"
 import { SelectQiuz } from "./selectQuiz"
-import { Terms } from "./terms"
+import { TermsAgreement } from "./termsAgreement"
 import { BotConversation } from "./types/botConversation"
 
 export const BotConversations = {
   getList(): Array<BotConversation> {
     return [
-      Terms,
+      TermsAgreement,
       AddClient,
       SelectQiuz,
       SelectMenuItem,

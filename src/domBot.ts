@@ -16,6 +16,8 @@ import { DbConnection, getSessions } from "./services/db/connectDB"
 
 import { cwd } from "process"
 import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
+import getAvailableCommandsMessage from "./common/utils/getAvailableCommandsMessage"
+import getFilterByCommand from "./common/utils/getFilterByCommand"
 import NotificationListener from "./components/NotificationListener/notificationListener"
 
 /** ENVIROMENT */
@@ -37,6 +39,10 @@ export default domBot
 domBot.api.setMyCommands([
   { command: BOT_COMMANDS.START, description: BOT_COMMANDS_DESCR.START },
   { command: BOT_COMMANDS.MENU, description: BOT_COMMANDS_DESCR.MENU },
+  {
+    command: BOT_COMMANDS.TERMS_AGREEMENT,
+    description: BOT_COMMANDS_DESCR.TERMS_AGREEMENT,
+  },
 ])
 
 /** SESSION */
@@ -72,29 +78,40 @@ domBot.use(conversations())
 // NOTICE: connection to the api websocket for listening events and show notifications
 domBot.fork(async (ctx: MyContext, next) => {
   NotificationListener.start(ctx)
-
   return next()
 })
 
 /** COMMAND HANDLERS: start */
 domBot.command(BOT_COMMANDS.START, async (ctx) => {
   await ctx.conversation.exit()
+
   await ctx.reply(BOT_TEXTS.WELCOME, ReplyMarkup.emptyKeyboard)
+
   await ctx.reply(
-    `Показать меню - /${BOT_COMMANDS.MENU}`,
-    // `Показать меню - /${BOT_COMMANDS.MENU}`,
+    getAvailableCommandsMessage(ctx.session),
     ReplyMarkup.emptyKeyboard
   )
 })
 
 /** CONVERSATIONS: use */
-// domBot.use(...BotConversations.listOfMiddlewares())
-domBot.use(
-  BotConversations.getMiddlewareByName(CONVERSATION_NAMES.SELECT_MENU_ITEM)
-)
+domBot
+  .filter(getFilterByCommand(BOT_COMMANDS.TERMS_AGREEMENT))
+  .use(BotConversations.getMiddlewareByName(CONVERSATION_NAMES.TERMS_AGREEMENT))
+
+domBot
+  .filter(getFilterByCommand(BOT_COMMANDS.MENU))
+  .use(
+    BotConversations.getMiddlewareByName(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+  )
 
 /** COMMAND HANDLERS */
+domBot.command(BOT_COMMANDS.TERMS_AGREEMENT, async (ctx) => {
+  console.log("HANDLE COMMAND:", BOT_COMMANDS.TERMS_AGREEMENT)
+  await ctx.conversation.reenter(CONVERSATION_NAMES.TERMS_AGREEMENT)
+})
+
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
+  console.log("HANDLE COMMAND:", BOT_COMMANDS.MENU)
   await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
 })
 

@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "copy-assets": "cp -r ./src/assets ./dist/assets",
     "build": "tsc && npm run copy-assets",
-    "start": "node --inspect --es-module-specifier-resolution=node dist/index.js",
+    "start": "node --es-module-specifier-resolution=node dist/index.js",
+    "startInspect": "node --inspect --es-module-specifier-resolution=node dist/index.js",
     "restart": "npm run build && npm run start",
     "dev": "nodemon"
   },

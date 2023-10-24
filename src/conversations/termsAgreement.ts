@@ -6,13 +6,16 @@ import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 import { CONVERSATION_TERMS_TEXTS } from "./enums/conversationTermsTexts.enum"
 import { BotConversation } from "./types/botConversation"
 
-export const Terms: BotConversation = {
+export const TermsAgreement: BotConversation = {
   getName(): CONVERSATION_NAMES {
     return CONVERSATION_NAMES.TERMS_AGREEMENT
   },
 
   getConversation(): ConversationFn<MyContext> {
-    return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
+    return async (
+      conversation: Conversation<MyContext>,
+      ctx: MyContext
+    ): Promise<boolean> => {
       if (conversation.session.hasTermsAgreement) {
         await ctx.reply(
           CONVERSATION_TERMS_TEXTS.DESCRIPTION,
@@ -45,6 +48,8 @@ export const Terms: BotConversation = {
             break
         }
       }
+
+      return conversation.session.hasTermsAgreement
     }
   },
 }

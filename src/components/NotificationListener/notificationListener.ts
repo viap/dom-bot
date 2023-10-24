@@ -28,13 +28,7 @@ export default class NotificationListener {
       })
 
       NotificationListener.socket.io.on("error", NotificationListener.onError)
-      NotificationListener.socket.on("connect", function () {
-        NotificationListener.isConnected = true
-
-        NotificationListener.pollingInterval = setInterval(() => {
-          NotificationListener.emit("notifications")
-        }, NotificationListener.polingDelay)
-      })
+      NotificationListener.socket.on("connect", NotificationListener.onConnect)
       NotificationListener.socket.on(
         "notification",
         NotificationListener.makeEffect
@@ -62,7 +56,7 @@ export default class NotificationListener {
       case NotificationTypes.NEW_THERAPY_REQUEST:
       case NotificationTypes.TRANSFER_THERAPY_REQUEST:
         await NotificationListener.ctx.reply(
-          "Пришел новый запрос. Перейти [ Меню > Мои заявки > Новые заявки ]"
+          "Пришел новый запрос.\r\n[ Меню > Мои заявки > Новые заявки ]"
         )
         NotificationListener.sendNotificationOfDelivery(notification._id)
         break
@@ -76,15 +70,24 @@ export default class NotificationListener {
   }
 
   private static async onInited() {
-    console.log("Inited")
+    console.log("Notifications: inited")
   }
 
   private static async onError(error: unknown) {
-    console.log("Error", error)
+    console.log("Notifications: error", error)
   }
 
+  private static async onConnect() {
+    console.log("Notifications: connected")
+
+    NotificationListener.pollingInterval = setInterval(() => {
+      NotificationListener.emit("notifications")
+    }, NotificationListener.polingDelay)
+
+    NotificationListener.isConnected = true
+  }
   private static async onDisconnect() {
-    console.log("Disconnected")
+    console.log("Notifications: disconnected")
 
     clearInterval(NotificationListener.pollingInterval)
     NotificationListener.isConnected = false
@@ -93,6 +96,6 @@ export default class NotificationListener {
   }
 
   private static async onException(exception: unknown) {
-    console.log("exception", exception)
+    console.log("Notifications: exception", exception)
   }
 }
