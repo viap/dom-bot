@@ -18,7 +18,7 @@ export async function loadClientsMenuItems(
 ): Promise<Array<MenuBlockItemsProps>> {
   const therapySessionsByClient = groupBy<TherapySessionDto>(
     await getTherapySessions(ctx),
-    (ts: TherapySessionDto) => ts.client._id
+    (ts: TherapySessionDto) => ts.client?._id
   )
 
   const menuItems: Array<MenuBlockItemsProps> = (

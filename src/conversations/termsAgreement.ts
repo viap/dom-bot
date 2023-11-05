@@ -5,6 +5,8 @@ import { MyContext } from "../common/types/myContext"
 import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
 import { CONVERSATION_TERMS_TEXTS } from "./enums/conversationTermsTexts.enum"
 import { BotConversation } from "./types/botConversation"
+import getAvailableCommandButtons from "../common/utils/getAvailableCommandButtons"
+import { BOT_TEXTS } from "../common/enums/botTexts.enum"
 
 export const TermsAgreement: BotConversation = {
   getName(): CONVERSATION_NAMES {
@@ -38,6 +40,9 @@ export const TermsAgreement: BotConversation = {
               CONVERSATION_TERMS_TEXTS.YES_REPLY,
               ReplyMarkup.emptyKeyboard
             )
+            await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
+              reply_markup: getAvailableCommandButtons(ctx.session),
+            })
             break
           case CONVERSATION_TERMS_TEXTS.NO:
             conversation.session.hasTermsAgreement = false
