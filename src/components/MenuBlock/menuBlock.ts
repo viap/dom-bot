@@ -113,7 +113,7 @@ export default class MenuBlock {
       ...sourceMenu,
       items: (sourceMenu.items || [])
         .filter((item) => {
-          return (item.roles || sourceMenu.roles || []).find((role) =>
+          return (item.roles || sourceMenu.roles || defaultRoles).find((role) =>
             availableRoles.includes(role)
           )
         })
@@ -356,8 +356,8 @@ export default class MenuBlock {
       })
     }
   }
-  async show() {
-    this.selectItem(undefined, true)
+  async show(itemKey?: string) {
+    this.selectItem(itemKey, true)
 
     let keepGoing = true
     do {

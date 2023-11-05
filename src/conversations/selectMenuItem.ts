@@ -49,7 +49,9 @@ export const SelectMenuItem: BotConversation = {
         return
       }
 
-      await menu.show()
+      const goTo = conversation.session.deepLink?.goTo
+      delete conversation.session.deepLink
+      await menu.show(goTo)
     }
   },
 }

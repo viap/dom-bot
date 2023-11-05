@@ -1,7 +1,10 @@
-import NotificationTypes from "../../common/enums/notificationTypes"
-import { NotificationDto } from "../../common/dto/notification.dto"
-import { MyContext } from "../../common/types/myContext"
+import { InlineKeyboard } from "grammy"
 import { io, Socket } from "socket.io-client"
+import { NotificationDto } from "../../common/dto/notification.dto"
+import NotificationTypes from "../../common/enums/notificationTypes"
+import { MyContext } from "../../common/types/myContext"
+import MENU_ITEM_TYPES from "../../components/MenuBlock/enums/menuItemTypes.enum"
+import { ReplyMarkup } from "../../common/utils/replyMarkup"
 
 export default class NotificationListener {
   private static ctx: MyContext
@@ -56,7 +59,16 @@ export default class NotificationListener {
       case NotificationTypes.NEW_THERAPY_REQUEST:
       case NotificationTypes.TRANSFER_THERAPY_REQUEST:
         await NotificationListener.ctx.reply(
-          "Пришел новый запрос.\r\n[ Меню > Мои заявки > Новые заявки ]"
+          "Пришел новый запрос.\r\n[ Меню > Мои заявки > Новые заявки ]",
+          {
+            reply_markup: new InlineKeyboard().text(
+              "Перейти",
+              JSON.stringify({
+                goTo: MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW,
+              })
+            ),
+            ...ReplyMarkup.parseModeV2,
+          }
         )
         NotificationListener.sendNotificationOfDelivery(notification._id)
         break

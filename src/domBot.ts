@@ -10,14 +10,16 @@ import { BotConversations } from "./conversations"
 import { CONVERSATION_NAMES } from "./conversations/enums/conversationNames.enum"
 
 import { MyContext } from "./common/types/myContext"
-import { SessionData } from "./common/types/sessionData"
+import { SessionData, defaultSessionData } from "./common/types/sessionData"
 import { ReplyMarkup } from "./common/utils/replyMarkup"
 import { DbConnection, getSessions } from "./services/db/connectDB"
 
 import { cwd } from "process"
 import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
-import getAvailableCommandsMessage from "./common/utils/getAvailableCommandsMessage"
+import { PrimitiveValues } from "./common/types/primitiveValues"
+import getAvailableCommandButtons from "./common/utils/getAvailableCommandButtons"
 import getFilterByCommand from "./common/utils/getFilterByCommand"
+import MENU_ITEM_TYPES from "./components/MenuBlock/enums/menuItemTypes.enum"
 import NotificationListener from "./components/NotificationListener/notificationListener"
 
 /** ENVIROMENT */
@@ -48,7 +50,7 @@ domBot.api.setMyCommands([
 /** SESSION */
 
 function sessionInit(): SessionData {
-  return { hasTermsAgreement: false, quizAnswers: {} }
+  return defaultSessionData
 }
 
 function getSessionKey(ctx: Context): string | undefined {
@@ -87,10 +89,9 @@ domBot.command(BOT_COMMANDS.START, async (ctx) => {
 
   await ctx.reply(BOT_TEXTS.WELCOME, ReplyMarkup.emptyKeyboard)
 
-  await ctx.reply(
-    getAvailableCommandsMessage(ctx.session),
-    ReplyMarkup.emptyKeyboard
-  )
+  await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
+    reply_markup: getAvailableCommandButtons(ctx.session),
+  })
 })
 
 /** CONVERSATIONS: use */
@@ -104,6 +105,43 @@ domBot
     BotConversations.getMiddlewareByName(CONVERSATION_NAMES.SELECT_MENU_ITEM)
   )
 
+/* CALLBACKS */
+domBot.on("callback_query:data", async (ctx: MyContext) => {
+  let data: { [key: string]: PrimitiveValues } | undefined
+  try {
+    data = JSON.parse(ctx.callbackQuery?.data || "")
+  } catch (e) {
+    data = undefined
+  }
+
+  if (!data) {
+    return
+  }
+
+  if (data.command) {
+    switch (data.command) {
+      case BOT_COMMANDS.MENU:
+        await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+        break
+      case BOT_COMMANDS.TERMS_AGREEMENT:
+        await ctx.conversation.reenter(CONVERSATION_NAMES.TERMS_AGREEMENT)
+        break
+    }
+  } else if (data.goTo) {
+    switch (data.goTo) {
+      case MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW:
+        ctx.session.deepLink = { goTo: data.goTo }
+        await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+        break
+    }
+  } else {
+    console.log("Unknown button event with payload", ctx.callbackQuery?.data)
+  }
+
+  // NOTICE: remove loading animation
+  await ctx.answerCallbackQuery()
+})
+
 /** COMMAND HANDLERS */
 domBot.command(BOT_COMMANDS.TERMS_AGREEMENT, async (ctx) => {
   console.log("HANDLE COMMAND:", BOT_COMMANDS.TERMS_AGREEMENT)
@@ -112,7 +150,7 @@ domBot.command(BOT_COMMANDS.TERMS_AGREEMENT, async (ctx) => {
 
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
   console.log("HANDLE COMMAND:", BOT_COMMANDS.MENU)
-  await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+  await ctx.conversation.enter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
 })
 
 /** MESSAGE HANDLERS */
