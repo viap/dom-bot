@@ -29,14 +29,17 @@ export const AddTherapySession: BotConversation = {
       conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
-      // NOTICE: duration in minutes
-      const hoursSpent =
+      // NOTICE: how many hours were spent (duration in minutes)
+      const commissionHoursSpent =
         sessions.reduce((acc, session) => {
           acc += session.duration
           return acc
         }, 0) / 60
+      const commissionHoursLeft = numberOfCommissionHours - commissionHoursSpent
+      const shoulPayCommission = commissionHoursLeft > 0
 
       const inputs: Array<FormInputProps> = [
+        // NOTICE: before uncomment need to add date picker
         // {
         //   name: "date",
         //   alias: "Дата",
@@ -56,32 +59,16 @@ export const AddTherapySession: BotConversation = {
         },
         {
           name: "priceCurrency",
-          alias: "Цена (Валюта)",
+          alias: "Валюта",
           type: FORM_INPUT_TYPES.SELECT,
           values: Object.values(CURRENCIES),
         },
         {
           name: "priceValue",
-          alias: "Цена (Сумма)",
+          alias: "Цена",
           type: FORM_INPUT_TYPES.FLOAT,
         },
       ]
-
-      if (hoursSpent < numberOfCommissionHours) {
-        inputs.push(
-          {
-            name: "comissionCurrency",
-            alias: `Комиссия (Валюта)`, // (проведено ${hoursSpent} из ${numberOfCommissionHours} часов)
-            type: FORM_INPUT_TYPES.SELECT,
-            values: Object.values(CURRENCIES),
-          },
-          {
-            name: "comissionValue",
-            alias: "Комиссия (Сумма)",
-            type: FORM_INPUT_TYPES.FLOAT,
-          }
-        )
-      }
 
       type resultType = {
         // date: string
@@ -89,17 +76,29 @@ export const AddTherapySession: BotConversation = {
         duration: number
         priceCurrency: CURRENCIES
         priceValue: number
-        comissionCurrency: CURRENCIES
-        comissionValue: number
       }
       const form = new Form<resultType>(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
       let result = false
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
+        // NOTICE: don't use conversation.now inside of conversation.external !!!!
+        const now = await conversation.now()
+
+        const sessionDurationInHours = formResult.data.duration / 60
+        const commisionPartOfSession =
+          commissionHoursLeft >= sessionDurationInHours
+            ? 2 // 50%
+            : (sessionDurationInHours / commissionHoursLeft) * 2 // less then 50%
+        const commissionHoursSpentForSession =
+          sessionDurationInHours > commissionHoursLeft
+            ? commissionHoursLeft
+            : sessionDurationInHours
+        const commissionAmount = shoulPayCommission
+          ? Math.floor(formResult.data.priceValue / commisionPartOfSession)
+          : 0
+
         try {
-          // NOTICE: don't use conversation.now inside of conversation.external !!!!
-          const now = await conversation.now()
           result = notEmpty(
             await conversation.external(async () => {
               return addTherapySession(ctx, {
@@ -112,8 +111,8 @@ export const AddTherapySession: BotConversation = {
                   value: formResult.data.priceValue,
                 },
                 comission: {
-                  currency: formResult.data.comissionCurrency,
-                  value: formResult.data.comissionValue,
+                  currency: formResult.data.priceCurrency,
+                  value: commissionAmount,
                 },
                 descr: formResult.data.descr || undefined,
               })
@@ -124,6 +123,15 @@ export const AddTherapySession: BotConversation = {
         } finally {
           if (result) {
             await ctx.reply("*Добавлена сессия*", ReplyMarkup.parseModeV2)
+            if (shoulPayCommission && commissionAmount) {
+              await ctx.reply(
+                `Комиссия центра (${
+                  commissionHoursSpent + commissionHoursSpentForSession
+                } из ${numberOfCommissionHours} часов) = ${commissionAmount}${
+                  formResult.data.priceCurrency
+                }`
+              )
+            }
           } else {
             await ctx.reply(
               "*Не удалось добавить сессию*",
