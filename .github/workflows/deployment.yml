@@ -39,7 +39,7 @@ jobs:
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
-          ARGS: "-avzr -i"
+          ARGS: "-avzr --delete"
           REMOTE_HOST: ${{secrets.REMOTE_HOST}}
           REMOTE_USER: ${{secrets.REMOTE_USER}}
           TARGET: ${{secrets.REMOTE_TARGET}}
