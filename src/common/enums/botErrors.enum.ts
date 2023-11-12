@@ -4,4 +4,5 @@ export enum BOT_ERRORS {
   UNAVAILABLE = "Could not contact Telegram",
   UNKNOWN = "Unknown error",
   CONVERSATION = "Error in conversation",
+  UNKNOWN_CALLBACK = "Unknown button event",
 }

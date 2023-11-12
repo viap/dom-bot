@@ -107,15 +107,17 @@ export class Form<T extends ObjectWithPrimitiveValues> {
           typeof textProp === "string"
             ? textProp
             : this.input
-            ? textProp(this.data, this.input)
+            ? textProp(
+                this.data,
+                this.input,
+                this.inputIndex,
+                this.inputs.length
+              )
             : ""
         break
       case FORM_TEXT_TYPES.AFTER_REJECT:
         textProp = this.options.texts?.[type] || ""
-        text =
-          typeof textProp === "string"
-            ? textProp
-            : textProp(this.data, {} as FormInputProps)
+        text = typeof textProp === "string" ? textProp : textProp(this.data)
         break
     }
 
