@@ -14,6 +14,7 @@ import { SessionData, defaultSessionData } from "./common/types/sessionData"
 import { ReplyMarkup } from "./common/utils/replyMarkup"
 import { DbConnection, getSessions } from "./services/db/connectDB"
 
+import MenuBlock from "./components/MenuBlock/menuBlock"
 import { cwd } from "process"
 import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
 import { PrimitiveValues } from "./common/types/primitiveValues"
@@ -88,7 +89,6 @@ domBot.command(BOT_COMMANDS.START, async (ctx) => {
   await ctx.conversation.exit()
 
   await ctx.reply(BOT_TEXTS.WELCOME, ReplyMarkup.emptyKeyboard)
-
   await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
     reply_markup: getAvailableCommandButtons(ctx.session),
   })
@@ -130,12 +130,12 @@ domBot.on("callback_query:data", async (ctx: MyContext) => {
   } else if (data.goTo) {
     switch (data.goTo) {
       case MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW:
-        ctx.session.deepLink = { goTo: data.goTo }
+        MenuBlock.setDeepLink(data.goTo)
         await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
         break
     }
   } else {
-    console.log("Unknown button event with payload", ctx.callbackQuery?.data)
+    console.log(BOT_ERRORS.UNKNOWN_CALLBACK, ctx.callbackQuery?.data)
   }
 
   // NOTICE: remove loading animation
@@ -144,12 +144,10 @@ domBot.on("callback_query:data", async (ctx: MyContext) => {
 
 /** COMMAND HANDLERS */
 domBot.command(BOT_COMMANDS.TERMS_AGREEMENT, async (ctx) => {
-  console.log("HANDLE COMMAND:", BOT_COMMANDS.TERMS_AGREEMENT)
   await ctx.conversation.reenter(CONVERSATION_NAMES.TERMS_AGREEMENT)
 })
 
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
-  console.log("HANDLE COMMAND:", BOT_COMMANDS.MENU)
   await ctx.conversation.enter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
 })
 
@@ -157,6 +155,9 @@ domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
 
 domBot.on("message", async (ctx) => {
   await ctx.reply(`${BOT_TEXTS.DEFAULT} - ${ctx.message.text}`)
+  await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
+    reply_markup: getAvailableCommandButtons(ctx.session),
+  })
 })
 
 /** ERROR HANDLERS */

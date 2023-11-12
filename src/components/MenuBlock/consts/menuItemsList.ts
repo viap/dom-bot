@@ -2,11 +2,11 @@ import { ROLES } from "../../../common/enums/roles.enum"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import MENU_ITEM_TYPES from "../enums/menuItemTypes.enum"
 import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
-import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
 import { defaultRoles } from "./defaultRoles"
 
 const menuItemsList: Array<
-  Partial<MenuBlockItemsProps> & Required<{ key: string }>
+  PartialMenuBlockItemsProps & Required<{ key: string }>
 > = [
   {
     key: MENU_ITEM_TYPES.MAIN,

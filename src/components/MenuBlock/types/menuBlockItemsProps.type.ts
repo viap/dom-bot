@@ -19,3 +19,11 @@ export type MenuBlockItemsProps = {
   conversation?: CONVERSATION_NAMES
   props?: Array<unknown>
 }
+
+export type PartialMenuBlockItemsProps = Partial<
+  Omit<MenuBlockItemsProps, "parent" | "items">
+> &
+  Partial<{
+    parent: PartialMenuBlockItemsProps
+    items: Array<PartialMenuBlockItemsProps>
+  }>

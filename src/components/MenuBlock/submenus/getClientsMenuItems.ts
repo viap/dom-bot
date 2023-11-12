@@ -1,5 +1,6 @@
 import { getPsychologistClients } from "../../../api/controllerPsychologists/getPsychologistClients"
 import { getTherapySessions } from "../../../api/controllerTherapySessions/getTherapySessions"
+import { PropType } from "../../../api/type/propType"
 import { ClientDto } from "../../../common/dto/client.dto"
 import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
 import { MyContext } from "../../../common/types/myContext"
@@ -10,37 +11,31 @@ import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import MenuBlock from "../menuBlock"
-import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import {
+  MenuBlockItemsProps,
+  PartialMenuBlockItemsProps,
+} from "../types/menuBlockItemsProps.type"
 
 export async function loadClientsMenuItems(
   ctx: MyContext,
-  current: MenuBlockItemsProps
-): Promise<Array<MenuBlockItemsProps>> {
+  _props: PropType<MenuBlockItemsProps, "props"> = []
+): Promise<Array<PartialMenuBlockItemsProps>> {
   const therapySessionsByClient = groupBy<TherapySessionDto>(
     await getTherapySessions(ctx),
     (ts: TherapySessionDto) => ts.client?._id
   )
 
-  const menuItems: Array<MenuBlockItemsProps> = (
-    await getPsychologistClients(ctx)
-  )
+  return (await getPsychologistClients(ctx))
     .reverse()
     .map((client) =>
-      getClientMenuItem(
-        current,
-        client,
-        therapySessionsByClient[client.user._id]
-      )
+      getClientMenuItem(client, therapySessionsByClient[client.user._id])
     )
-
-  return menuItems
 }
 
 export function getClientMenuItem(
-  parent: MenuBlockItemsProps,
   client: ClientDto,
   sessions: Array<TherapySessionDto> = []
-): MenuBlockItemsProps {
+): PartialMenuBlockItemsProps {
   const props = [client, sessions]
 
   const content: string = [
@@ -67,14 +62,11 @@ export function getClientMenuItem(
     .filter(notEmpty)
     .join("\r\n\r\n")
 
-  const result = MenuBlock.getPreparedMenu(
-    {
-      name: client.user.name + " | " + sessions.length,
-      content,
-      props: props,
-    },
-    parent
-  )
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
+    name: client.user.name + " | " + sessions.length,
+    content,
+    props,
+  })
 
   result.items = [
     sessions.length > 0
@@ -84,33 +76,27 @@ export function getClientMenuItem(
           options: {
             columns: 2,
           },
+          props,
         }
       : undefined,
     {
       name: "Добавить сессию",
       conversation: CONVERSATION_NAMES.THERAPY_SESSION_ADD,
+      props,
     },
     {
       name: "Редактировать описание",
       conversation: CONVERSATION_NAMES.CLIENT_EDIT,
+      props,
     },
     sessions.length === 0
       ? {
           name: "Удалить",
           conversation: CONVERSATION_NAMES.CLIENT_DELETE,
+          props,
         }
       : undefined,
-  ]
-    .filter(notEmpty)
-    .map((item) => {
-      return MenuBlock.getPreparedMenu(
-        {
-          ...item,
-          props,
-        },
-        result
-      )
-    })
+  ].filter(notEmpty) as Array<PartialMenuBlockItemsProps>
 
   return result
 }

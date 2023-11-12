@@ -57,7 +57,7 @@ export const BotConversations = {
     if (conversation) {
       return this.getMiddleware(conversation)
     } else {
-      return (ctx, next) => next()
+      return (_ctx, next) => next()
     }
   },
 

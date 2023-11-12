@@ -1,7 +1,7 @@
-import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
-import getMeppedMenuItems from "../utils/getMeppedMenuItems"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import getMenuItemsMap from "../utils/getMenuItemsMap"
 
-const mappedMenuItemsList = getMeppedMenuItems()
+const mappedMenuItemsList = getMenuItemsMap()
 const defaultMenu = {
   ...mappedMenuItemsList.main,
   items: [
@@ -29,6 +29,6 @@ const defaultMenu = {
     },
     mappedMenuItemsList.sendTherapyRequest,
   ],
-} as Partial<MenuBlockItemsProps>
+} as PartialMenuBlockItemsProps
 
 export default defaultMenu

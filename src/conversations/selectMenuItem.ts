@@ -44,14 +44,13 @@ export const SelectMenuItem: BotConversation = {
       const menu = defaultMenu
         ? new MenuBlock(conversation, ctx, defaultMenu)
         : undefined
+
       if (!menu) {
         await ctx.reply(CONVERSATION_ERRORS.EMPTY_MENU)
         return
       }
 
-      const goTo = conversation.session.deepLink?.goTo
-      delete conversation.session.deepLink
-      await menu.show(goTo)
+      await menu.show()
     }
   },
 }

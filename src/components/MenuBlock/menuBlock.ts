@@ -1,18 +1,23 @@
 import { Conversation } from "@grammyjs/conversations"
-import { ClientDto } from "../../common/dto/client.dto"
-import { TherapySessionDto } from "../../common/dto/therapySession.dto"
-import { BotConversation } from "../../conversations/types/botConversation"
+import { randomUUID } from "crypto"
 import { Keyboard } from "grammy"
+import { jsonc } from "jsonc"
+import { PropType } from "../../api/type/propType"
+import { ClientDto } from "../../common/dto/client.dto"
 import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
+import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { UserDto } from "../../common/dto/user.dto"
 import { ACTION_BUTTON_TEXTS } from "../../common/enums/actionButtonTexts.enum"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { ROLES } from "../../common/enums/roles.enum"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
+import toFirstCapitalLetter from "../../common/utils/toFirstCapitalLetter"
 import { BotConversations } from "../../conversations/index"
+import { BotConversation } from "../../conversations/types/botConversation"
 import { ConversationResult } from "../../conversations/types/conversationResult"
 import { defaultRoles } from "./consts/defaultRoles"
+import MENU_ITEM_TYPES from "./enums/menuItemTypes.enum"
 import { SUBMENU_TYPES } from "./enums/submenuTypes.enum"
 import {
   getClientMenuItem,
@@ -35,10 +40,11 @@ import {
   loadUsersMenuItems,
 } from "./submenus/getUsersMenuItems"
 import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
-import { MenuBlockItemsProps } from "./types/menuBlockItemsProps.type"
+import {
+  MenuBlockItemsProps,
+  PartialMenuBlockItemsProps,
+} from "./types/menuBlockItemsProps.type"
 import { MenuBlockOptions } from "./types/menuBlockOptions.type"
-import { randomUUID } from "crypto"
-import toFirstCapitalLetter from "../../common/utils/toFirstCapitalLetter"
 
 const defaultItemsParams: MenuBlockItemsParams = {
   pageNumber: 0,
@@ -52,6 +58,57 @@ const defaultMenuOptions: MenuBlockOptions = {
   withSearch: false,
 }
 export default class MenuBlock {
+  private static deepLink?: MENU_ITEM_TYPES
+
+  static setDeepLink(goTo: MENU_ITEM_TYPES) {
+    this.deepLink = goTo
+  }
+
+  static takeDeepLink() {
+    const key = this.deepLink
+    delete this.deepLink
+    return key
+  }
+
+  static getPreparedMenu(
+    sourceMenu: PartialMenuBlockItemsProps,
+    parent?: MenuBlockItemsProps,
+    roles: Array<ROLES> = defaultRoles
+  ): MenuBlockItemsProps {
+    const menu = {
+      ...sourceMenu,
+      key: sourceMenu.key || randomUUID(),
+      parent: sourceMenu.parent || parent,
+      roles: sourceMenu.roles || parent?.roles || roles,
+    } as MenuBlockItemsProps
+
+    menu.items = (menu.items || []).map((item) => {
+      return this.getPreparedMenu(item, menu, item.roles || menu.roles)
+    })
+
+    return menu
+  }
+
+  static getMenuFilteredByRoles(
+    sourceMenu: PartialMenuBlockItemsProps,
+    availableRoles: Array<ROLES> = defaultRoles
+  ) {
+    const menu = {
+      ...sourceMenu,
+      items: (sourceMenu.items || [])
+        .filter((item) => {
+          return (item.roles || sourceMenu.roles || defaultRoles).find((role) =>
+            availableRoles.includes(role)
+          )
+        })
+        .map((item) => {
+          return this.getMenuFilteredByRoles(item, availableRoles)
+        }),
+    } as MenuBlockItemsProps
+
+    return menu
+  }
+
   private current: MenuBlockItemsProps
   private menu: MenuBlockItemsProps
 
@@ -65,7 +122,7 @@ export default class MenuBlock {
   constructor(
     private conversation: Conversation<MyContext>,
     private ctx: MyContext,
-    menu: Partial<MenuBlockItemsProps>,
+    menu: PartialMenuBlockItemsProps,
     options?: Partial<MenuBlockOptions>
   ) {
     this.menu = MenuBlock.getPreparedMenu(
@@ -84,45 +141,6 @@ export default class MenuBlock {
     )
 
     this.setDefaultItemsParams()
-  }
-
-  static getPreparedMenu(
-    sourceMenu: Partial<MenuBlockItemsProps>,
-    parent?: MenuBlockItemsProps,
-    roles: Array<ROLES> = defaultRoles
-  ): MenuBlockItemsProps {
-    const menu = {
-      ...sourceMenu,
-      key: sourceMenu.key || `${sourceMenu.name}_${randomUUID()}`,
-      parent: sourceMenu.parent || parent,
-      roles: sourceMenu.roles || parent?.roles || roles,
-    } as MenuBlockItemsProps
-
-    menu.items = (menu.items || []).map((item) => {
-      return this.getPreparedMenu(item, menu, item.roles || menu.roles)
-    })
-
-    return menu
-  }
-
-  static getMenuFilteredByRoles(
-    sourceMenu: Partial<MenuBlockItemsProps>,
-    availableRoles: Array<ROLES> = defaultRoles
-  ) {
-    const menu = {
-      ...sourceMenu,
-      items: (sourceMenu.items || [])
-        .filter((item) => {
-          return (item.roles || sourceMenu.roles || defaultRoles).find((role) =>
-            availableRoles.includes(role)
-          )
-        })
-        .map((item) => {
-          return this.getMenuFilteredByRoles(item, availableRoles)
-        }),
-    } as MenuBlockItemsProps
-
-    return menu
   }
 
   set currentItems(items: Array<MenuBlockItemsProps>) {
@@ -214,9 +232,15 @@ export default class MenuBlock {
     if (menu.key === itemKey || !itemKey) {
       return menu
     } else if (direction === "down") {
-      return (menu.items || []).find((child) => {
-        return this.findItem(itemKey, child, direction)
-      })
+      if (menu.items?.length) {
+        for (const child of menu.items) {
+          const foundRes = this.findItem(itemKey, child, direction)
+          if (foundRes) {
+            return foundRes
+          }
+        }
+      }
+      return undefined
     } else if (direction === "up" && menu.parent) {
       return this.findItem(itemKey, menu.parent, direction)
     }
@@ -245,62 +269,50 @@ export default class MenuBlock {
     }
   }
 
-  private async loadSubmenuItems(
-    submenuType: SUBMENU_TYPES,
-    item: MenuBlockItemsProps
-  ): Promise<Array<MenuBlockItemsProps>> {
-    switch (submenuType) {
+  private async loadSubmenuItems(parent: MenuBlockItemsProps = this.current) {
+    let items: Array<PartialMenuBlockItemsProps> = []
+
+    const props: [MyContext, PropType<MenuBlockItemsProps, "props">] = [
+      this.ctx,
+      parent.props || [],
+    ]
+
+    switch (parent.submenu) {
       case SUBMENU_TYPES.ALL_USERS:
-        return await loadUsersMenuItems(this.ctx, item)
+        items = await this.conversation.external(async () => {
+          return await loadUsersMenuItems(...props)
+        })
+        break
 
       case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
-        return await loadClientsMenuItems(this.ctx, item)
+        items = await this.conversation.external(async () => {
+          return await loadClientsMenuItems(...props)
+        })
+        break
 
       case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
-        return await loadTherapySessionsMenuItems(this.ctx, item)
+        items = await this.conversation.external(async () => {
+          return await loadTherapySessionsMenuItems(...props)
+        })
+        break
 
       case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
-        return await loadTherapyRequestsMenuItems(this.ctx, item)
+        items = await this.conversation.external(async () => {
+          return await loadTherapyRequestsMenuItems(...props)
+        })
+        break
 
       case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
-        return await loadPsychologistTherapyRequestsMenuItems(this.ctx, item)
-      default:
-        return []
+        items = await this.conversation.external(async () => {
+          return await loadPsychologistTherapyRequestsMenuItems(...props)
+        })
+
+        break
     }
-  }
 
-  private getSubmenuItem(
-    submenuType: SUBMENU_TYPES,
-    parent: MenuBlockItemsProps,
-    props: Array<unknown> = []
-  ): MenuBlockItemsProps {
-    switch (submenuType) {
-      case SUBMENU_TYPES.ALL_USERS:
-        return getUserMenuItem(parent, ...(props as [UserDto]))
-
-      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
-        return getClientMenuItem(
-          parent,
-          ...(props as [ClientDto, Array<TherapySessionDto>])
-        )
-      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
-        return getTherapySessionMenuItem(
-          parent,
-          ...(props as [ClientDto, TherapySessionDto])
-        )
-
-      case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
-        return getTherapyRequestMenuItem(
-          parent,
-          ...(props as [TherapyRequestDto])
-        )
-
-      case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
-        return getPsychologistTherapyRequestMenuItem(
-          parent,
-          ...(props as [TherapyRequestDto])
-        )
-    }
+    parent.items = items.map((item) => {
+      return MenuBlock.getPreparedMenu(item, parent)
+    })
   }
 
   getItemBreadCrumbsString(item: MenuBlockItemsProps = this.current): string {
@@ -357,11 +369,14 @@ export default class MenuBlock {
     }
   }
   async show(itemKey?: string) {
-    this.selectItem(itemKey, true)
+    const deepLink = await this.conversation.external(() => {
+      return MenuBlock.takeDeepLink()
+    })
+
+    this.selectItem(itemKey || deepLink, true)
 
     let keepGoing = true
     do {
-      // NOTICE: fall inside a conversation
       if (this.current.conversation) {
         try {
           await this.printItemContent()
@@ -369,6 +384,7 @@ export default class MenuBlock {
             this.current.conversation
           )
           if (botConversation) {
+            // NOTICE: fall inside a conversation
             await this.showConversation(botConversation)
           }
         } catch (e) {
@@ -377,12 +393,11 @@ export default class MenuBlock {
       }
 
       // NOTICE: load currentItems if they were not preloaded
-      if (this.current.submenu && !this.current.submenuPreload) {
-        this.currentItems = await this.conversation.external(async () => {
-          return this.current.submenu
-            ? await this.loadSubmenuItems(this.current.submenu, this.current)
-            : []
-        })
+      if (
+        this.current.submenu &&
+        !(this.current.submenuPreload && this.currentItems.length)
+      ) {
+        await this.loadSubmenuItems(this.current)
       }
 
       if (this.currentItems.length) {
@@ -398,6 +413,10 @@ export default class MenuBlock {
         }
       }
 
+      if (process.env.NODE_ENV === "dev") {
+        this.printMenuStructure()
+      }
+
       this.ctx = await this.conversation.waitFor("message:text")
       const text = this.ctx.msg?.text || ""
 
@@ -408,7 +427,7 @@ export default class MenuBlock {
   printMenuStructure(curItem: MenuBlockItemsProps = this.menu, depth = 0) {
     if (depth === 0) {
       this.conversation.log(
-        "\r\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\n"
+        "\r\n-------------------------------------------------------------\r\n"
       )
     }
     const isCurrent =
@@ -418,13 +437,20 @@ export default class MenuBlock {
 
     this.conversation.log(
       new Array(depth).fill(tab).join("") +
-        (curItem.parent ? `[ ${curItem.parent.name} ] => ` : "") +
-        curItem.key +
-        ` < ${(curItem.roles || []).join(" | ")} >`
+        ` ${curItem.name} {${curItem.key}} [${(curItem.roles || []).join(
+          ", "
+        )}] <= ${curItem.parent ? curItem.parent.name : "*"}`
     )
-    ;(curItem.items || []).forEach((item) => {
-      this.printMenuStructure(item, depth + 1)
-    })
+
+    if (curItem.items?.length) {
+      curItem.items.forEach((item) => {
+        this.printMenuStructure(item, depth + 1)
+      })
+    } else if (curItem.submenu) {
+      this.conversation.log(
+        `${new Array(depth + 1).fill(tab).join("")} [...${curItem.submenu}] `
+      )
+    }
   }
 
   private async showConversation(botConversation: BotConversation) {
@@ -438,7 +464,7 @@ export default class MenuBlock {
     this.conversation.log("conversationResult", conversationResult)
 
     if (conversationResult) {
-      // -------------------------- Might need to be removed:start --------------------------------- //
+      // FIXME: -------------------------- Might need to be removed:start --------------------------------- //
       // if (conversationResult.current) {
       //   Object.assign(this.current, conversationResult.current)
       //   this.conversation.log("UPDATE_CURRENT", this.current)
@@ -502,13 +528,42 @@ export default class MenuBlock {
     this.selectParent()
   }
 
+  // FIXME: -------------------------- Might need to be removed:start --------------------------------- //
   private updateItemByProps(item: MenuBlockItemsProps, props: Array<unknown>) {
     if (item.parent?.submenu) {
-      this.getSubmenuItem(item.parent.submenu, item.parent, props)
+      this.getSubmenuItem(item.parent.submenu, props)
     } else {
       return { ...item, props }
     }
   }
+
+  private getSubmenuItem(
+    submenuType: SUBMENU_TYPES,
+    props: Array<unknown> = []
+  ): PartialMenuBlockItemsProps {
+    switch (submenuType) {
+      case SUBMENU_TYPES.ALL_USERS:
+        return getUserMenuItem(...(props as [UserDto]))
+
+      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
+        return getClientMenuItem(
+          ...(props as [ClientDto, Array<TherapySessionDto>])
+        )
+      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
+        return getTherapySessionMenuItem(
+          ...(props as [ClientDto, TherapySessionDto])
+        )
+
+      case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
+        return getTherapyRequestMenuItem(...(props as [TherapyRequestDto]))
+
+      case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
+        return getPsychologistTherapyRequestMenuItem(
+          ...(props as [TherapyRequestDto])
+        )
+    }
+  }
+  // -------------------------- Might need to be removed:end --------------------------------- //
 
   getItemOnStepsBack(
     steps = 1,
@@ -544,24 +599,11 @@ export default class MenuBlock {
     fromTheTop = false,
     direction: "up" | "down" = "down"
   ) {
-    // this.conversation.log("PARAMS", itemName, fromTheTop, direction)
-    // this.conversation.log("Current", this.current)
-
     const resultDirection = fromTheTop ? "down" : direction
     const item = fromTheTop ? this.menu : this.current
 
     const result = this.findItem(itemKey, item, resultDirection)
     this.current = result ? result : this.menu
-
-    // this.conversation.log(
-    //   "result",
-    //   this.current.name,
-    //   this.current.parent?.name
-    // )
-
-    if (process.env.NODE_ENV === "dev") {
-      this.printMenuStructure()
-    }
 
     this.setDefaultItemsParams()
   }
@@ -585,12 +627,9 @@ export default class MenuBlock {
     for (let i = 0; i < this.currentItems.length; i++) {
       const item = this.currentItems[i]
       if (item.submenu && item.submenuPreload) {
-        item.items = await this.conversation.external(
-          async () =>
-            await this.loadSubmenuItems(item.submenu as SUBMENU_TYPES, item)
-        )
+        await this.loadSubmenuItems(item)
 
-        if (!item.items.length) {
+        if (!item.items?.length) {
           continue
         }
       }

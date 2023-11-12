@@ -1,4 +1,5 @@
 import { getAllUsers } from "../../../api/controllerUsers/getAllUsers"
+import { PropType } from "../../../api/type/propType"
 import { UserDto } from "../../../common/dto/user.dto"
 import { ROLES } from "../../../common/enums/roles.enum"
 import { MyContext } from "../../../common/types/myContext"
@@ -7,23 +8,19 @@ import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import MenuBlock from "../menuBlock"
-import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import {
+  MenuBlockItemsProps,
+  PartialMenuBlockItemsProps,
+} from "../types/menuBlockItemsProps.type"
 
 export async function loadUsersMenuItems(
   ctx: MyContext,
-  current: MenuBlockItemsProps
-): Promise<Array<MenuBlockItemsProps>> {
-  const menuItems: Array<MenuBlockItemsProps> = (await getAllUsers(ctx))
-    .reverse()
-    .map((user) => getUserMenuItem(current, user))
-
-  return menuItems
+  _props: PropType<MenuBlockItemsProps, "props"> = []
+): Promise<Array<PartialMenuBlockItemsProps>> {
+  return (await getAllUsers(ctx)).reverse().map((user) => getUserMenuItem(user))
 }
 
-export function getUserMenuItem(
-  parent: MenuBlockItemsProps,
-  user: UserDto
-): MenuBlockItemsProps {
+export function getUserMenuItem(user: UserDto): PartialMenuBlockItemsProps {
   const props = [user]
 
   const content: string = [
@@ -41,40 +38,30 @@ export function getUserMenuItem(
     .filter(notEmpty)
     .join("\r\n\r\n")
 
-  const result = MenuBlock.getPreparedMenu(
-    {
-      name: user.name,
-      content,
-      props: props,
-    },
-    parent
-  )
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
+    name: user.name,
+    content,
+    props,
+  })
 
   result.items = [
     {
       name: "Редактировать",
       conversation: CONVERSATION_NAMES.USER_EDIT,
+      props,
     },
     !user.roles.includes(ROLES.PSYCHOLOGIST)
       ? {
           name: "Дать права психолога",
           conversation: CONVERSATION_NAMES.USER_TO_PSYCHOLOGIST,
+          props,
         }
       : {
           name: "Убрать права психолога",
           conversation: CONVERSATION_NAMES.PSYCHOLOGIST_TO_USER,
-        },
-  ]
-    .filter(notEmpty)
-    .map((item) => {
-      return MenuBlock.getPreparedMenu(
-        {
-          ...item,
           props,
         },
-        result
-      )
-    })
+  ].filter(notEmpty) as Array<PartialMenuBlockItemsProps>
 
   return result
 }

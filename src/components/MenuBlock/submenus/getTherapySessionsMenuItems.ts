@@ -1,3 +1,4 @@
+import { PropType } from "../../../api/type/propType"
 import { oneDayInMilliseconds } from "../../../common/consts/oneDayInMilliseconds"
 import { ClientDto } from "../../../common/dto/client.dto"
 import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
@@ -6,26 +7,26 @@ import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import MenuBlock from "../menuBlock"
-import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import {
+  MenuBlockItemsProps,
+  PartialMenuBlockItemsProps,
+} from "../types/menuBlockItemsProps.type"
 
 export async function loadTherapySessionsMenuItems(
-  ctx: MyContext,
-  current: MenuBlockItemsProps
-): Promise<Array<MenuBlockItemsProps>> {
-  const props = current.props as [ClientDto, TherapySessionDto[]]
-  const [client, sessions] = props
-  const menuItems: Array<MenuBlockItemsProps> = [...(sessions || [])]
-    .reverse()
-    .map((session) => getTherapySessionMenuItem(current, client, session))
+  _ctx: MyContext,
+  props: PropType<MenuBlockItemsProps, "props"> = []
+): Promise<Array<PartialMenuBlockItemsProps>> {
+  const [client, sessions] = props as [ClientDto, TherapySessionDto[]]
 
-  return menuItems
+  return [...(sessions || [])]
+    .reverse()
+    .map((session) => getTherapySessionMenuItem(client, session))
 }
 
 export function getTherapySessionMenuItem(
-  parent: MenuBlockItemsProps,
   client: ClientDto,
   session: TherapySessionDto
-): MenuBlockItemsProps {
+): PartialMenuBlockItemsProps {
   const props = [client, session]
 
   const content = getTextOfData(
@@ -48,14 +49,11 @@ export function getTherapySessionMenuItem(
     }
   )
 
-  const result = MenuBlock.getPreparedMenu(
-    {
-      name: `Сессия от ${session.date}`,
-      content,
-      props,
-    },
-    parent
-  )
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
+    name: `Сессия от ${session.date}`,
+    content,
+    props,
+  })
 
   const deletionIsAvailable =
     Date.now() - session.timestamp < oneDayInMilliseconds
@@ -68,11 +66,7 @@ export function getTherapySessionMenuItem(
           conversation: CONVERSATION_NAMES.THERAPY_SESSION_DELETE,
         }
       : undefined,
-  ]
-    .filter(notEmpty)
-    .map((item) => {
-      return MenuBlock.getPreparedMenu(item as MenuBlockItemsProps, result)
-    }) as Array<MenuBlockItemsProps>
+  ].filter(notEmpty) as Array<PartialMenuBlockItemsProps>
 
   return result
 }

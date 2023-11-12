@@ -1,4 +1,5 @@
 import { getPsychologistTherapyRequests } from "../../../api/controllerTherapyRequests/getPsychologistTherapyRequests"
+import { PropType } from "../../../api/type/propType"
 import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../../common/types/myContext"
 import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
@@ -9,28 +10,30 @@ import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import MenuBlock from "../menuBlock"
-import { MenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import {
+  MenuBlockItemsProps,
+  PartialMenuBlockItemsProps,
+} from "../types/menuBlockItemsProps.type"
 
 export async function loadPsychologistTherapyRequestsMenuItems(
   ctx: MyContext,
-  current: MenuBlockItemsProps
-): Promise<Array<MenuBlockItemsProps>> {
-  const [params] = current.props as [ObjectWithPrimitiveValues]
+  props: PropType<MenuBlockItemsProps, "props"> = []
+): Promise<Array<PartialMenuBlockItemsProps>> {
+  const [params] = props as [ObjectWithPrimitiveValues]
   const therapyRequests = await getPsychologistTherapyRequests(ctx, params)
 
-  const menuItems: Array<MenuBlockItemsProps> = therapyRequests
+  const menuItems: Array<PartialMenuBlockItemsProps> = therapyRequests
     .reverse()
     .map((therapyRequest) =>
-      getPsychologistTherapyRequestMenuItem(current, therapyRequest)
+      getPsychologistTherapyRequestMenuItem(therapyRequest)
     )
 
   return menuItems
 }
 
 export function getPsychologistTherapyRequestMenuItem(
-  parent: MenuBlockItemsProps,
   therapyRequest: TherapyRequestDto
-): MenuBlockItemsProps {
+): PartialMenuBlockItemsProps {
   const props = [therapyRequest]
 
   const requestDate = getCurrentDateString(therapyRequest.timestamp)
@@ -61,39 +64,35 @@ export function getPsychologistTherapyRequestMenuItem(
     .filter(notEmpty)
     .join("\r\n\r\n")
 
-  const result = MenuBlock.getPreparedMenu(
-    {
-      name: `Заявка от ${requestDate} в ${requestTime}`,
-      content,
-      props,
-    },
-    parent
-  )
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
+    name: `Заявка от ${requestDate} в ${requestTime}`,
+    content,
+    props,
+  })
 
   result.items = [
     !therapyRequest.accepted
       ? {
           name: "Принять заявку",
           conversation: CONVERSATION_NAMES.THERAPY_REQUEST_ACCEPT,
+          props,
         }
       : undefined,
     !therapyRequest.accepted
       ? {
           name: "Отклонить заявку",
           conversation: CONVERSATION_NAMES.THERAPY_REQUEST_REJECT,
+          props,
         }
       : undefined,
     !therapyRequest.accepted
       ? {
           name: "Перенаправить заявку",
           conversation: CONVERSATION_NAMES.THERAPY_REQUEST_TRANSFER,
+          props,
         }
       : undefined,
-  ]
-    .filter(notEmpty)
-    .map((item) => {
-      return MenuBlock.getPreparedMenu({ ...item, props }, result)
-    }) as Array<MenuBlockItemsProps>
+  ].filter(notEmpty) as Array<PartialMenuBlockItemsProps>
 
   return result
 }
