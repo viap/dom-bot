@@ -50,8 +50,8 @@ jobs:
           command: |
             cd ${{secrets.REMOTE_TARGET}} && 
             npm install && 
-            pm2 delete domBot 2 > /dev/null
             npm run build &&
+            pm2 delete domBot > /dev/null
             pm2 start npm --name domBot -- start
           host: ${{secrets.REMOTE_HOST}}
           user: ${{secrets.REMOTE_USER}}
