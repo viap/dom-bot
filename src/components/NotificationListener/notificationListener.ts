@@ -5,6 +5,7 @@ import NotificationTypes from "../../common/enums/notificationTypes"
 import { MyContext } from "../../common/types/myContext"
 import MENU_ITEM_TYPES from "../../components/MenuBlock/enums/menuItemTypes.enum"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
+import getMenuItemBreadCrumbs from "../../components/MenuBlock/utils/getMenuItemBreadCrumbs"
 
 export default class NotificationListener {
   private static ctx: MyContext
@@ -55,11 +56,20 @@ export default class NotificationListener {
   }
 
   private static async makeEffect(notification: NotificationDto) {
+    let menuItemBreadCrumbs: Array<string> | undefined
     switch (notification.type) {
       case NotificationTypes.NEW_THERAPY_REQUEST:
       case NotificationTypes.TRANSFER_THERAPY_REQUEST:
+        menuItemBreadCrumbs = getMenuItemBreadCrumbs(
+          MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW
+        )
         await NotificationListener.ctx.reply(
-          "Пришел новый запрос.\r\n[ Меню > Мои заявки > Новые заявки ]",
+          "*Пришел новый терапевтический запрос*" +
+            (menuItemBreadCrumbs?.length
+              ? `\r\n${ReplyMarkup.escapeForParseModeV2(
+                  menuItemBreadCrumbs.join(" > ")
+                )}`
+              : ""),
           {
             reply_markup: new InlineKeyboard().text(
               "Перейти",
