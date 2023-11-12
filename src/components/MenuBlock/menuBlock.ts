@@ -1,7 +1,6 @@
 import { Conversation } from "@grammyjs/conversations"
 import { randomUUID } from "crypto"
 import { Keyboard } from "grammy"
-import { jsonc } from "jsonc"
 import { PropType } from "../../api/type/propType"
 import { ClientDto } from "../../common/dto/client.dto"
 import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
