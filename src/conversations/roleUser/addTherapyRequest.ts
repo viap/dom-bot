@@ -56,7 +56,7 @@ export const AddTherapyRequest: BotConversation = {
         },
         {
           name: "psychologist",
-          alias: "психолог",
+          alias: "психолога",
           type: FORM_INPUT_TYPES.SELECT,
           optional: true,
           values: allPsychologists.map((psychologist) => {

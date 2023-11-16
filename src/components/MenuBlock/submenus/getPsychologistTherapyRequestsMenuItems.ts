@@ -65,7 +65,7 @@ export function getPsychologistTherapyRequestMenuItem(
     .join("\r\n\r\n")
 
   const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
-    name: `Заявка от ${requestDate} в ${requestTime}`,
+    name: `${therapyRequest.name}, заявка от ${requestDate}`,
     content,
     props,
   })

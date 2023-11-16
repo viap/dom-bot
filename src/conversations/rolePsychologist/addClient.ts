@@ -32,6 +32,7 @@ export const AddClient: BotConversation = {
           alias: "описание",
           type: FORM_INPUT_TYPES.STRING,
           owner: "клиентa",
+          optional: true,
         },
       ]
 
