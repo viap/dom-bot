@@ -42,10 +42,10 @@ export default domBot
 domBot.api.setMyCommands([
   { command: BOT_COMMANDS.START, description: BOT_COMMANDS_DESCR.START },
   { command: BOT_COMMANDS.MENU, description: BOT_COMMANDS_DESCR.MENU },
-  {
-    command: BOT_COMMANDS.TERMS_AGREEMENT,
-    description: BOT_COMMANDS_DESCR.TERMS_AGREEMENT,
-  },
+  // {
+  //   command: BOT_COMMANDS.TERMS_AGREEMENT,
+  //   description: BOT_COMMANDS_DESCR.TERMS_AGREEMENT,
+  // },
 ])
 
 /** SESSION */
@@ -86,12 +86,19 @@ domBot.fork(async (ctx: MyContext, next) => {
 
 /** COMMAND HANDLERS: start */
 domBot.command(BOT_COMMANDS.START, async (ctx) => {
-  await ctx.conversation.exit()
+  try {
+    await ctx.conversation.exit()
+  } catch (error) {
+    console.log(BOT_ERRORS.CONVERSATION_EXIT, error)
+  }
 
-  await ctx.reply(BOT_TEXTS.WELCOME, ReplyMarkup.emptyKeyboard)
-  await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
+  await ctx.reply(BOT_TEXTS.WELCOME, {
     reply_markup: getAvailableCommandButtons(ctx.session),
   })
+
+  // await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
+  //   reply_markup: getAvailableCommandButtons(ctx.session),
+  // })
 })
 
 /** CONVERSATIONS: use */
@@ -154,10 +161,12 @@ domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
 /** MESSAGE HANDLERS */
 
 domBot.on("message", async (ctx) => {
-  await ctx.reply(`${BOT_TEXTS.DEFAULT} - ${ctx.message.text}`)
-  await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
+  await ctx.reply(`${BOT_TEXTS.DEFAULT} - ${ctx.message.text}`, {
     reply_markup: getAvailableCommandButtons(ctx.session),
   })
+  // await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
+  //   reply_markup: getAvailableCommandButtons(ctx.session),
+  // })
 })
 
 /** ERROR HANDLERS */

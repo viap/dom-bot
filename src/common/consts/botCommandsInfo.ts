@@ -16,11 +16,11 @@ const botCommandsInfo: BotCommandsInfo = {
     descr: BOT_COMMANDS_DESCR.MENU,
     withAgreements: true,
   },
-  [BOT_COMMANDS.TERMS_AGREEMENT]: {
-    conversation: CONVERSATION_NAMES.TERMS_AGREEMENT,
-    descr: BOT_COMMANDS_DESCR.TERMS_AGREEMENT,
-    withAgreements: false,
-  },
+  // [BOT_COMMANDS.TERMS_AGREEMENT]: {
+  //   conversation: CONVERSATION_NAMES.TERMS_AGREEMENT,
+  //   descr: BOT_COMMANDS_DESCR.TERMS_AGREEMENT,
+  //   withAgreements: false,
+  // },
 }
 
 export default botCommandsInfo

@@ -14,6 +14,6 @@ export type SessionData = {
 }
 
 export const defaultSessionData = {
-  hasTermsAgreement: false,
+  hasTermsAgreement: true,
   quizAnswers: {},
 }
