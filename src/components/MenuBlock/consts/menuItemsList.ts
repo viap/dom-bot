@@ -43,7 +43,7 @@ const menuItemsList: Array<
   },
   {
     key: MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS_NEW,
-    name: "Новые заяки",
+    name: "Новые заявки",
     options: { columns: 2 },
     submenu: SUBMENU_TYPES.ALL_THERAPY_REQUESTS,
     // submenuPreload: true,
@@ -81,7 +81,7 @@ const menuItemsList: Array<
   },
   {
     key: MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW,
-    name: "Новые заяки",
+    name: "Новые заявки",
     options: { columns: 2 },
     submenu: SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS,
     // submenuPreload: true,
