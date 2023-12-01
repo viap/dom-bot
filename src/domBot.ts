@@ -11,16 +11,15 @@ import { CONVERSATION_NAMES } from "./conversations/enums/conversationNames.enum
 
 import { MyContext } from "./common/types/myContext"
 import { SessionData, defaultSessionData } from "./common/types/sessionData"
-import { ReplyMarkup } from "./common/utils/replyMarkup"
 import { DbConnection, getSessions } from "./services/db/connectDB"
 
-import MenuBlock from "./components/MenuBlock/menuBlock"
 import { cwd } from "process"
 import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
 import { PrimitiveValues } from "./common/types/primitiveValues"
 import getAvailableCommandButtons from "./common/utils/getAvailableCommandButtons"
 import getFilterByCommand from "./common/utils/getFilterByCommand"
 import MENU_ITEM_TYPES from "./components/MenuBlock/enums/menuItemTypes.enum"
+import MenuBlock from "./components/MenuBlock/menuBlock"
 import NotificationListener from "./components/NotificationListener/notificationListener"
 
 /** ENVIROMENT */
@@ -51,7 +50,9 @@ domBot.api.setMyCommands([
 /** SESSION */
 
 function sessionInit(): SessionData {
-  return defaultSessionData
+  // NOTICE: should create a new object otherwise several chats might share the same session object in memory
+  // https://grammy.dev/plugins/session#initial-session-data
+  return { ...defaultSessionData }
 }
 
 function getSessionKey(ctx: Context): string | undefined {
@@ -95,10 +96,6 @@ domBot.command(BOT_COMMANDS.START, async (ctx) => {
   await ctx.reply(BOT_TEXTS.WELCOME, {
     reply_markup: getAvailableCommandButtons(ctx.session),
   })
-
-  // await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
-  //   reply_markup: getAvailableCommandButtons(ctx.session),
-  // })
 })
 
 /** CONVERSATIONS: use */

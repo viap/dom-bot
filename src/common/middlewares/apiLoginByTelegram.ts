@@ -1,5 +1,5 @@
 import { MyContext } from "../../common/types/myContext"
-import { isValidToken } from "../../api/controllerAuth/isValidToken"
+import { hasValidToken } from "../../api/controllerAuth/isValidToken"
 import { loginByTelegram } from "../../api/controllerAuth/loginByTelegram"
 import { TelegramUserDto } from "../dto/telegramUser.dto"
 import { BOT_TEXTS } from "../enums/botTexts.enum"
@@ -13,7 +13,7 @@ export const apiLoginByTelegram = async (
   next: NextFunction
 ) => {
   if (ctx.from && !ctx.from.is_bot) {
-    if (!(await isValidToken(ctx))) {
+    if (!(await hasValidToken(ctx))) {
       delete ctx.session.token
     }
 
