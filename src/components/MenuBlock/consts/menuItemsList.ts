@@ -1,3 +1,4 @@
+import { PERIODS } from "../../../common/enums/periods.enum"
 import { ROLES } from "../../../common/enums/roles.enum"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
 import MENU_ITEM_TYPES from "../enums/menuItemTypes.enum"
@@ -100,6 +101,28 @@ const menuItemsList: Array<
     name: "Оставить заявку",
     content: "Опишите пожалуйста ваш запрос",
     conversation: CONVERSATION_NAMES.THERAPY_REQUEST_ADD,
+  },
+  {
+    key: MENU_ITEM_TYPES.STATISTIC,
+    name: "Статистика",
+  },
+  {
+    key: MENU_ITEM_TYPES.WEEK,
+    name: "Неделя",
+    conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_STATISTIC,
+    props: [PERIODS.WEEK],
+  },
+  {
+    key: MENU_ITEM_TYPES.FORTNIGHT,
+    name: "Две недели",
+    conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_STATISTIC,
+    props: [PERIODS.FORTNIGHT],
+  },
+  {
+    key: MENU_ITEM_TYPES.MONTH,
+    name: "Месяц",
+    conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_STATISTIC,
+    props: [PERIODS.MONTH],
   },
 ]
 

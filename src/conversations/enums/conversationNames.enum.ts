@@ -13,6 +13,7 @@ export enum CONVERSATION_NAMES {
   THERAPY_SESSION_DELETE = "therapy_session_delete",
   THERAPY_REQUEST_ACCEPT = "therapy_request_accept",
   THERAPY_REQUEST_REJECT = "therapy_request_reject",
+  THERAPY_SESSIONS_STATISTIC = "therapy_sessions_statistic",
   // FOR EDITORS
   USER_EDIT = "user_edit",
   USER_TO_PSYCHOLOGIST = "user_to_psychologist",

@@ -14,6 +14,11 @@ enum MENU_ITEM_TYPES {
   THERAPY_REQUESTS_NEW = "therapyRequestsNew",
   THERAPY_REQUESTS_ACCEPTED = "therapyRequestsAccepted",
   SEND_THERAPY_REQUEST = "sendTherapyRequest",
+  STATISTIC = "statistic",
+  //PERIODS
+  WEEK = "week",
+  FORTNIGHT = "fortnight",
+  MONTH = "month",
 }
 
 export default MENU_ITEM_TYPES

@@ -18,7 +18,18 @@ const defaultMenu = {
     },
     {
       ...mappedMenuItemsList.clients,
-      items: [mappedMenuItemsList.clientsList, mappedMenuItemsList.clientsAdd],
+      items: [
+        mappedMenuItemsList.clientsList,
+        mappedMenuItemsList.clientsAdd,
+        {
+          ...mappedMenuItemsList.statistic,
+          items: [
+            mappedMenuItemsList.week,
+            mappedMenuItemsList.fortnight,
+            mappedMenuItemsList.month,
+          ],
+        },
+      ],
     },
     {
       ...mappedMenuItemsList.therapyRequests,

@@ -44,6 +44,8 @@ export const API_PATHS: ApiPaths = {
       all: "/therapy-sessions",
       one: "/therapy-sessions/:therapySessionId",
       forPsychologist: "/therapy-sessions/psychologist/:psychologistId",
+      forPsychologistForPeriod:
+        "/therapy-sessions/psychologist/:psychologistId/from/:from/to/:to",
       forPsychologistWithClient:
         "/therapy-sessions/psychologist/:psychologistId/client/:userId",
     },

@@ -13,6 +13,7 @@ import { DeleteTherapySession } from "./rolePsychologist/deleteTherapySession"
 import { EditClient } from "./rolePsychologist/editClient"
 import { RejectTherapyRequest } from "./rolePsychologist/rejectTherapyRequest"
 import { TransferTherapyRequest } from "./rolePsychologist/transferTherapyRequest"
+import { TherapySessionsStatistic } from "./rolePsychologist/therapySessionsStatistic"
 import { AddTherapyRequest } from "./roleUser/addTherapyRequest"
 // import { QuizProgress } from "./quizProgress"
 import { MyContext } from "common/types/myContext"
@@ -41,6 +42,7 @@ export const BotConversations = {
       DeleteClient,
       AddTherapySession,
       DeleteTherapySession,
+      TherapySessionsStatistic,
       AddTherapyRequest,
     ]
   },
