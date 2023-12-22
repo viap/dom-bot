@@ -33,6 +33,10 @@ const sessions = getSessions(connection)
 /** BOT */
 
 const domBot = new Bot<MyContext>(process.env.TOKEN || "")
+
+// NOTICE: connection to the api websocket for listening events and show notifications
+NotificationListener.start(domBot, sessions)
+
 export default domBot
 // const privateBot = domBot.chatType("private")
 
@@ -78,12 +82,6 @@ domBot.use(apiLoginByTelegram)
 
 /** CONVERSATIONS: init */
 domBot.use(conversations())
-
-// NOTICE: connection to the api websocket for listening events and show notifications
-domBot.fork(async (ctx: MyContext, next) => {
-  NotificationListener.start(ctx)
-  return next()
-})
 
 /** COMMAND HANDLERS: start */
 domBot.command(BOT_COMMANDS.START, async (ctx) => {

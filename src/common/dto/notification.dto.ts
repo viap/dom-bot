@@ -1,7 +1,6 @@
 import NotificationStatuses from "../enums/notificationStatuses"
 import NotificationTypes from "../enums/notificationTypes"
 import { ROLES } from "../enums/roles.enum"
-import { UserDto } from "./user.dto"
 
 export type NotificationDto = {
   _id: string
@@ -11,8 +10,8 @@ export type NotificationDto = {
   finishAt: number
 
   roles: Array<ROLES>
-  recipients: Array<UserDto>
-  received: Array<UserDto>
+  recipients: Array<string>
+  received: Array<string>
   type: NotificationTypes
   status: NotificationStatuses
 }

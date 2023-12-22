@@ -1,4 +1,4 @@
-import { InlineKeyboard } from "grammy"
+import { Api, Bot, InlineKeyboard, RawApi } from "grammy"
 import { io, Socket } from "socket.io-client"
 import { NotificationDto } from "../../common/dto/notification.dto"
 import NotificationTypes from "../../common/enums/notificationTypes"
@@ -6,17 +6,32 @@ import { MyContext } from "../../common/types/myContext"
 import MENU_ITEM_TYPES from "../../components/MenuBlock/enums/menuItemTypes.enum"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import getMenuItemBreadCrumbs from "../../components/MenuBlock/utils/getMenuItemBreadCrumbs"
+import { getApiClientHeader } from "../../common/utils/getApiClientHeader"
+import * as MongoStorage from "@grammyjs/storage-mongodb"
+import { Collection } from "@grammyjs/storage-mongodb/dist/cjs/deps.node"
+import { SessionData } from "../../common/types/sessionData"
+import { jwtDecode } from "jwt-decode"
+import { TokenPayloadDto } from "../../common/dto/tokenPayload.dto"
+
+type NotificationRecipient = { chatId: string; token: string }
 
 export default class NotificationListener {
-  private static ctx: MyContext
+  private static bot: Bot<MyContext, Api<RawApi>>
+  private static sessions: Collection<MongoStorage.ISession>
+
   private static socket: Socket | undefined
   private static isConnected: boolean
   private static pollingInterval: NodeJS.Timeout | undefined
   private static polingDelay: number
 
-  static start(ctx: MyContext, params?: { polingDelay: number }) {
-    if (!NotificationListener.isConnected && ctx.session.token) {
-      NotificationListener.ctx = ctx
+  static async start(
+    bot: Bot<MyContext, Api<RawApi>>,
+    sessions: Collection<MongoStorage.ISession>,
+    params?: { polingDelay: number }
+  ) {
+    if (!NotificationListener.isConnected) {
+      NotificationListener.bot = bot
+      NotificationListener.sessions = sessions
 
       NotificationListener.polingDelay =
         params?.polingDelay ||
@@ -27,7 +42,11 @@ export default class NotificationListener {
         autoConnect: true,
         reconnectionDelayMax: 10000,
         extraHeaders: {
-          Authorization: `Bearer ${NotificationListener.ctx.session.token}`,
+          // Authorization: `Bearer ${NotificationListener.ctx.session.token}`,
+          Authorization: getApiClientHeader(
+            process.env.API_CLIENT_NAME,
+            process.env.API_CLIENT_PASSWORD
+          ),
         },
       })
 
@@ -55,39 +74,132 @@ export default class NotificationListener {
     }
   }
 
+  private static emitWithAck(message: string, data?: unknown) {
+    if (NotificationListener.socket) {
+      return NotificationListener.socket.emitWithAck(message, data)
+    }
+  }
+
+  private static async getNotificationRecipient(
+    notification: NotificationDto
+  ): Promise<NotificationRecipient | undefined> {
+    let recipient: NotificationRecipient | undefined = undefined
+
+    if (NotificationListener.sessions) {
+      const allSessionsWithToken = NotificationListener.sessions.find({
+        "value.token": { $exists: true, $ne: "" },
+      })
+
+      let session = undefined
+      while ((await allSessionsWithToken.hasNext()) && !recipient) {
+        session = (await allSessionsWithToken.next()) as {
+          key: string
+          value: SessionData
+        }
+
+        console.log("@@@ session", session.key)
+
+        if (session.value.token) {
+          const { userId, roles = [] }: Partial<TokenPayloadDto> = jwtDecode(
+            session.value.token
+          )
+
+          console.log("@@@ userId", userId)
+          console.log("@@@ roles", roles)
+
+          if (
+            userId &&
+            // NOTICE: roles empty or user have any required role
+            (!notification.roles.length ||
+              notification.roles.find((role) => roles.includes(role))) &&
+            // NOTICE: recipients empty or user is in recipients list
+            (!notification.recipients.length ||
+              notification.recipients.includes(userId)) &&
+            // NOTICE: user is not in received list
+            !notification.received.includes(userId)
+          ) {
+            recipient = {
+              chatId: session.key.split("/")[1],
+              token: session.value.token,
+            }
+            allSessionsWithToken.rewind()
+          }
+        }
+      }
+    }
+    return recipient
+  }
+
   private static async makeEffect(notification: NotificationDto) {
     let menuItemBreadCrumbs: Array<string> | undefined
+
+    const recipient = await NotificationListener.getNotificationRecipient(
+      notification
+    )
+
+    if (!recipient) {
+      return
+    }
+
+    let message:
+      | { text: string; options: { [key: string]: unknown } }
+      | undefined = undefined
     switch (notification.type) {
       case NotificationTypes.NEW_THERAPY_REQUEST:
       case NotificationTypes.TRANSFER_THERAPY_REQUEST:
         menuItemBreadCrumbs = getMenuItemBreadCrumbs(
           MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW
         )
-        await NotificationListener.ctx.reply(
-          "*Пришел новый терапевтический запрос*" +
+
+        message = {
+          text:
+            "*Пришел новый терапевтический запрос*" +
             (menuItemBreadCrumbs?.length
               ? `\r\n${ReplyMarkup.escapeForParseModeV2(
                   menuItemBreadCrumbs.join(" > ")
                 )}`
               : ""),
-          {
+          options: {
+            ...ReplyMarkup.parseModeV2,
             reply_markup: new InlineKeyboard().text(
               "Перейти",
               JSON.stringify({
                 goTo: MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW,
               })
             ),
-            ...ReplyMarkup.parseModeV2,
-          }
-        )
-        NotificationListener.sendNotificationOfDelivery(notification._id)
+          },
+        }
         break
+    }
+
+    if (message) {
+      try {
+        // NOTICE: First we send a notification of receipt, then we send a notification to user to avoid repetitions
+        const result = await NotificationListener.sendNotificationOfReceipt(
+          notification._id,
+          recipient.token
+        )
+
+        if (result) {
+          await NotificationListener.bot.api.sendMessage(
+            recipient.chatId,
+            message.text,
+            message.options
+          )
+        }
+      } catch (error) {
+        console.error("Notification delivery error", error)
+      }
     }
   }
 
-  private static sendNotificationOfDelivery(notificationId: string) {
-    NotificationListener.emit("notifications/add-received", {
+  private static sendNotificationOfReceipt(
+    notificationId: string,
+    token: string
+  ) {
+    return NotificationListener.emitWithAck("notifications/add-received", {
       notificationId,
+      token,
     })
   }
 
@@ -103,7 +215,7 @@ export default class NotificationListener {
     console.log("Notifications: connected")
 
     NotificationListener.pollingInterval = setInterval(() => {
-      NotificationListener.emit("notifications")
+      NotificationListener.emit("notifications/get-all")
     }, NotificationListener.polingDelay)
 
     NotificationListener.isConnected = true
