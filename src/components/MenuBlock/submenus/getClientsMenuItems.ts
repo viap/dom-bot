@@ -8,7 +8,7 @@ import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsDa
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { groupBy } from "../../../common/utils/groupBy"
 import { notEmpty } from "../../../common/utils/notEmpty"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
 import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import MenuBlock from "../menuBlock"
 import {

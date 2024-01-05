@@ -1,6 +1,6 @@
 import { ConversationFn } from "@grammyjs/conversations"
 import { MyContext } from "common/types/myContext"
-import { CONVERSATION_NAMES } from "conversations/enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "conversations/enums/conversationNames"
 
 export type BotConversation = {
   contextPreload?(ctx: MyContext): Promise<Array<unknown> | never>

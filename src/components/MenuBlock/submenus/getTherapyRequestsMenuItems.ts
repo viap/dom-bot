@@ -1,3 +1,4 @@
+import { SocialNetworks } from "../../../common/enums/socialNetworks.enum"
 import { getAllTherapyRequests } from "../../../api/controllerTherapyRequests/getAllTherapyRequests"
 import { PropType } from "../../../api/type/propType"
 import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
@@ -8,7 +9,7 @@ import { getCurrentTimeString } from "../../../common/utils/getCurrentTimeString
 import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
 import MenuBlock from "../menuBlock"
 import {
   MenuBlockItemsProps,
@@ -35,6 +36,10 @@ export function getTherapyRequestMenuItem(
   const requestDate = getCurrentDateString(therapyRequest.timestamp)
   const requestTime = getCurrentTimeString(therapyRequest.timestamp)
 
+  const telegramUserName =
+    therapyRequest.psychologist?.user.contacts.find(
+      (contact) => contact.network === SocialNetworks.Telegram
+    )?.username || ""
   const content: string = [
     getTextOfData(
       "",
@@ -43,7 +48,8 @@ export function getTherapyRequestMenuItem(
         name: therapyRequest.name,
         descr: therapyRequest.descr,
         psychologist: therapyRequest.psychologist
-          ? therapyRequest.psychologist.user.name
+          ? (telegramUserName ? `@${telegramUserName}, ` : undefined) +
+            therapyRequest.psychologist.user.name
           : "",
         accepted: therapyRequest.accepted ? "да" : "нет",
       },

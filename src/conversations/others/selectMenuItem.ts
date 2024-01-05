@@ -1,13 +1,13 @@
 import { Conversation } from "@grammyjs/conversations"
-import MenuBlock from "../components/MenuBlock/menuBlock"
+import MenuBlock from "../../components/MenuBlock/menuBlock"
 
-import { MyContext } from "../common/types/myContext"
-import defaultMenu from "../components/MenuBlock/consts/defaultMenu"
-import { CONVERSATION_ERRORS } from "./enums/conversationErrors.enum"
-import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
-import { BotConversation } from "./types/botConversation"
+import { MyContext } from "../../common/types/myContext"
+import defaultMenu from "../../components/MenuBlock/consts/defaultMenu"
+import { CONVERSATION_ERRORS } from "../enums/conversationErrors"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 
-import { BotConversations } from "./index"
+import { BotConversations } from "../index"
 
 async function checkAgreemensts(
   conversation: Conversation<MyContext>,
@@ -30,7 +30,7 @@ async function checkAgreemensts(
   return conversation.session.hasTermsAgreement
 }
 
-export const SelectMenuItem: BotConversation = {
+const menuItemSelect: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.SELECT_MENU_ITEM
   },
@@ -54,3 +54,5 @@ export const SelectMenuItem: BotConversation = {
     }
   },
 }
+
+export default menuItemSelect

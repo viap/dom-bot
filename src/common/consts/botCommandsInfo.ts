@@ -1,6 +1,6 @@
 import { BOT_COMMANDS_DESCR } from "../../common/enums/botCommandsDescr.enum"
 import { BOT_COMMANDS } from "../enums/botCommands.enum"
-import { CONVERSATION_NAMES } from "../../conversations/enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../../conversations/enums/conversationNames"
 
 export type BotCommandsInfo = {
   [key: string]: {

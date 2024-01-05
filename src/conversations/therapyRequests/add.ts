@@ -12,11 +12,11 @@ import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enu
 import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
 import { Form } from "../../components/Form/form"
 import { FormInputProps } from "../../components/Form/types/formInputProps"
-import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-export const AddTherapyRequest: BotConversation = {
+const therapyRequestAdd: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.THERAPY_REQUEST_ADD
   },
@@ -136,3 +136,5 @@ export const AddTherapyRequest: BotConversation = {
     }
   },
 }
+
+export default therapyRequestAdd

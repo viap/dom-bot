@@ -1,4 +1,4 @@
-import { conversations } from "@grammyjs/conversations"
+import { ConversationHandle, conversations } from "@grammyjs/conversations"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import dotenv from "dotenv"
 import { Bot, Context, GrammyError, HttpError, session } from "grammy"
@@ -7,7 +7,7 @@ import { BOT_COMMANDS_DESCR } from "./common/enums/botCommandsDescr.enum"
 import { BOT_ERRORS } from "./common/enums/botErrors.enum"
 import { BOT_TEXTS } from "./common/enums/botTexts.enum"
 import { BotConversations } from "./conversations"
-import { CONVERSATION_NAMES } from "./conversations/enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "./conversations/enums/conversationNames"
 
 import { MyContext } from "./common/types/myContext"
 import { SessionData, defaultSessionData } from "./common/types/sessionData"
@@ -109,7 +109,9 @@ domBot
 
 /* CALLBACKS */
 domBot.on("callback_query:data", async (ctx: MyContext) => {
-  let data: { [key: string]: PrimitiveValues } | undefined
+  let data:
+    | { [key: string]: PrimitiveValues | Array<PrimitiveValues> }
+    | undefined
   try {
     data = JSON.parse(ctx.callbackQuery?.data || "")
   } catch (e) {

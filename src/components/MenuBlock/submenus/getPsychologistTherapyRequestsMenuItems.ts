@@ -8,7 +8,7 @@ import { getCurrentTimeString } from "../../../common/utils/getCurrentTimeString
 import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
 import MenuBlock from "../menuBlock"
 import {
   MenuBlockItemsProps,

@@ -1,6 +1,6 @@
 import { PERIODS } from "../../../common/enums/periods.enum"
 import { ROLES } from "../../../common/enums/roles.enum"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
 import MENU_ITEM_TYPES from "../enums/menuItemTypes.enum"
 import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps.type"

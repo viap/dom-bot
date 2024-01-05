@@ -8,11 +8,11 @@ import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enum"
 import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
 import { Form } from "../../components/Form/form"
-import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-export const EditClient: BotConversation = {
+const clientEdit: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.CLIENT_EDIT
   },
@@ -66,3 +66,5 @@ export const EditClient: BotConversation = {
     }
   },
 }
+
+export default clientEdit

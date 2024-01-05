@@ -4,12 +4,12 @@ import { ClientDto } from "../../common/dto/client.dto"
 import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 
-export const DeleteClient: BotConversation = {
+const clientDelete: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.CLIENT_DELETE
   },
@@ -46,3 +46,5 @@ export const DeleteClient: BotConversation = {
     }
   },
 }
+
+export default clientDelete

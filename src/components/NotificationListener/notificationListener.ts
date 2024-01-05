@@ -97,15 +97,10 @@ export default class NotificationListener {
           value: SessionData
         }
 
-        console.log("@@@ session", session.key)
-
         if (session.value.token) {
           const { userId, roles = [] }: Partial<TokenPayloadDto> = jwtDecode(
             session.value.token
           )
-
-          console.log("@@@ userId", userId)
-          console.log("@@@ roles", roles)
 
           if (
             userId &&

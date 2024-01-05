@@ -1,19 +1,17 @@
 import { Conversation } from "@grammyjs/conversations"
-import { editUser } from "../../api/controllerUsers/editUser"
-import { EditUserDto } from "../../api/dto/editUser.dto"
+import { createPsychologistFromUser } from "../../api/controllerPsychologists/createPsychologistFromUser"
 import { UserDto } from "../../common/dto/user.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
-import { ROLES } from "../../common/enums/roles.enum"
 import { MyContext } from "../../common/types/myContext"
 import { notEmpty } from "../../common/utils/notEmpty"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-export const RemoveFromPsychologists: BotConversation = {
+const userToPsychologist: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.PSYCHOLOGIST_TO_USER
+    return CONVERSATION_NAMES.USER_TO_PSYCHOLOGIST
   },
 
   getConversation(user: UserDto) {
@@ -26,19 +24,20 @@ export const RemoveFromPsychologists: BotConversation = {
       try {
         result = notEmpty(
           await conversation.external(async () => {
-            return await editUser(ctx, user._id, {
-              roles: user.roles.filter((role) => role !== ROLES.PSYCHOLOGIST),
-            } as EditUserDto)
+            return await createPsychologistFromUser(ctx, { userId: user._id })
           })
         )
       } catch (e) {
         conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {
         if (result) {
-          await ctx.reply("*Удалены права психолога*", ReplyMarkup.parseModeV2)
+          await ctx.reply(
+            "*Добавлены права психолога*",
+            ReplyMarkup.parseModeV2
+          )
         } else {
           await ctx.reply(
-            "*Не удалось удалить права психолога*",
+            "*Не удалось добавить права психолога*",
             ReplyMarkup.parseModeV2
           )
         }
@@ -52,3 +51,5 @@ export const RemoveFromPsychologists: BotConversation = {
     }
   },
 }
+
+export default userToPsychologist

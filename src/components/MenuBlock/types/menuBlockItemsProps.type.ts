@@ -1,5 +1,5 @@
 import { ROLES } from "../../../common/enums/roles.enum"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
 import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
 import { MenuBlockOptions } from "./menuBlockOptions.type"
 

@@ -1,14 +1,14 @@
 import { Conversation, ConversationFn } from "@grammyjs/conversations"
 import { Keyboard } from "grammy"
-import { ReplyMarkup } from "../common/utils/replyMarkup"
-import { MyContext } from "../common/types/myContext"
-import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
-import { CONVERSATION_TERMS_TEXTS } from "./enums/conversationTermsTexts.enum"
-import { BotConversation } from "./types/botConversation"
-import getAvailableCommandButtons from "../common/utils/getAvailableCommandButtons"
-import { BOT_TEXTS } from "../common/enums/botTexts.enum"
+import { ReplyMarkup } from "../../common/utils/replyMarkup"
+import { MyContext } from "../../common/types/myContext"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { CONVERSATION_TERMS_TEXTS } from "../enums/conversationTermsTexts"
+import { BotConversation } from "../types/botConversation"
+import getAvailableCommandButtons from "../../common/utils/getAvailableCommandButtons"
+import { BOT_TEXTS } from "../../common/enums/botTexts.enum"
 
-export const TermsAgreement: BotConversation = {
+const termsAgreementShow: BotConversation = {
   getName(): CONVERSATION_NAMES {
     return CONVERSATION_NAMES.TERMS_AGREEMENT
   },
@@ -58,3 +58,5 @@ export const TermsAgreement: BotConversation = {
     }
   },
 }
+
+export default termsAgreementShow

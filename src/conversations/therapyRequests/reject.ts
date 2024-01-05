@@ -1,20 +1,16 @@
 import { Conversation } from "@grammyjs/conversations"
-import { addNewClient } from "../../api/controllerPsychologists/addNewClient"
+import { rejectTherapyRequest } from "../../api/controllerTherapyRequests/rejectTherapyRequest"
+import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
+import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enum"
-import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
-import { Form } from "../../components/Form/form"
-import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
-import { acceptTherapyRequest } from "../../api/controllerTherapyRequests/acceptTherapyRequest"
-import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
 import { ConversationResult } from "conversations/types/conversationResult"
 
-export const AcceptTherapyRequest: BotConversation = {
+const therapyRequestReject: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.THERAPY_REQUEST_ACCEPT
+    return CONVERSATION_NAMES.THERAPY_REQUEST_REJECT
   },
   getConversation(therapyRequest: TherapyRequestDto) {
     return async (
@@ -25,16 +21,16 @@ export const AcceptTherapyRequest: BotConversation = {
 
       try {
         result = await conversation.external(async () => {
-          return await acceptTherapyRequest(ctx, therapyRequest._id)
+          return await rejectTherapyRequest(ctx, therapyRequest._id)
         })
       } catch (e) {
         conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {
         if (result) {
-          await ctx.reply("*Заявка принята*", ReplyMarkup.parseModeV2)
+          await ctx.reply("*Заявка отклонена*", ReplyMarkup.parseModeV2)
         } else {
           await ctx.reply(
-            "*Не удалось принять заявку*",
+            "*Не удалось отклонить заявку*",
             ReplyMarkup.parseModeV2
           )
         }
@@ -44,3 +40,5 @@ export const AcceptTherapyRequest: BotConversation = {
     }
   },
 }
+
+export default therapyRequestReject

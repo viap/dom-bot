@@ -1,13 +1,13 @@
 import { Conversation } from "@grammyjs/conversations"
 import { Keyboard } from "grammy"
-import { BOT_COMMANDS_DESCR } from "../common/enums/botCommandsDescr.enum"
-import { QuizStatus } from "../components/Quiz/enums/quizStatus.enum"
-import { QuizModel } from "../components/Quiz/models/quiz.model"
-import { MyContext } from "../common/types/myContext"
-import { CONVERSATION_NAMES } from "./enums/conversationNames.enum"
-import { BotConversation } from "./types/botConversation"
+import { BOT_COMMANDS_DESCR } from "../../common/enums/botCommandsDescr.enum"
+import { QuizStatus } from "../../components/Quiz/enums/quizStatus.enum"
+import { QuizModel } from "../../components/Quiz/models/quiz.model"
+import { MyContext } from "../../common/types/myContext"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 
-export const SelectQiuz: BotConversation = {
+const qiuzSelect: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.SELECT_QUIZ
   },
@@ -42,3 +42,5 @@ export const SelectQiuz: BotConversation = {
     }
   },
 }
+
+export default qiuzSelect

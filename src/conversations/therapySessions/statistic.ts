@@ -6,11 +6,11 @@ import { getSumsForPrices } from "../../common/utils/getSumsForPrices"
 import { getTextOfData } from "../../common/utils/getTextOfData"
 import { getTimeRange } from "../../common/utils/getTimeRange"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { CONVERSATION_NAMES } from "../enums/conversationNames.enum"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-export const TherapySessionsStatistic: BotConversation = {
+const therapySessionsStatistic: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.THERAPY_SESSIONS_STATISTIC
   },
@@ -63,3 +63,5 @@ export const TherapySessionsStatistic: BotConversation = {
     }
   },
 }
+
+export default therapySessionsStatistic
