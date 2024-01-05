@@ -1,6 +1,6 @@
 import { Conversation } from "@grammyjs/conversations"
 import { MyContext } from "../../../common/types/myContext"
-import { FORM_BUTTON_ACTIONS } from "../enums/formButtonActions.enum"
+import { FORM_BUTTON_ACTIONS } from "../enums/formButtonActions"
 
 export type FormButtonProps = {
   text: string

@@ -1,5 +1,5 @@
 import { Conversation } from "@grammyjs/conversations"
-import { PERIODS } from "common/enums/periods.enum"
+import { PERIODS } from "common/enums/periods"
 import { getTherapySessions } from "../../api/controllerTherapySessions/getTherapySessions"
 import { MyContext } from "../../common/types/myContext"
 import { getSumsForPrices } from "../../common/utils/getSumsForPrices"

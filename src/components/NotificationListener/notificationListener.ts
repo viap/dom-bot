@@ -1,9 +1,9 @@
 import { Api, Bot, InlineKeyboard, RawApi } from "grammy"
 import { io, Socket } from "socket.io-client"
 import { NotificationDto } from "../../common/dto/notification.dto"
-import NotificationTypes from "../../common/enums/notificationTypes"
+import { NOTIFICATION_TYPES } from "../../common/enums/notificationTypes"
 import { MyContext } from "../../common/types/myContext"
-import MENU_ITEM_TYPES from "../../components/MenuBlock/enums/menuItemTypes.enum"
+import { MENU_ITEM_TYPES } from "../MenuBlock/enums/menuItemTypes"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import getMenuItemBreadCrumbs from "../../components/MenuBlock/utils/getMenuItemBreadCrumbs"
 import { getApiClientHeader } from "../../common/utils/getApiClientHeader"
@@ -140,8 +140,8 @@ export default class NotificationListener {
       | { text: string; options: { [key: string]: unknown } }
       | undefined = undefined
     switch (notification.type) {
-      case NotificationTypes.NEW_THERAPY_REQUEST:
-      case NotificationTypes.TRANSFER_THERAPY_REQUEST:
+      case NOTIFICATION_TYPES.NEW_THERAPY_REQUEST:
+      case NOTIFICATION_TYPES.TRANSFER_THERAPY_REQUEST:
         menuItemBreadCrumbs = getMenuItemBreadCrumbs(
           MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW
         )

@@ -1,4 +1,4 @@
-import { PSY_SCHOOLS } from "../enums/psySchools.enum"
+import { PSY_SCHOOLS } from "../enums/psySchools"
 
 export const getPsySchoolDescr = (school: PSY_SCHOOLS): string => {
   switch (school) {

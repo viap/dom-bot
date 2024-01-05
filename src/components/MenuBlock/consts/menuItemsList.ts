@@ -1,9 +1,9 @@
-import { PERIODS } from "../../../common/enums/periods.enum"
-import { ROLES } from "../../../common/enums/roles.enum"
+import { PERIODS } from "../../../common/enums/periods"
+import { ROLES } from "../../../common/enums/roles"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
-import MENU_ITEM_TYPES from "../enums/menuItemTypes.enum"
-import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
-import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import { MENU_ITEM_TYPES } from "../enums/menuItemTypes"
+import { SUBMENU_TYPES } from "../enums/submenuTypes"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 import { defaultRoles } from "./defaultRoles"
 
 const menuItemsList: Array<

@@ -9,16 +9,16 @@ import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { groupBy } from "../../../common/utils/groupBy"
 import { notEmpty } from "../../../common/utils/notEmpty"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
-import { SUBMENU_TYPES } from "../enums/submenuTypes.enum"
+import { SUBMENU_TYPES } from "../enums/submenuTypes"
 import MenuBlock from "../menuBlock"
 import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
-} from "../types/menuBlockItemsProps.type"
+} from "../types/menuBlockItemsProps"
 
 export async function loadClientsMenuItems(
   ctx: MyContext,
-  _props: PropType<MenuBlockItemsProps, "props"> = []
+  _props: PropType<MenuBlockItemsProps, "props">
 ): Promise<Array<PartialMenuBlockItemsProps>> {
   const therapySessionsByClient = groupBy<TherapySessionDto>(
     await getTherapySessions(ctx),

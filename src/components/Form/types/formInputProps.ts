@@ -1,5 +1,5 @@
 import { FromInputValue } from "./formInputValue"
-import { FORM_INPUT_TYPES } from "../enums/formInputTypes.enum"
+import { FORM_INPUT_TYPES } from "../enums/formInputTypes"
 
 export type FormInputProps = {
   name: string

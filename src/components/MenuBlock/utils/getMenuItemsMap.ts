@@ -1,5 +1,5 @@
 import menuItemsList from "../consts/menuItemsList"
-import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 
 export default function getMenuItemsMap(): {
   [key: string]: PartialMenuBlockItemsProps

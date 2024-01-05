@@ -1,4 +1,4 @@
-export enum QuizTypes {
+export enum QUIZ_TYPES {
   NORMAL,
   CONSISTENT,
 }

@@ -13,7 +13,7 @@ import MenuBlock from "../menuBlock"
 import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
-} from "../types/menuBlockItemsProps.type"
+} from "../types/menuBlockItemsProps"
 
 export async function loadPsychologistTherapyRequestsMenuItems(
   ctx: MyContext,

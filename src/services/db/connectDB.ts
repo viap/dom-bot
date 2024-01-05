@@ -1,6 +1,6 @@
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import mongoose from "mongoose"
-import { DbMessages } from "./consts"
+import { DB_MESSAGES } from "./consts"
 
 export class DbConnection {
   private static connection: mongoose.Connection
@@ -12,11 +12,11 @@ export class DbConnection {
     if (DbConnection.connection) {
       DbConnection.connection.on(
         "error",
-        console.error.bind(console, DbMessages.CONNECTION_ERROR)
+        console.error.bind(console, DB_MESSAGES.CONNECTION_ERROR)
       )
 
       DbConnection.connection.once("open", function () {
-        console.info(DbMessages.CONNECTION_SUCCESS)
+        console.info(DB_MESSAGES.CONNECTION_SUCCESS)
       })
     }
   }

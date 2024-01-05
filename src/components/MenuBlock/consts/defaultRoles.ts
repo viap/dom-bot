@@ -1,2 +1,2 @@
-import { ROLES } from "../../../common/enums/roles.enum"
+import { ROLES } from "../../../common/enums/roles"
 export const defaultRoles = [ROLES.USER]

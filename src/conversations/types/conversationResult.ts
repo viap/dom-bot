@@ -1,4 +1,4 @@
-import { MenuBlockItemsProps } from "../../components/MenuBlock/types/menuBlockItemsProps.type"
+import { MenuBlockItemsProps } from "../../components/MenuBlock/types/menuBlockItemsProps"
 
 export type ConversationResult = {
   stepsBack?: number

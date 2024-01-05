@@ -1,4 +1,4 @@
-import { FORM_RESULT_STATUSES } from "../enums/formResultStatuses.enum"
+import { FORM_RESULT_STATUSES } from "../enums/formResultStatuses"
 
 export type FormResultProps<T> =
   | {

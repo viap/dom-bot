@@ -1,5 +1,5 @@
 import botCommandsInfo from "../consts/botCommandsInfo"
-import { BOT_COMMANDS } from "../enums/botCommands.enum"
+import { BOT_COMMANDS } from "../enums/botCommands"
 import { MyContext } from "../types/myContext"
 
 export default function getFilterByCommand(expectedСommand: BOT_COMMANDS) {

@@ -6,9 +6,9 @@ import { ClientDto } from "../../common/dto/client.dto"
 import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
 import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { UserDto } from "../../common/dto/user.dto"
-import { ACTION_BUTTON_TEXTS } from "../../common/enums/actionButtonTexts.enum"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
-import { ROLES } from "../../common/enums/roles.enum"
+import { ACTION_BUTTON_TEXTS } from "../../common/enums/actionButtonTexts"
+import { BOT_ERRORS } from "../../common/enums/botErrors"
+import { ROLES } from "../../common/enums/roles"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import toFirstCapitalLetter from "../../common/utils/toFirstCapitalLetter"
@@ -16,8 +16,8 @@ import { BotConversations } from "../../conversations/index"
 import { BotConversation } from "../../conversations/types/botConversation"
 import { ConversationResult } from "../../conversations/types/conversationResult"
 import { defaultRoles } from "./consts/defaultRoles"
-import MENU_ITEM_TYPES from "./enums/menuItemTypes.enum"
-import { SUBMENU_TYPES } from "./enums/submenuTypes.enum"
+import { MENU_ITEM_TYPES } from "./enums/menuItemTypes"
+import { SUBMENU_TYPES } from "./enums/submenuTypes"
 import {
   getClientMenuItem,
   loadClientsMenuItems,
@@ -38,12 +38,12 @@ import {
   getUserMenuItem,
   loadUsersMenuItems,
 } from "./submenus/getUsersMenuItems"
-import { MenuBlockItemsParams } from "./types/menuBlockItemsParams.type"
+import { MenuBlockItemsParams } from "./types/menuBlockItemsParams"
 import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
-} from "./types/menuBlockItemsProps.type"
-import { MenuBlockOptions } from "./types/menuBlockOptions.type"
+} from "./types/menuBlockItemsProps"
+import { MenuBlockOptions } from "./types/menuBlockOptions"
 
 const defaultItemsParams: MenuBlockItemsParams = {
   pageNumber: 0,

@@ -1,5 +1,5 @@
 import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
-import { FORM_TEXT_TYPES } from "../enums/formTextTypes.enum"
+import { FORM_TEXT_TYPES } from "../enums/formTextTypes"
 import { FormInputProps } from "../types/formInputProps"
 
 export type FormOptions = {

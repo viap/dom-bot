@@ -7,7 +7,7 @@ import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
+import { BOT_ERRORS } from "../../common/enums/botErrors"
 
 const clientDelete: BotConversation = {
   getName() {

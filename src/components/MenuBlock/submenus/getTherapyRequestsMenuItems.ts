@@ -1,4 +1,4 @@
-import { SocialNetworks } from "../../../common/enums/socialNetworks.enum"
+import { SocialNetworks } from "../../../common/enums/socialNetworks"
 import { getAllTherapyRequests } from "../../../api/controllerTherapyRequests/getAllTherapyRequests"
 import { PropType } from "../../../api/type/propType"
 import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
@@ -14,7 +14,7 @@ import MenuBlock from "../menuBlock"
 import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
-} from "../types/menuBlockItemsProps.type"
+} from "../types/menuBlockItemsProps"
 
 export async function loadTherapyRequestsMenuItems(
   ctx: MyContext,

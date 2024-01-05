@@ -1,5 +1,5 @@
 import { ContactDto } from "../dto/contact.dto"
-import { SocialNetworks } from "../enums/socialNetworks.enum"
+import { SocialNetworks } from "../enums/socialNetworks"
 import { DataStructure } from "../types/dataStructure"
 import { getTextOfData } from "./getTextOfData"
 

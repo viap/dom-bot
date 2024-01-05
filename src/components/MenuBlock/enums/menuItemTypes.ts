@@ -1,4 +1,4 @@
-enum MENU_ITEM_TYPES {
+export enum MENU_ITEM_TYPES {
   MAIN = "main",
   ABOUT = "about",
   SCHEDULE = "schedule",
@@ -20,5 +20,3 @@ enum MENU_ITEM_TYPES {
   FORTNIGHT = "fortnight",
   MONTH = "month",
 }
-
-export default MENU_ITEM_TYPES

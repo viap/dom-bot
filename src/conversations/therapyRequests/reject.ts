@@ -1,7 +1,7 @@
 import { Conversation } from "@grammyjs/conversations"
 import { rejectTherapyRequest } from "../../api/controllerTherapyRequests/rejectTherapyRequest"
 import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
+import { BOT_ERRORS } from "../../common/enums/botErrors"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"

@@ -1,5 +1,5 @@
-import { ACTION_BUTTON_TEXTS } from "../../../common/enums/actionButtonTexts.enum"
-import { FORM_BUTTON_ACTIONS } from "../enums/formButtonActions.enum"
+import { ACTION_BUTTON_TEXTS } from "../../../common/enums/actionButtonTexts"
+import { FORM_BUTTON_ACTIONS } from "../enums/formButtonActions"
 
 export const defaultButtonsRow = [
   [

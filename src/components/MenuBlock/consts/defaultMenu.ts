@@ -1,4 +1,4 @@
-import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 import getMenuItemsMap from "../utils/getMenuItemsMap"
 
 const mappedMenuItemsList = getMenuItemsMap()

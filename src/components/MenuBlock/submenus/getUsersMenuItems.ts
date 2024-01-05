@@ -1,7 +1,7 @@
 import { getAllUsers } from "../../../api/controllerUsers/getAllUsers"
 import { PropType } from "../../../api/type/propType"
 import { UserDto } from "../../../common/dto/user.dto"
-import { ROLES } from "../../../common/enums/roles.enum"
+import { ROLES } from "../../../common/enums/roles"
 import { MyContext } from "../../../common/types/myContext"
 import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
@@ -11,7 +11,7 @@ import MenuBlock from "../menuBlock"
 import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
-} from "../types/menuBlockItemsProps.type"
+} from "../types/menuBlockItemsProps"
 
 export async function loadUsersMenuItems(
   ctx: MyContext,

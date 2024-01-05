@@ -1,7 +1,7 @@
 import { Conversation } from "@grammyjs/conversations"
 import { deleteTherapySession } from "../../api/controllerTherapySessions/deleteTherapySession"
 import { oneDayInMilliseconds } from "../../common/consts/oneDayInMilliseconds"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
+import { BOT_ERRORS } from "../../common/enums/botErrors"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"

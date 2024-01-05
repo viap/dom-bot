@@ -2,12 +2,12 @@ import { Conversation } from "@grammyjs/conversations"
 import { addNewClient } from "../../api/controllerPsychologists/addNewClient"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes.enum"
-import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses.enum"
+import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes"
+import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses"
 import { Form } from "../../components/Form/form"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
-import { BOT_ERRORS } from "../../common/enums/botErrors.enum"
+import { BOT_ERRORS } from "../../common/enums/botErrors"
 
 const clientAdd: BotConversation = {
   getName() {

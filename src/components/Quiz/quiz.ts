@@ -1,30 +1,30 @@
 import { Keyboard } from "grammy"
-import { QUIZ_TEXTS } from "./enums/quizTexts.enum"
+import { QUIZ_TEXTS } from "./enums/quizTexts"
 
 import mongoose from "mongoose"
 import { AnswerProps } from "./types/answerProps"
 import { GivenAnswerProps } from "./types/givenAnswerProps"
 import { QuestionProps } from "./types/questionProps"
-import { QuestionTypes } from "./enums/quiestionTypes.enum"
-import { QuizModel } from "./models/quiz.model"
+import { QUESTION_TYPES } from "./enums/quiestionTypes"
+import { QuizModel } from "./models/quiz"
 import { QuizProps } from "./types/quizProps"
-import { QuizTypes } from "./enums/quizTypes.enum"
+import { QUIZ_TYPES } from "./enums/quizTypes"
 import { QuizScalesResult } from "./types/quizScalesResult"
-import { QuizStatus } from "./enums/quizStatus.enum"
-import { QuizLang } from "./enums/quizLang.enum"
+import { QUIZ_STATUS } from "./enums/quizStatus"
+import { QUIZ_LANG } from "./enums/quizLang"
 import { QuizGivenAnswers } from "./types/quizGivenAnswers"
 
 export class QuestionModel {
   content: string
   mandatory: boolean
   answers: Array<AnswerProps>
-  type?: QuestionTypes
+  type?: QUESTION_TYPES
 
   constructor({
     content = "",
     mandatory = false,
     answers = [],
-    type = QuestionTypes.SINGLE,
+    type = QUESTION_TYPES.SINGLE,
   }: QuestionProps) {
     this.content = content
     this.answers = answers
@@ -35,11 +35,11 @@ export class QuestionModel {
 
 export class Quiz {
   private _id: mongoose.Types.ObjectId
-  private lang: QuizLang
+  private lang: QUIZ_LANG
   private name: string
   private descr: string
-  private type: QuizTypes
-  private status: QuizStatus
+  private type: QUIZ_TYPES
+  private status: QUIZ_STATUS
   private questions: Array<QuestionProps>
   private givenAnswers: Array<GivenAnswerProps>
   private keyboards: Array<Keyboard>
@@ -47,11 +47,11 @@ export class Quiz {
 
   constructor({
     _id,
-    lang = QuizLang.RUS,
+    lang = QUIZ_LANG.RUS,
     name = "",
     descr = "",
-    type = QuizTypes.NORMAL,
-    status = QuizStatus.DISABLED,
+    type = QUIZ_TYPES.NORMAL,
+    status = QUIZ_STATUS.DISABLED,
     questions = [],
     givenAnswers = [],
     scales = {},
@@ -79,7 +79,7 @@ export class Quiz {
         }
       })
 
-      if (this.type === QuizTypes.NORMAL) {
+      if (this.type === QUIZ_TYPES.NORMAL) {
         keyboard
           .row()
           .add({ text: QUIZ_TEXTS.QUESTION_PREV })

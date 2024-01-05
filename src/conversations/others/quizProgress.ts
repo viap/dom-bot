@@ -1,11 +1,11 @@
 import { Conversation } from "@grammyjs/conversations"
 import { InputFile, Keyboard } from "grammy"
-import { QuizModel } from "../../components/Quiz/models/quiz.model"
+import { QuizModel } from "../../components/Quiz/models/quiz"
 import { Quiz } from "../../components/Quiz/quiz"
 import { QuizScalesResult } from "../../components/Quiz/types/quizScalesResult"
 import { ContactInfo, Psychologist } from "../../common/types"
 
-import { PSY_SCHOOLS } from "../../common/enums/psySchools.enum"
+import { PSY_SCHOOLS } from "../../common/enums/psySchools"
 import { getPsySchoolDescr } from "../../common/utils/getPsySchoolDescr"
 import { GivenAnswerProps } from "../../components/Quiz/types/givenAnswerProps"
 

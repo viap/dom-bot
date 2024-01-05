@@ -1,4 +1,4 @@
-import { PERIODS } from "../enums/periods.enum"
+import { PERIODS } from "../enums/periods"
 
 export function getTimeRange(
   range: PERIODS,

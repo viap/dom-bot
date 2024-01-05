@@ -1,6 +1,6 @@
 import defaultMenu from "../consts/defaultMenu"
-import MENU_ITEM_TYPES from "../enums/menuItemTypes.enum"
-import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps.type"
+import { MENU_ITEM_TYPES } from "../enums/menuItemTypes"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 
 export default function getMenuItemBreadCrumbs(
   itemType: MENU_ITEM_TYPES,

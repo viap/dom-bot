@@ -1,4 +1,4 @@
 import mongoose from "mongoose"
-import { AnswerSchema } from "../schemas/answer.schema"
+import { AnswerSchema } from "../schemas/answer"
 
 export const AnswerModel = mongoose.model("Answer", AnswerSchema)
