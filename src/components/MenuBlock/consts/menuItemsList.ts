@@ -4,7 +4,6 @@ import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNam
 import { MENU_ITEM_TYPES } from "../enums/menuItemTypes"
 import { SUBMENU_TYPES } from "../enums/submenuTypes"
 import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
-import { defaultRoles } from "./defaultRoles"
 
 const menuItemsList: Array<
   PartialMenuBlockItemsProps & Required<{ key: string }>
@@ -12,7 +11,6 @@ const menuItemsList: Array<
   {
     key: MENU_ITEM_TYPES.MAIN,
     name: "Меню",
-    roles: defaultRoles,
   },
   {
     key: MENU_ITEM_TYPES.ABOUT,
@@ -89,7 +87,7 @@ const menuItemsList: Array<
     props: [{ accepted: false }],
   },
   {
-    key: MENU_ITEM_TYPES.THERAPY_REQUESTS_ACCEPTED,
+    key: MENU_ITEM_TYPES.THERAPY_REQUESTS_ACCEPT,
     name: "Принятые заявки",
     options: { columns: 2 },
     submenu: SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS,
@@ -97,31 +95,32 @@ const menuItemsList: Array<
     props: [{ accepted: true }],
   },
   {
-    key: MENU_ITEM_TYPES.SEND_THERAPY_REQUEST,
+    key: MENU_ITEM_TYPES.THERAPY_REQUESTS_SEND,
     name: "Оставить заявку",
     content: "Опишите пожалуйста ваш запрос",
     conversation: CONVERSATION_NAMES.THERAPY_REQUEST_ADD,
   },
   {
-    key: MENU_ITEM_TYPES.STATISTIC,
+    key: MENU_ITEM_TYPES.PERSONAL_STATISTIC,
     name: "Статистика",
   },
   {
+    key: MENU_ITEM_TYPES.GENERAL_STATISTIC,
+    name: "Cтатистика",
+  },
+  {
     key: MENU_ITEM_TYPES.WEEK,
-    name: "Неделя",
-    conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_STATISTIC,
+    name: "Текущая неделя",
     props: [PERIODS.WEEK],
   },
   {
     key: MENU_ITEM_TYPES.FORTNIGHT,
-    name: "Две недели",
-    conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_STATISTIC,
+    name: "Текущая и прошлая недели",
     props: [PERIODS.FORTNIGHT],
   },
   {
     key: MENU_ITEM_TYPES.MONTH,
-    name: "Месяц",
-    conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_STATISTIC,
+    name: "Текущий месяц",
     props: [PERIODS.MONTH],
   },
 ]

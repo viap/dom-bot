@@ -43,7 +43,8 @@ export enum CONVERSATION_NAMES {
   THERAPY_SESSION_ADD = "therapy-session_add",
   THERAPY_SESSION_SHOW = "therapy-session_show",
   THERAPY_SESSION_DELETE = "therapy-session_delete",
-  THERAPY_SESSIONS_STATISTIC = "therapy-sessions_statistic",
+  THERAPY_SESSIONS_PERSONAL_STATISTIC = "therapy-sessions_personal-statistic",
+  THERAPY_SESSIONS_GENERAL_STATISTIC = "therapy-sessions_general-statistic",
   //OTHERS
   TERMS_AGREEMENT = "terms_agreement",
   QUIZ_PROGRESS = "quiz_progress",

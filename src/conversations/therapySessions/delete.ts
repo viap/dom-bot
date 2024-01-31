@@ -1,6 +1,7 @@
 import { Conversation } from "@grammyjs/conversations"
 import { deleteTherapySession } from "../../api/controllerTherapySessions/deleteTherapySession"
 import { oneDayInMilliseconds } from "../../common/consts/oneDayInMilliseconds"
+import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors"
 import { MyContext } from "../../common/types/myContext"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
@@ -13,7 +14,7 @@ const therapySessionDelete: BotConversation = {
     return CONVERSATION_NAMES.THERAPY_SESSION_DELETE
   },
 
-  getConversation(sessionId: string, sessionTimestamp: number) {
+  getConversation(session: TherapySessionDto) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
@@ -22,11 +23,11 @@ const therapySessionDelete: BotConversation = {
 
       try {
         const deletionIsAvailable =
-          Date.now() - sessionTimestamp < oneDayInMilliseconds
+          Date.now() - session.timestamp < oneDayInMilliseconds
 
         result = deletionIsAvailable
           ? await conversation.external(async () => {
-              return await deleteTherapySession(ctx, sessionId)
+              return await deleteTherapySession(ctx, session._id)
             })
           : false
       } catch (e) {

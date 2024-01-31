@@ -1,4 +1,4 @@
-import { ConversationHandle, conversations } from "@grammyjs/conversations"
+import { conversations } from "@grammyjs/conversations"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import dotenv from "dotenv"
 import { Bot, Context, GrammyError, HttpError, session } from "grammy"
@@ -112,6 +112,7 @@ domBot.on("callback_query:data", async (ctx: MyContext) => {
   let data:
     | { [key: string]: PrimitiveValues | Array<PrimitiveValues> }
     | undefined
+
   try {
     data = JSON.parse(ctx.callbackQuery?.data || "")
   } catch (e) {

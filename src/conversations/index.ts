@@ -24,7 +24,8 @@ import therapyRequestAdd from "./therapyRequests/add"
 import therapySessionAdd from "./therapySessions/add"
 import therapySessionDelete from "./therapySessions/delete"
 import therapySessionShow from "./therapySessions/show"
-import therapySessionsStatistic from "./therapySessions/statistic"
+import therapySessionsPresonalStatistic from "./therapySessions/personalStatistic"
+import therapySessionsGeneralStatistic from "./therapySessions/generalStatistic"
 //OTHERS
 import menuItemSelect from "./others/selectMenuItem"
 import qiuzSelect from "./others/selectQuiz"
@@ -57,7 +58,8 @@ export const BotConversations = {
       therapySessionAdd,
       therapySessionDelete,
       therapySessionShow,
-      therapySessionsStatistic,
+      therapySessionsPresonalStatistic,
+      therapySessionsGeneralStatistic,
     ]
   },
 
@@ -67,33 +69,41 @@ export const BotConversations = {
     })
   },
 
-  getMiddlewareByName(name: CONVERSATION_NAMES): MiddlewareFn<MyContext> {
+  getMiddlewareByName(
+    name: CONVERSATION_NAMES,
+    props: Array<unknown> = []
+  ): MiddlewareFn<MyContext> {
     const conversation = this.getByName(name)
 
     if (conversation) {
-      return this.getMiddleware(conversation)
+      return this.getMiddleware(conversation, props)
     } else {
       return (_ctx, next) => next()
     }
   },
 
-  getMiddleware(conversation: BotConversation): MiddlewareFn<MyContext> {
+  getMiddleware(
+    conversation: BotConversation,
+    props: Array<unknown> = []
+  ): MiddlewareFn<MyContext> {
     if (conversation.contextPreload) {
       return async (ctx, next) => {
-        const props = conversation.contextPreload
+        const preloadedProps = conversation.contextPreload
           ? await conversation.contextPreload(ctx)
-          : []
+          : props
 
         return createConversation(
-          conversation.getConversation(...props),
+          conversation.getConversation(...preloadedProps),
           conversation.getName()
         )(ctx, next)
       }
     } else {
-      return createConversation(
-        conversation.getConversation(),
+      const conv = createConversation(
+        conversation.getConversation(...props),
         conversation.getName()
       )
+
+      return conv
     }
   },
 

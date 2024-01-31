@@ -42,12 +42,16 @@ export const API_PATHS: ApiPaths = {
   therapySessions: {
     GET: {
       all: "/therapy-sessions",
+      allForPeriod: "/therapy-sessions/from/:from/to/:to",
       one: "/therapy-sessions/:therapySessionId",
       forPsychologist: "/therapy-sessions/psychologist/:psychologistId",
       forPsychologistForPeriod:
         "/therapy-sessions/psychologist/:psychologistId/from/:from/to/:to",
       forPsychologistWithClient:
         "/therapy-sessions/psychologist/:psychologistId/client/:userId",
+      statisticForPeriod: "/therapy-sessions/statistic/from/:from/to/:to",
+      statisticForPsychologistForPeriod:
+        "/therapy-sessions/statistic/psychologist/:psychologistId/from/:from/to/:to",
     },
     POST: {
       create: "/therapy-sessions",

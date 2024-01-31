@@ -8,6 +8,8 @@ import { KeyboardButton } from "grammy/types"
 import { telegramParseModeV2CharsEscape } from "./telegramParseModeV2Chars"
 
 export const ReplyMarkup = {
+  newLine: "\r\n",
+  doubleNewLine: "\r\n\r\n",
   emptyKeyboard: {
     reply_markup: { remove_keyboard: true } as ReplyKeyboardRemove,
   },

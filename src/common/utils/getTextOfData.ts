@@ -11,7 +11,7 @@ export function getTextOfData(
   const tab = "   "
 
   if (title) {
-    result.push(`*${title.toUpperCase()}*`)
+    result.push(`*${title}*`)
   }
 
   result.push(
