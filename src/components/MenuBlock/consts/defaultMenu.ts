@@ -17,7 +17,7 @@ const defaultMenu = {
       ...mappedMenuItemsList.allTherapyRequests,
       items: [
         mappedMenuItemsList.allTherapyRequestsNew,
-        mappedMenuItemsList.allTherapyRequestsAccept,
+        mappedMenuItemsList.allTherapyRequestsAccepted,
       ],
     },
     {
