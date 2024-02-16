@@ -41,12 +41,14 @@ export enum CONVERSATION_NAMES {
   THERAPY_REQUEST_TRANSFER = "therapy-request_transfer",
   //THERAPY_SESSIONS
   THERAPY_SESSION_ADD = "therapy-session_add",
+  THERAPY_SESSION_EDIT = "therapy-session_edit",
   THERAPY_SESSION_SHOW = "therapy-session_show",
   THERAPY_SESSION_DELETE = "therapy-session_delete",
   THERAPY_SESSIONS_PERSONAL_STATISTIC = "therapy-sessions_personal-statistic",
   THERAPY_SESSIONS_GENERAL_STATISTIC = "therapy-sessions_general-statistic",
   //OTHERS
   TERMS_AGREEMENT = "terms_agreement",
+  REQUISITES = "requsites",
   QUIZ_PROGRESS = "quiz_progress",
   SELECT_QUIZ = "select_quiz",
   SELECT_MENU_ITEM = "select_menu_item",

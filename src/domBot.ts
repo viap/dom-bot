@@ -45,6 +45,10 @@ export default domBot
 domBot.api.setMyCommands([
   { command: BOT_COMMANDS.START, description: BOT_COMMANDS_DESCR.START },
   { command: BOT_COMMANDS.MENU, description: BOT_COMMANDS_DESCR.MENU },
+  {
+    command: BOT_COMMANDS.REQUISITES,
+    description: BOT_COMMANDS_DESCR.REQUISITES,
+  },
   // {
   //   command: BOT_COMMANDS.TERMS_AGREEMENT,
   //   description: BOT_COMMANDS_DESCR.TERMS_AGREEMENT,
@@ -102,6 +106,10 @@ domBot
   .use(BotConversations.getMiddlewareByName(CONVERSATION_NAMES.TERMS_AGREEMENT))
 
 domBot
+  .filter(getFilterByCommand(BOT_COMMANDS.REQUISITES))
+  .use(BotConversations.getMiddlewareByName(CONVERSATION_NAMES.REQUISITES))
+
+domBot
   .filter(getFilterByCommand(BOT_COMMANDS.MENU))
   .use(
     BotConversations.getMiddlewareByName(CONVERSATION_NAMES.SELECT_MENU_ITEM)
@@ -150,6 +158,13 @@ domBot.on("callback_query:data", async (ctx: MyContext) => {
 /** COMMAND HANDLERS */
 domBot.command(BOT_COMMANDS.TERMS_AGREEMENT, async (ctx) => {
   await ctx.conversation.reenter(CONVERSATION_NAMES.TERMS_AGREEMENT)
+})
+
+/** COMMAND HANDLERS */
+domBot.command(BOT_COMMANDS.REQUISITES, async (ctx) => {
+  await ctx.conversation.enter(CONVERSATION_NAMES.REQUISITES, {
+    overwrite: true,
+  })
 })
 
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {

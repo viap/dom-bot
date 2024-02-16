@@ -30,12 +30,14 @@ import therapySessionsGeneralStatistic from "./therapySessions/generalStatistic"
 import menuItemSelect from "./others/selectMenuItem"
 import qiuzSelect from "./others/selectQuiz"
 import termsAgreementShow from "./others/termsAgreement"
+import requisitesShow from "./others/requisites"
 // import { QuizProgress } from "./quizProgress"
 
 export const BotConversations = {
   getList(): Array<BotConversation> {
     return [
       termsAgreementShow,
+      requisitesShow,
       qiuzSelect,
       menuItemSelect,
 
