@@ -1,45 +1,46 @@
 import { ROLES } from "../../../common/enums/roles"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
+import { MENU_ITEM_TYPES } from "../enums/menuItemTypes"
 import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 import getMenuItemsMap from "../utils/getMenuItemsMap"
 import { defaultRoles } from "./defaultRoles"
 
 const mappedMenuItemsList = getMenuItemsMap()
 const defaultMenu = {
-  ...mappedMenuItemsList.main,
+  ...mappedMenuItemsList[MENU_ITEM_TYPES.MAIN],
   roles: defaultRoles,
   items: [
     // menuItemsList.schedule,
     // menuItemsList.book,
-    mappedMenuItemsList.about,
-    mappedMenuItemsList.users,
+    mappedMenuItemsList[MENU_ITEM_TYPES.ABOUT],
+    mappedMenuItemsList[MENU_ITEM_TYPES.USERS],
     {
-      ...mappedMenuItemsList.allTherapyRequests,
+      ...mappedMenuItemsList[MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS],
       items: [
-        mappedMenuItemsList.allTherapyRequestsNew,
-        mappedMenuItemsList.allTherapyRequestsAccepted,
+        mappedMenuItemsList[MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS_NEW],
+        mappedMenuItemsList[MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS_ACCEPTED],
       ],
     },
     {
-      ...mappedMenuItemsList.clients,
+      ...mappedMenuItemsList[MENU_ITEM_TYPES.CLIENTS],
       items: [
-        mappedMenuItemsList.clientsList,
-        mappedMenuItemsList.clientsAdd,
+        mappedMenuItemsList[MENU_ITEM_TYPES.CLIENTS_LIST],
+        mappedMenuItemsList[MENU_ITEM_TYPES.CLIENTS_ADD],
         {
-          ...mappedMenuItemsList.personalStatistic,
+          ...mappedMenuItemsList[MENU_ITEM_TYPES.PERSONAL_STATISTIC],
           items: [
             {
-              ...mappedMenuItemsList.week,
+              ...mappedMenuItemsList[MENU_ITEM_TYPES.WEEK],
               conversation:
                 CONVERSATION_NAMES.THERAPY_SESSIONS_PERSONAL_STATISTIC,
             },
             {
-              ...mappedMenuItemsList.fortnight,
+              ...mappedMenuItemsList[MENU_ITEM_TYPES.FORTNIGHT],
               conversation:
                 CONVERSATION_NAMES.THERAPY_SESSIONS_PERSONAL_STATISTIC,
             },
             {
-              ...mappedMenuItemsList.month,
+              ...mappedMenuItemsList[MENU_ITEM_TYPES.MONTH],
               conversation:
                 CONVERSATION_NAMES.THERAPY_SESSIONS_PERSONAL_STATISTIC,
             },
@@ -48,31 +49,31 @@ const defaultMenu = {
       ],
     },
     {
-      ...mappedMenuItemsList.generalStatistic,
+      ...mappedMenuItemsList[MENU_ITEM_TYPES.GENERAL_STATISTIC],
       roles: [ROLES.ADMIN, ROLES.ACCOUNTANT],
       items: [
         {
-          ...mappedMenuItemsList.week,
+          ...mappedMenuItemsList[MENU_ITEM_TYPES.WEEK],
           conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_GENERAL_STATISTIC,
         },
         {
-          ...mappedMenuItemsList.fortnight,
+          ...mappedMenuItemsList[MENU_ITEM_TYPES.FORTNIGHT],
           conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_GENERAL_STATISTIC,
         },
         {
-          ...mappedMenuItemsList.month,
+          ...mappedMenuItemsList[MENU_ITEM_TYPES.MONTH],
           conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_GENERAL_STATISTIC,
         },
       ],
     },
     {
-      ...mappedMenuItemsList.therapyRequests,
+      ...mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS],
       items: [
-        mappedMenuItemsList.therapyRequestsNew,
-        mappedMenuItemsList.therapyRequestsAccept,
+        mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW],
+        mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_ACCEPT],
       ],
     },
-    mappedMenuItemsList.therapyRequestsSend,
+    mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_SEND],
   ],
 } as PartialMenuBlockItemsProps
 
