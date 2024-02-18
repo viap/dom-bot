@@ -18,6 +18,7 @@ import {
 
 export async function loadClientsMenuItems(
   ctx: MyContext,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _props: PropType<MenuBlockItemsProps, "props">
 ): Promise<Array<PartialMenuBlockItemsProps>> {
   const therapySessionsByClient = groupBy<TherapySessionDto>(
@@ -63,7 +64,11 @@ export function getClientMenuItem(
     .join("\r\n\r\n")
 
   const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
-    name: client.user.name + " | " + sessions.length,
+    name: `${client.user.name} | ${sessions.length} (${Math.round(
+      sessions.reduce((acc, session) => {
+        return acc + session.duration
+      }, 0) / 60
+    )} ч.)`,
     content,
     props,
   })
