@@ -41,7 +41,7 @@ export function getClientMenuItem(
 
   const content: string = [
     getTextOfData(
-      "клиент",
+      "",
       {
         name: client.user.name,
         therapyRequest:

@@ -20,23 +20,33 @@ export const defaultTexts = {
     ) {
       content.push(
         `*${ReplyMarkup.escapeForParseModeV2(
-          `${inputIndex + 1}/${inputsLength} | `
-        )}*`
+          `${inputIndex + 1}/${inputsLength} |`
+        )}*${ReplyMarkup.space}`
       )
     }
     content.push(input.values && input.values.length ? "Выберите" : "Введите")
     content.push(
-      `*${ReplyMarkup.escapeForParseModeV2(
-        input.alias || input.name
-      ).toUpperCase()}*`
+      ReplyMarkup.space +
+        `*${ReplyMarkup.escapeForParseModeV2(
+          input.alias || input.name
+        ).toUpperCase()}*`
     )
     content.push(
       input.owner
-        ? `для *${ReplyMarkup.escapeForParseModeV2(input.owner.toUpperCase())}*`
+        ? ReplyMarkup.space +
+            `для *${ReplyMarkup.escapeForParseModeV2(
+              input.owner.toUpperCase()
+            )}*`
         : ""
     )
-    content.push(input.optional ? "или пропустите" : "")
+    content.push(
+      input.default
+        ? ReplyMarkup.escapeForParseModeV2(`, по-умолчанию `) +
+            `*${input.default}*`
+        : ""
+    )
+    content.push(input.optional ? ReplyMarkup.space + "или пропустите " : "")
 
-    return content.filter(notEmpty).join(" ")
+    return content.filter(notEmpty).join("")
   },
 }

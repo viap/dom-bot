@@ -7,6 +7,7 @@ import { ClientDto } from "../../common/dto/client.dto"
 import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors"
 import { CURRENCIES } from "../../common/enums/currencies"
+import { getTextOfTherapySession } from "../../common/texts/getTextOfTherapySession"
 import { MyContext } from "../../common/types/myContext"
 import { getCurrentDateString } from "../../common/utils/getCurrentDateString"
 import { notEmpty } from "../../common/utils/notEmpty"
@@ -28,7 +29,7 @@ const therapySessionAdd: BotConversation = {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
-    ): Promise<ConversationResult | undefined> => {
+    ): Promise<ConversationResult | undefined | unknown> => {
       // NOTICE: how many hours were spent (duration in minutes)
       const commissionHoursSpent =
         sessions.reduce((acc, session) => {
@@ -37,6 +38,12 @@ const therapySessionAdd: BotConversation = {
         }, 0) / 60
       const commissionHoursLeft = numberOfCommissionHours - commissionHoursSpent
       const shoulPayCommission = commissionHoursLeft > 0
+
+      const theLastSession: TherapySessionDto | undefined = sessions
+        .filter((session) => session.client._id === client.user._id)
+        .sort(
+          (session1, session2) => session2.timestamp - session1.timestamp
+        )[0]
 
       const inputs: Array<FormInputProps> = [
         // NOTICE: before uncomment need to add date picker
@@ -56,17 +63,28 @@ const therapySessionAdd: BotConversation = {
           alias: "Продолжительность",
           type: FORM_INPUT_TYPES.SELECT,
           values: therapySessionDurations,
+          default: theLastSession
+            ? therapySessionDurations.find(
+                (item) => item.value === theLastSession.duration
+              )?.text
+            : undefined,
         },
         {
           name: "priceCurrency",
           alias: "Валюта",
           type: FORM_INPUT_TYPES.SELECT,
           values: Object.values(CURRENCIES),
+          default: theLastSession
+            ? Object.values(CURRENCIES).find(
+                (item) => item === theLastSession.price.currency
+              )
+            : undefined,
         },
         {
           name: "priceValue",
           alias: "Цена",
           type: FORM_INPUT_TYPES.FLOAT,
+          default: theLastSession?.price.value.toString(),
         },
       ]
 
@@ -90,54 +108,59 @@ const therapySessionAdd: BotConversation = {
           commissionHoursLeft >= sessionDurationInHours
             ? 2 // 50%
             : (sessionDurationInHours / commissionHoursLeft) * 2 // less then 50%
-        const commissionHoursSpentForSession =
-          sessionDurationInHours > commissionHoursLeft
-            ? commissionHoursLeft
-            : sessionDurationInHours
         const commissionAmount = shoulPayCommission
           ? Math.floor(formResult.data.priceValue / commisionPartOfSession)
           : 0
 
+        let addedSession: TherapySessionDto | undefined = undefined
         try {
-          result = notEmpty(
-            await conversation.external(async () => {
-              return addTherapySession(ctx, {
-                date: getCurrentDateString(now),
-                psychologist: currentUserAlias,
-                client: client.user._id,
-                duration: formResult.data.duration,
-                price: {
-                  currency: formResult.data.priceCurrency,
-                  value: formResult.data.priceValue,
-                },
-                comission: {
-                  currency: formResult.data.priceCurrency,
-                  value: commissionAmount,
-                },
-                descr: formResult.data.descr || undefined,
-              })
+          addedSession = await conversation.external(async () => {
+            return addTherapySession(ctx, {
+              date: getCurrentDateString(now),
+              psychologist: currentUserAlias,
+              client: client.user._id,
+              duration: formResult.data.duration,
+              price: {
+                currency: formResult.data.priceCurrency,
+                value: formResult.data.priceValue,
+              },
+              comission: {
+                currency: formResult.data.priceCurrency,
+                value: commissionAmount,
+              },
+              descr: formResult.data.descr || undefined,
             })
-          )
+          })
+
+          result = notEmpty(addedSession)
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
           if (result) {
             await ctx.reply("*Добавлена сессия*", ReplyMarkup.parseModeV2)
-            if (shoulPayCommission && commissionAmount) {
-              await ctx.reply(
-                `Комиссия центра (${
-                  commissionHoursSpent + commissionHoursSpentForSession
-                } из ${numberOfCommissionHours} часов) = ${commissionAmount}${
-                  formResult.data.priceCurrency
-                }`
-              )
-            }
           } else {
             await ctx.reply(
               "*Не удалось добавить сессию*",
               ReplyMarkup.parseModeV2
             )
           }
+        }
+
+        if (addedSession) {
+          await ctx.reply(
+            getTextOfTherapySession(addedSession),
+            ReplyMarkup.parseModeV2
+          )
+          // const conv: BotConversation | undefined = BotConversations.getByName(
+          //   CONVERSATION_NAMES.THERAPY_SESSION_SHOW
+          // )
+
+          // if (conv) {
+          //   return await conv.getConversation(...[client, addedSession])(
+          //     conversation,
+          //     ctx
+          //   )
+          // }
         }
       }
 

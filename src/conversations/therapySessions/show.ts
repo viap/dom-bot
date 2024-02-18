@@ -4,8 +4,8 @@ import { oneDayInMilliseconds } from "../../common/consts/oneDayInMilliseconds"
 import { ClientDto } from "../../common/dto/client.dto"
 import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { ACTION_BUTTON_TEXTS } from "../../common/enums/actionButtonTexts"
+import { getTextOfTherapySession } from "../../common/texts/getTextOfTherapySession"
 import { MyContext } from "../../common/types/myContext"
-import { getTextOfData } from "../../common/utils/getTextOfData"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { MENU_ITEM_TYPES } from "../../components/MenuBlock/enums/menuItemTypes"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
@@ -39,28 +39,10 @@ const therapySessionShow: BotConversation = {
       conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined | unknown> => {
-      const content = getTextOfData(
-        "",
-        {
-          descr: session.descr,
-          date: session.date,
-          duration: session.duration,
-          price: [session.price.value, session.price.currency].join(" "),
-          comission: session.comission
-            ? [session.comission.value, session.price.currency].join(" ")
-            : "",
-        },
-        {
-          descr: "описание",
-          date: "дата",
-          duration: "продолжительность",
-          price: "цена",
-          comission: "комиссия",
-        }
-      )
+      const content = getTextOfTherapySession(session)
 
       const deletionIsAvailable =
-        Date.now() - session.timestamp < oneDayInMilliseconds
+        Date.now() - session.timestamp < oneDayInMilliseconds * 7
 
       const keyboard = new Keyboard()
 

@@ -51,7 +51,9 @@ export class Form<T extends ObjectWithPrimitiveValues> {
             case FORM_BUTTON_ACTIONS.PREV:
               return notEmpty(this.prevInput)
             case FORM_BUTTON_ACTIONS.NEXT:
-              return notEmpty(this.input && this.input.optional)
+              return notEmpty(
+                this.input && (this.input.optional || this.input.default)
+              )
             default:
               return true
           }
@@ -176,11 +178,8 @@ export class Form<T extends ObjectWithPrimitiveValues> {
         )
 
         this.ctx = await this.conversation.waitFor("message:text")
-        const text = this.ctx.msg?.text || this.input.default || ""
-        const buttonAction = this.getButtonAction(text)
-
-        // this.conversation.log("text", text)
-        // this.conversation.log("buttonAction", buttonAction)
+        const useInput = this.ctx.msg?.text || ""
+        const buttonAction = this.getButtonAction(useInput)
 
         if (buttonAction) {
           switch (buttonAction.action) {
@@ -188,6 +187,9 @@ export class Form<T extends ObjectWithPrimitiveValues> {
               this.inputIndex -= 2
               break
             case FORM_BUTTON_ACTIONS.NEXT:
+              if (this.input.default) {
+                this.saveToResult(this.input.default)
+              }
               break
             case FORM_BUTTON_ACTIONS.REJECT:
               this.status = FORM_RESULT_STATUSES.REJECTED
@@ -206,24 +208,7 @@ export class Form<T extends ObjectWithPrimitiveValues> {
             await buttonAction.callback(this.conversation, this.ctx)
           }
         } else {
-          if (!this.validateInput(text, this.input)) {
-            await this.ctx.reply(
-              this.getValidationErrorMessage(text, this.input)
-            )
-            this.inputIndex--
-          } else {
-            this.data = {
-              ...this.data,
-              [this.input.name]: this.convertValue(text, this.input),
-            } as T
-
-            await this.showText(
-              FORM_TEXT_TYPES.AFTER_INPUT,
-              this.keyboard
-                ? ReplyMarkup.keyboard(this.keyboard)
-                : ReplyMarkup.emptyKeyboard
-            )
-          }
+          this.saveToResult(useInput || this.input.default || "")
         }
         await this.requestInputs()
       } else {
@@ -237,14 +222,37 @@ export class Form<T extends ObjectWithPrimitiveValues> {
     } as FormResultProps<T>
   }
 
-  private validateInput(text: string, input: FormInputProps): boolean {
+  private async saveToResult(value: FromInputValue) {
+    if (this.input) {
+      if (!this.validateInput(value, this.input)) {
+        await this.ctx.reply(
+          this.getValidationErrorMessage(value.toString(), this.input)
+        )
+        this.inputIndex--
+      } else {
+        this.data = {
+          ...this.data,
+          [this.input.name]: this.convertValue(value, this.input),
+        } as T
+
+        await this.showText(
+          FORM_TEXT_TYPES.AFTER_INPUT,
+          this.keyboard
+            ? ReplyMarkup.keyboard(this.keyboard)
+            : ReplyMarkup.emptyKeyboard
+        )
+      }
+    }
+  }
+
+  private validateInput(text: FromInputValue, input: FormInputProps): boolean {
     switch (input.type) {
       case FORM_INPUT_TYPES.STRING:
         return typeof text === "string" && text.length > 0
       case FORM_INPUT_TYPES.NUMBER:
-        return !isNaN(parseInt(text))
+        return !isNaN(parseInt(text.toString()))
       case FORM_INPUT_TYPES.FLOAT:
-        return !isNaN(parseFloat(text))
+        return !isNaN(parseFloat(text.toString()))
       case FORM_INPUT_TYPES.BOOLEAN:
         return Boolean(text)
       case FORM_INPUT_TYPES.SELECT:
@@ -254,20 +262,24 @@ export class Form<T extends ObjectWithPrimitiveValues> {
     }
   }
 
-  private convertValue(text: string, input: FormInputProps): PrimitiveValues {
+  private convertValue(
+    text: FromInputValue,
+    input: FormInputProps
+  ): PrimitiveValues {
     let res = undefined
+    const enteredValue = text === "" && input.default ? input.default : text
     switch (input.type) {
       case FORM_INPUT_TYPES.STRING:
-        return text
+        return enteredValue.toString()
       case FORM_INPUT_TYPES.NUMBER:
-        return parseInt(text)
+        return parseInt(enteredValue.toString())
       case FORM_INPUT_TYPES.FLOAT:
-        return parseFloat(text)
+        return parseFloat(enteredValue.toString())
       case FORM_INPUT_TYPES.BOOLEAN:
-        return Boolean(text)
+        return Boolean(enteredValue)
       case FORM_INPUT_TYPES.SELECT:
         res = (input.values || []).find((value) => {
-          return inputValueToString(value) === text
+          return inputValueToString(value) === enteredValue
         }) as FromInputValue
         return typeof res === "object" ? res.value : res
     }
