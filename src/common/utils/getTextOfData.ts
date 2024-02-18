@@ -5,7 +5,8 @@ import { notEmpty } from "./notEmpty"
 export function getTextOfData(
   title: string,
   data: DataStructure,
-  projection?: { [key: string]: string }
+  projection?: { [key: string]: string },
+  separator = ":"
 ): string {
   const result: Array<string> = []
   const tab = "   "
@@ -35,7 +36,7 @@ export function getTextOfData(
         } else if (propValue !== undefined) {
           return `*${ReplyMarkup.escapeForParseModeV2(
             propTitle
-          )}* ${ReplyMarkup.escapeForParseModeV2(`- ${propValue}`)}`
+          )}*${ReplyMarkup.escapeForParseModeV2(`${separator} ${propValue}`)}`
         } else {
           return ""
         }
