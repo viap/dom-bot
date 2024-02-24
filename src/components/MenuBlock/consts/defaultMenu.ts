@@ -13,9 +13,13 @@ const defaultMenu = {
     // menuItemsList.schedule,
     // menuItemsList.book,
     mappedMenuItemsList[MENU_ITEM_TYPES.ABOUT],
-    mappedMenuItemsList[MENU_ITEM_TYPES.USERS],
+    {
+      ...mappedMenuItemsList[MENU_ITEM_TYPES.USERS],
+      roles: [ROLES.ADMIN, ROLES.EDITOR],
+    },
     {
       ...mappedMenuItemsList[MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS],
+      roles: [ROLES.ADMIN, ROLES.EDITOR],
       items: [
         mappedMenuItemsList[MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS_NEW],
         mappedMenuItemsList[MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS_ACCEPTED],
@@ -23,6 +27,7 @@ const defaultMenu = {
     },
     {
       ...mappedMenuItemsList[MENU_ITEM_TYPES.CLIENTS],
+      roles: [ROLES.PSYCHOLOGIST],
       items: [
         mappedMenuItemsList[MENU_ITEM_TYPES.CLIENTS_LIST],
         mappedMenuItemsList[MENU_ITEM_TYPES.CLIENTS_ADD],
@@ -68,12 +73,16 @@ const defaultMenu = {
     },
     {
       ...mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS],
+      roles: [ROLES.PSYCHOLOGIST],
       items: [
         mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW],
         mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_ACCEPT],
       ],
     },
-    mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_SEND],
+    {
+      ...mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_SEND],
+      roles: [ROLES.ADMIN, ROLES.EDITOR],
+    },
   ],
 } as PartialMenuBlockItemsProps
 

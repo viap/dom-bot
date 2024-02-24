@@ -1,5 +1,4 @@
 import { PERIODS } from "../../../common/enums/periods"
-import { ROLES } from "../../../common/enums/roles"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
 import { MENU_ITEM_TYPES } from "../enums/menuItemTypes"
 import { SUBMENU_TYPES } from "../enums/submenuTypes"
@@ -33,12 +32,10 @@ const menuItemsList: Array<
     name: "Пользователи",
     submenu: SUBMENU_TYPES.ALL_USERS,
     options: { columns: 2 },
-    roles: [ROLES.ADMIN, ROLES.EDITOR],
   },
   {
     key: MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS,
     name: "Заявки",
-    roles: [ROLES.ADMIN, ROLES.EDITOR],
   },
   {
     key: MENU_ITEM_TYPES.ALL_THERAPY_REQUESTS_NEW,
@@ -59,7 +56,6 @@ const menuItemsList: Array<
   {
     key: MENU_ITEM_TYPES.CLIENTS,
     name: "Мои клиенты",
-    roles: [ROLES.PSYCHOLOGIST],
   },
   {
     key: MENU_ITEM_TYPES.CLIENTS_LIST,
@@ -71,12 +67,10 @@ const menuItemsList: Array<
     key: MENU_ITEM_TYPES.CLIENTS_ADD,
     name: "Добавить клиента",
     conversation: CONVERSATION_NAMES.CLIENT_ADD,
-    roles: [ROLES.PSYCHOLOGIST],
   },
   {
     key: MENU_ITEM_TYPES.THERAPY_REQUESTS,
     name: "Мои заявки",
-    roles: [ROLES.PSYCHOLOGIST],
   },
   {
     key: MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW,
