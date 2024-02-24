@@ -9,7 +9,7 @@ const menuItemsList: Array<
 > = [
   {
     key: MENU_ITEM_TYPES.MAIN,
-    name: "Меню",
+    name: "Основное меню",
   },
   {
     key: MENU_ITEM_TYPES.ABOUT,
