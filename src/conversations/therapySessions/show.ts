@@ -18,17 +18,6 @@ enum ACTIONS {
   EDIT = "Редактировать",
 }
 
-function getAnotherConversation(
-  conversation: CONVERSATION_NAMES,
-  props: Array<unknown>
-): ConversationFn<MyContext> | undefined {
-  const deleteTherapySession = BotConversations.getByName(conversation)
-
-  if (deleteTherapySession) {
-    return deleteTherapySession.getConversation(...props)
-  }
-}
-
 const therapySessionShow: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.THERAPY_SESSION_SHOW
@@ -65,7 +54,7 @@ const therapySessionShow: BotConversation = {
         ctx = await conversation.waitFor("message:text")
         const text = ctx.msg?.text || ""
 
-        let conv: ReturnType<typeof getAnotherConversation>
+        let conv: BotConversation | undefined
         switch (text) {
           case ACTION_BUTTON_TEXTS.MAIN_MENU:
             return {
@@ -83,12 +72,12 @@ const therapySessionShow: BotConversation = {
           //   }
           //   return
           case ACTIONS.DELETE:
-            conv = getAnotherConversation(
-              CONVERSATION_NAMES.THERAPY_SESSION_DELETE,
-              [session]
+            conv = BotConversations.getByName(
+              CONVERSATION_NAMES.THERAPY_SESSION_DELETE
             )
+
             if (conv) {
-              return await conv(conversation, ctx)
+              return await conv.getConversation(session)(conversation, ctx)
             }
             return
         }
