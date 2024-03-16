@@ -18,6 +18,8 @@ import { FromInputValue } from "./types/formInputValue"
 import { FormOptions } from "./types/formOptions"
 import { FormResultProps } from "./types/formResultProps"
 import { inputValueToString } from "./utils/inputValueToString"
+import { DatePicker } from "../../components/DatePicker/datePicker"
+import { getCurrentDateString } from "../../common/utils/getCurrentDateString"
 
 export class Form<T extends ObjectWithPrimitiveValues> {
   private status: FORM_RESULT_STATUSES
@@ -177,8 +179,7 @@ export class Form<T extends ObjectWithPrimitiveValues> {
             : ReplyMarkup.emptyKeyboard
         )
 
-        this.ctx = await this.conversation.waitFor("message:text")
-        const useInput = this.ctx.msg?.text || ""
+        const useInput = await this.waitForAnswer(this.input)
         const buttonAction = this.getButtonAction(useInput)
 
         if (buttonAction) {
@@ -222,6 +223,41 @@ export class Form<T extends ObjectWithPrimitiveValues> {
     } as FormResultProps<T>
   }
 
+  private async waitForAnswer(input: FormInputProps): Promise<string> {
+    if (input.type === FORM_INPUT_TYPES.DATE) {
+      const calendar = DatePicker.getCalendar({
+        custom_start_msg: "календарь 🗓️",
+        ...input.calendarOptions,
+      })
+
+      if (!calendar) return ""
+
+      calendar.startNavCalendar(this.ctx)
+
+      let res: number | string = -1
+      do {
+        this.ctx = await this.conversation.wait()
+
+        if (this.ctx.callbackQuery) {
+          res = await calendar.clickButtonCalendar(this.ctx)
+        } else {
+          res = this.ctx.msg?.text || ""
+
+          if (!this.getButtonAction(res)) {
+            res = -1
+          }
+        }
+      } while (res === -1)
+
+      return res.toString()
+    } else {
+      this.ctx = await this.conversation.waitFor("message:text")
+      const useInput = this.ctx.msg?.text || ""
+
+      return useInput
+    }
+  }
+
   private async saveToResult(value: FromInputValue) {
     if (this.input) {
       if (!this.validateInput(value, this.input)) {
@@ -232,7 +268,7 @@ export class Form<T extends ObjectWithPrimitiveValues> {
       } else {
         this.data = {
           ...this.data,
-          [this.input.name]: this.convertValue(value, this.input),
+          [this.input.name]: await this.convertValue(value, this.input),
         } as T
 
         await this.showText(
@@ -245,29 +281,36 @@ export class Form<T extends ObjectWithPrimitiveValues> {
     }
   }
 
-  private validateInput(text: FromInputValue, input: FormInputProps): boolean {
+  private validateInput(value: FromInputValue, input: FormInputProps): boolean {
     switch (input.type) {
       case FORM_INPUT_TYPES.STRING:
-        return typeof text === "string" && text.length > 0
+        return typeof value === "string" && value.length > 0
       case FORM_INPUT_TYPES.NUMBER:
-        return !isNaN(parseInt(text.toString()))
+        return !isNaN(parseInt(value.toString()))
       case FORM_INPUT_TYPES.FLOAT:
-        return !isNaN(parseFloat(text.toString()))
+        return !isNaN(parseFloat(value.toString()))
       case FORM_INPUT_TYPES.BOOLEAN:
-        return Boolean(text)
+        return Boolean(value)
       case FORM_INPUT_TYPES.SELECT:
         return (input.values || [])
           .map(inputValueToString)
-          .includes(text.toString())
+          .includes(value.toString())
+
+      case FORM_INPUT_TYPES.DATE:
+        return (
+          typeof value === "string" && ReplyMarkup.regExp.dateRu.test(value)
+        )
     }
   }
 
-  private convertValue(
-    text: FromInputValue,
+  private async convertValue(
+    value: FromInputValue,
     input: FormInputProps
-  ): PrimitiveValues {
+  ): Promise<PrimitiveValues> {
     let res = undefined
-    const enteredValue = text === "" && input.default ? input.default : text
+    const enteredValue = value === "" && input.default ? input.default : value
+    const now = await this.conversation.now()
+
     switch (input.type) {
       case FORM_INPUT_TYPES.STRING:
         return enteredValue.toString()
@@ -282,11 +325,17 @@ export class Form<T extends ObjectWithPrimitiveValues> {
           return inputValueToString(value) === enteredValue
         }) as FromInputValue
         return typeof res === "object" ? res.value : res
+
+      case FORM_INPUT_TYPES.DATE:
+        return (
+          ReplyMarkup.regExp.dateRu.exec(enteredValue.toString() || "")?.[0] ||
+          getCurrentDateString(now)
+        )
     }
   }
 
   private getValidationErrorMessage(
-    text: string,
+    _text: string,
     input: FormInputProps
   ): string {
     switch (input.type) {
@@ -300,6 +349,8 @@ export class Form<T extends ObjectWithPrimitiveValues> {
         return "Должно быть 'да' или 'нет'"
       case FORM_INPUT_TYPES.SELECT:
         return "Выберите значение из списка"
+      case FORM_INPUT_TYPES.DATE:
+        return "Некорректная дата"
     }
   }
 }

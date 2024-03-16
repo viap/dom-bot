@@ -2,6 +2,7 @@ import { ReplyMarkup } from "../../../common/utils/replyMarkup"
 import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
 import { FormInputProps } from "../types/formInputProps"
 import { notEmpty } from "../../../common/utils/notEmpty"
+import { FORM_INPUT_TYPES } from "../enums/formInputTypes"
 
 export const defaultTexts = {
   beforeInput: (
@@ -24,7 +25,12 @@ export const defaultTexts = {
         )}*${ReplyMarkup.space}`
       )
     }
-    content.push(input.values && input.values.length ? "Выберите" : "Введите")
+    content.push(
+      (input.values && input.values.length) ||
+        input.type === FORM_INPUT_TYPES.DATE
+        ? "Выберите"
+        : "Введите"
+    )
     content.push(
       ReplyMarkup.space +
         `*${ReplyMarkup.escapeForParseModeV2(
@@ -39,12 +45,15 @@ export const defaultTexts = {
             )}*`
         : ""
     )
-    content.push(
-      input.default
-        ? ReplyMarkup.escapeForParseModeV2(`, по-умолчанию `) +
-            `*${input.default}*`
-        : ""
-    )
+
+    const defaultValue = input.default ? input.default.toString() : ""
+    if (defaultValue) {
+      content.push(
+        ReplyMarkup.escapeForParseModeV2(`, по-умолчанию `) +
+          `*${ReplyMarkup.escapeForParseModeV2(defaultValue)}*`
+      )
+    }
+
     content.push(input.optional ? ReplyMarkup.space + "или пропустите " : "")
 
     return content.filter(notEmpty).join("")

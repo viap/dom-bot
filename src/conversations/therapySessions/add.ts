@@ -30,6 +30,9 @@ const therapySessionAdd: BotConversation = {
       conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined | unknown> => {
+      // NOTICE: don't use conversation.now inside of conversation.external
+      const now = await conversation.now()
+
       // NOTICE: how many hours were spent (duration in minutes)
       const commissionHoursSpent =
         sessions.reduce((acc, session) => {
@@ -46,12 +49,15 @@ const therapySessionAdd: BotConversation = {
         )[0]
 
       const inputs: Array<FormInputProps> = [
-        // NOTICE: before uncomment need to add date picker
-        // {
-        //   name: "date",
-        //   alias: "Дата",
-        //   type: FORM_INPUT_TYPES.STRING,
-        // },
+        {
+          name: "date",
+          alias: "Дата",
+          type: FORM_INPUT_TYPES.DATE,
+          default: getCurrentDateString(now),
+          calendarOptions: {
+            stop_date: "now",
+          },
+        },
         {
           name: "descr",
           alias: "Описание",
@@ -89,7 +95,7 @@ const therapySessionAdd: BotConversation = {
       ]
 
       type resultType = {
-        // date: string
+        date: string
         descr: string
         duration: number
         priceCurrency: CURRENCIES
@@ -100,9 +106,6 @@ const therapySessionAdd: BotConversation = {
 
       let result = false
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
-        // NOTICE: don't use conversation.now inside of conversation.external !!!!
-        const now = await conversation.now()
-
         const sessionDurationInHours = formResult.data.duration / 60
         const commisionPartOfSession =
           commissionHoursLeft >= sessionDurationInHours
@@ -116,7 +119,7 @@ const therapySessionAdd: BotConversation = {
         try {
           addedSession = await conversation.external(async () => {
             return addTherapySession(ctx, {
-              date: getCurrentDateString(now),
+              date: formResult.data.date,
               psychologist: currentUserAlias,
               client: client.user._id,
               duration: formResult.data.duration,

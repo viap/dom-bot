@@ -4,7 +4,7 @@ export enum FORM_INPUT_TYPES {
   STRING = "string",
   BOOLEAN = "boolean",
   SELECT = "select",
-  // DATE = "date",
+  DATE = "date",
   // PRICE = "price",
   // COMPLEX = "complex",
 }

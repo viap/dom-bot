@@ -22,6 +22,8 @@ import { MENU_ITEM_TYPES } from "./components/MenuBlock/enums/menuItemTypes"
 import MenuBlock from "./components/MenuBlock/menuBlock"
 import NotificationListener from "./components/NotificationListener/notificationListener"
 
+import { DatePicker } from "./components/DatePicker/datePicker"
+
 /** ENVIROMENT */
 dotenv.config({ path: cwd() + "/config/.env" })
 
@@ -33,6 +35,9 @@ const sessions = getSessions(connection)
 /** BOT */
 
 const domBot = new Bot<MyContext>(process.env.TOKEN || "")
+
+/** DatePicker init */
+DatePicker.setBotInstance(domBot)
 
 // NOTICE: connection to the api websocket for listening events and show notifications
 NotificationListener.start(domBot, sessions)
@@ -174,12 +179,12 @@ domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
 /** MESSAGE HANDLERS */
 
 domBot.on("message", async (ctx) => {
+  // const activeConversations = await ctx.conversation.active()
+  // if (Object.keys(activeConversations).length === 0) {
+  // }
   await ctx.reply(`${BOT_TEXTS.DEFAULT} - ${ctx.message.text}`, {
     reply_markup: getAvailableCommandButtons(ctx.session),
   })
-  // await ctx.reply(BOT_TEXTS.SHOW_COMMAND, {
-  //   reply_markup: getAvailableCommandButtons(ctx.session),
-  // })
 })
 
 /** ERROR HANDLERS */
