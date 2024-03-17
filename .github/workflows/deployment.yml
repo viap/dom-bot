@@ -40,7 +40,7 @@ jobs:
         with:
           command: |
             cd ${{secrets.REMOTE_TARGET}} && 
-            pm2 stop domBot
+            pm2 stop > /dev/null domBot
           host: ${{secrets.REMOTE_HOST}}
           user: ${{secrets.REMOTE_USER}}
           key: ${{secrets.SSH_PRIVATE_KEY}}
@@ -58,7 +58,6 @@ jobs:
         with:
           command: |
             cd ${{secrets.REMOTE_TARGET}} && 
-            pm2 stop domBot &&
             pm2 delete domBot > /dev/null &&
             npm install && 
             npm run build &&
