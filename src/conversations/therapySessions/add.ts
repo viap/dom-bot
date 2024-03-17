@@ -9,7 +9,7 @@ import { BOT_ERRORS } from "../../common/enums/botErrors"
 import { CURRENCIES } from "../../common/enums/currencies"
 import { getTextOfTherapySession } from "../../common/texts/getTextOfTherapySession"
 import { MyContext } from "../../common/types/myContext"
-import { getCurrentDateString } from "../../common/utils/getCurrentDateString"
+import { getLocalDateString } from "../../common/utils/getLocalDateString"
 import { notEmpty } from "../../common/utils/notEmpty"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes"
@@ -19,6 +19,7 @@ import { FormInputProps } from "../../components/Form/types/formInputProps"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
+import { parseRuDate } from "../../common/utils/parseRuDate"
 
 const therapySessionAdd: BotConversation = {
   getName() {
@@ -53,7 +54,7 @@ const therapySessionAdd: BotConversation = {
           name: "date",
           alias: "Дата",
           type: FORM_INPUT_TYPES.DATE,
-          default: getCurrentDateString(now),
+          default: getLocalDateString(now),
           calendarOptions: {
             stop_date: "now",
           },
@@ -119,7 +120,7 @@ const therapySessionAdd: BotConversation = {
         try {
           addedSession = await conversation.external(async () => {
             return addTherapySession(ctx, {
-              date: formResult.data.date,
+              dateTime: parseRuDate(formResult.data.date) || Date.now(),
               psychologist: currentUserAlias,
               client: client.user._id,
               duration: formResult.data.duration,

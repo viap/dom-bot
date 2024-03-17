@@ -1,5 +1,5 @@
 import { Conversation } from "@grammyjs/conversations"
-import { PERIODS } from "common/enums/periods"
+import { PERIODS } from "../../common/enums/periods"
 import { getStatisticForPeriod } from "../../api/controllerTherapySessions/getStatisticForPeriod"
 import { numberOfCommissionHours } from "../../common/consts/numberOfCommissionHours"
 import { TherapySessionsStatisticDto } from "../../common/dto/therapySessionsStatistic.dto"
@@ -11,7 +11,7 @@ import { ReplyMarkup } from "../../common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
-import { PriceDto } from "common/dto/price.dto"
+import { PriceDto } from "../../common/dto/price.dto"
 
 const therapySessionsGeneralStatistic: BotConversation = {
   getName() {

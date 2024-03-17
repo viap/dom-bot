@@ -1,3 +1,4 @@
+import { getLocalDateString } from "../utils/getLocalDateString"
 import { TherapySessionDto } from "../../common/dto/therapySession.dto"
 import { getTextOfData } from "../../common/utils/getTextOfData"
 
@@ -10,7 +11,7 @@ export function getTextOfTherapySession(
     title,
     {
       descr: session.descr,
-      date: session.date,
+      date: getLocalDateString(session.dateTime),
       duration: session.duration,
       price: [session.price.value, session.price.currency].join(" "),
       comission: session.comission

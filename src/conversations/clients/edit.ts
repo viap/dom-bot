@@ -17,7 +17,7 @@ const clientEdit: BotConversation = {
     return CONVERSATION_NAMES.CLIENT_EDIT
   },
 
-  getConversation(client: ClientDto, sessions: Array<TherapySessionDto>) {
+  getConversation(client: ClientDto, _sessions: Array<TherapySessionDto>) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext

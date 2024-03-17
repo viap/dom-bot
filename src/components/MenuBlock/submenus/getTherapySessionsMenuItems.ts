@@ -1,3 +1,4 @@
+import { getLocalDateString } from "../../../common/utils/getLocalDateString"
 import { PropType } from "../../../api/type/propType"
 import { ClientDto } from "../../../common/dto/client.dto"
 import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
@@ -16,7 +17,7 @@ export async function loadTherapySessionsMenuItems(
   const [client, sessions] = props as [ClientDto, TherapySessionDto[]]
 
   return [...(sessions || [])]
-    .reverse()
+    .sort((s1, s2) => s2.dateTime - s1.dateTime)
     .map((session) => getTherapySessionMenuItem(client, session))
 }
 
@@ -27,7 +28,7 @@ export function getTherapySessionMenuItem(
   const props = [client, session]
 
   const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
-    name: `Сессия от ${session.date}`,
+    name: `Сессия от ${getLocalDateString(session.dateTime)}`,
     conversation: CONVERSATION_NAMES.THERAPY_SESSION_SHOW,
     props,
   })

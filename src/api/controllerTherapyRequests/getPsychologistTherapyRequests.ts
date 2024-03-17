@@ -1,4 +1,4 @@
-import { ObjectWithPrimitiveValues } from "common/types/objectWithPrimitiveValues"
+import { ObjectWithPrimitiveValues } from "../../common/types/objectWithPrimitiveValues"
 import { currentUserAlias } from "../../common/consts/currentUserAlias"
 import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../common/types/myContext"

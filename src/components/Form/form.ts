@@ -19,7 +19,7 @@ import { FormOptions } from "./types/formOptions"
 import { FormResultProps } from "./types/formResultProps"
 import { inputValueToString } from "./utils/inputValueToString"
 import { DatePicker } from "../../components/DatePicker/datePicker"
-import { getCurrentDateString } from "../../common/utils/getCurrentDateString"
+import { getLocalDateString } from "../../common/utils/getLocalDateString"
 
 export class Form<T extends ObjectWithPrimitiveValues> {
   private status: FORM_RESULT_STATUSES
@@ -134,6 +134,30 @@ export class Form<T extends ObjectWithPrimitiveValues> {
     return this.inputs[this.inputIndex]
   }
 
+  private get inputKeyboard() {
+    this.refreshKeyboardButtons()
+
+    if (this.input) {
+      const selectorKeyboard =
+        this.input.values && this.input.values.length > 0
+          ? new Keyboard(
+              this.input.values.map((value) => [inputValueToString(value)])
+            )
+          : undefined
+
+      const keyboard = selectorKeyboard
+        ? this.keyboard
+          ? this.keyboard.append(selectorKeyboard)
+          : selectorKeyboard
+        : this.keyboard
+
+      return keyboard
+        ? ReplyMarkup.keyboard(keyboard)
+        : ReplyMarkup.emptyKeyboard
+    }
+    return ReplyMarkup.emptyKeyboard
+  }
+
   get nextInput(): FormInputProps | undefined {
     return this.inputs[this.inputIndex + 1]
   }
@@ -154,30 +178,9 @@ export class Form<T extends ObjectWithPrimitiveValues> {
     ) {
       this.status = FORM_RESULT_STATUSES.IN_PROGRESS
       this.inputIndex++
-      // this.input = inputs.shift()
-      this.refreshKeyboardButtons()
 
       if (this.input) {
-        // TODO: move this logic into refreshKeyboardButtons or SLT
-        const selectKeyboard =
-          this.input.values && this.input.values.length > 0
-            ? new Keyboard(
-                this.input.values.map((value) => [inputValueToString(value)])
-              )
-            : undefined
-
-        const curKeyboard = selectKeyboard
-          ? this.keyboard
-            ? this.keyboard.append(selectKeyboard)
-            : selectKeyboard
-          : this.keyboard
-
-        await this.showText(
-          FORM_TEXT_TYPES.BEFORE_INPUT,
-          curKeyboard
-            ? ReplyMarkup.keyboard(curKeyboard)
-            : ReplyMarkup.emptyKeyboard
-        )
+        await this.showText(FORM_TEXT_TYPES.BEFORE_INPUT, this.inputKeyboard)
 
         const useInput = await this.waitForAnswer(this.input)
         const buttonAction = this.getButtonAction(useInput)
@@ -329,7 +332,7 @@ export class Form<T extends ObjectWithPrimitiveValues> {
       case FORM_INPUT_TYPES.DATE:
         return (
           ReplyMarkup.regExp.dateRu.exec(enteredValue.toString() || "")?.[0] ||
-          getCurrentDateString(now)
+          getLocalDateString(now)
         )
     }
   }

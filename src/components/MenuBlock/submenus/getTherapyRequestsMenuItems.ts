@@ -4,8 +4,8 @@ import { PropType } from "../../../api/type/propType"
 import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
 import { MyContext } from "../../../common/types/myContext"
 import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
-import { getCurrentDateString } from "../../../common/utils/getCurrentDateString"
-import { getCurrentTimeString } from "../../../common/utils/getCurrentTimeString"
+import { getLocalDateString } from "../../../common/utils/getLocalDateString"
+import { getLocalTimeString } from "../../../common/utils/getLocalTimeString"
 import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
@@ -33,8 +33,8 @@ export function getTherapyRequestMenuItem(
 ): PartialMenuBlockItemsProps {
   const props = [therapyRequest]
 
-  const requestDate = getCurrentDateString(therapyRequest.timestamp)
-  const requestTime = getCurrentTimeString(therapyRequest.timestamp)
+  const requestDate = getLocalDateString(therapyRequest.timestamp)
+  const requestTime = getLocalTimeString(therapyRequest.timestamp)
 
   const telegramUserName =
     therapyRequest.psychologist?.user.contacts.find(

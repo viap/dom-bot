@@ -6,6 +6,7 @@ export type TherapySessionDto = {
   _id: string
 
   date: string
+  dateTime: number
   timestamp: number
 
   client: UserDto
