@@ -1,3 +1,4 @@
+import { ReplyMarkup } from "../../../common/utils/replyMarkup"
 import { getPsychologistTherapyRequests } from "../../../api/controllerTherapyRequests/getPsychologistTherapyRequests"
 import { PropType } from "../../../api/type/propType"
 import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
@@ -17,6 +18,7 @@ import {
 
 export async function loadPsychologistTherapyRequestsMenuItems(
   ctx: MyContext,
+  parent: MenuBlockItemsProps,
   props: PropType<MenuBlockItemsProps, "props"> = []
 ): Promise<Array<PartialMenuBlockItemsProps>> {
   const [params] = props as [ObjectWithPrimitiveValues]
@@ -25,13 +27,14 @@ export async function loadPsychologistTherapyRequestsMenuItems(
   const menuItems: Array<PartialMenuBlockItemsProps> = therapyRequests
     .reverse()
     .map((therapyRequest) =>
-      getPsychologistTherapyRequestMenuItem(therapyRequest)
+      getPsychologistTherapyRequestMenuItem(parent, therapyRequest)
     )
 
   return menuItems
 }
 
 export function getPsychologistTherapyRequestMenuItem(
+  parent: MenuBlockItemsProps,
   therapyRequest: TherapyRequestDto
 ): PartialMenuBlockItemsProps {
   const props = [therapyRequest]
@@ -46,9 +49,7 @@ export function getPsychologistTherapyRequestMenuItem(
         dateTime: `${requestDate} в ${requestTime}`,
         name: therapyRequest.name,
         descr: therapyRequest.descr,
-        psychologist: therapyRequest.psychologist
-          ? therapyRequest.psychologist.user.name
-          : "",
+        psychologist: therapyRequest.psychologist?.user?.name || "",
         accepted: therapyRequest.accepted ? "да" : "нет",
       },
       {
@@ -62,13 +63,16 @@ export function getPsychologistTherapyRequestMenuItem(
     getTextOfContactsData(therapyRequest.contacts),
   ]
     .filter(notEmpty)
-    .join("\r\n\r\n")
+    .join(ReplyMarkup.doubleNewLine)
 
-  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
-    name: `${therapyRequest.name}, заявка от ${requestDate}`,
-    content,
-    props,
-  })
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu(
+    {
+      name: `${therapyRequest.name}, заявка от ${requestDate}`,
+      content,
+      props,
+    },
+    parent
+  )
 
   result.items = [
     !therapyRequest.accepted

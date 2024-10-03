@@ -15,9 +15,11 @@ import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
 } from "../types/menuBlockItemsProps"
+import { ReplyMarkup } from "../../../common/utils/replyMarkup"
 
 export async function loadTherapyRequestsMenuItems(
   ctx: MyContext,
+  parent: MenuBlockItemsProps,
   props: PropType<MenuBlockItemsProps, "props"> = []
 ): Promise<Array<PartialMenuBlockItemsProps>> {
   const [params] = props as [ObjectWithPrimitiveValues]
@@ -25,10 +27,11 @@ export async function loadTherapyRequestsMenuItems(
 
   return therapyRequests
     .reverse()
-    .map((therapyRequest) => getTherapyRequestMenuItem(therapyRequest))
+    .map((therapyRequest) => getTherapyRequestMenuItem(parent, therapyRequest))
 }
 
 export function getTherapyRequestMenuItem(
+  parent: MenuBlockItemsProps,
   therapyRequest: TherapyRequestDto
 ): PartialMenuBlockItemsProps {
   const props = [therapyRequest]
@@ -36,7 +39,7 @@ export function getTherapyRequestMenuItem(
   const requestDate = getLocalDateString(therapyRequest.timestamp)
   const requestTime = getLocalTimeString(therapyRequest.timestamp)
 
-  const telegramUserName =
+  const psychologistTelegramUserName =
     therapyRequest.psychologist?.user.contacts.find(
       (contact) => contact.network === SocialNetworks.Telegram
     )?.username || ""
@@ -48,8 +51,12 @@ export function getTherapyRequestMenuItem(
         name: therapyRequest.name,
         descr: therapyRequest.descr,
         psychologist: therapyRequest.psychologist
-          ? (telegramUserName ? `@${telegramUserName}, ` : undefined) +
-            therapyRequest.psychologist.user.name
+          ? [
+              psychologistTelegramUserName,
+              therapyRequest.psychologist.user.name,
+            ]
+              .filter(notEmpty)
+              .join(", ")
           : "",
         accepted: therapyRequest.accepted ? "да" : "нет",
       },
@@ -64,13 +71,16 @@ export function getTherapyRequestMenuItem(
     getTextOfContactsData(therapyRequest.contacts),
   ]
     .filter(notEmpty)
-    .join("\r\n\r\n")
+    .join(ReplyMarkup.doubleNewLine)
 
-  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
-    name: `${therapyRequest.name}, заявка от ${requestDate}`,
-    content,
-    props,
-  })
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu(
+    {
+      name: `${therapyRequest.name}, заявка от ${requestDate}`,
+      content,
+      props,
+    },
+    parent
+  )
 
   result.items = [
     !therapyRequest.accepted

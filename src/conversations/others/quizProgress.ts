@@ -197,7 +197,10 @@ export class QuizProgress {
       )
     })
 
-    await ctx.reply(schoolInfo.join("\r\n\r\n"), ReplyMarkup.parseModeV2)
+    await ctx.reply(
+      schoolInfo.join(ReplyMarkup.doubleNewLine),
+      ReplyMarkup.parseModeV2
+    )
 
     if (suitableSpecialists.length) {
       await ctx.reply(

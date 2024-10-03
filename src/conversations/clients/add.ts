@@ -42,7 +42,7 @@ const clientAdd: BotConversation = {
       const formResult = await form.requestData()
 
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
-        let result
+        let result = false
 
         try {
           result = await conversation.external(async () => {
@@ -54,7 +54,7 @@ const clientAdd: BotConversation = {
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
-          if (result) {
+          if (result === true) {
             await ctx.reply("*Добавлен новый клиент*", ReplyMarkup.parseModeV2)
           } else {
             await ctx.reply(

@@ -1,5 +1,6 @@
 import { Conversation } from "@grammyjs/conversations"
 import { editUser } from "../../api/controllerUsers/editUser"
+import { EditUserDto } from "../../api/dto/editUser.dto"
 import { UserDto } from "../../common/dto/user.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors"
 import { MyContext } from "../../common/types/myContext"
@@ -44,16 +45,18 @@ const userEdit: BotConversation = {
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
         let result = false
         try {
-          result = await conversation.external(async () => {
+          const editedUser = (await conversation.external(async () => {
             return await editUser(ctx, user._id, {
               name: formResult.data.name,
               descr: formResult.data.descr,
             })
-          })
+          })) as EditUserDto
+
+          result = Object.hasOwn(editedUser, "name")
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
-          if (result) {
+          if (result === true) {
             Object.assign(userResult, formResult.data)
             await ctx.reply(
               "*Данные пользователя изменены*",

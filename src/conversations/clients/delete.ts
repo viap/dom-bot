@@ -28,7 +28,7 @@ const clientDelete: BotConversation = {
       } catch (e) {
         conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {
-        if (result) {
+        if (result === true) {
           await ctx.reply("*Клиент удален*", ReplyMarkup.parseModeV2)
         } else {
           await ctx.reply(

@@ -6,9 +6,9 @@ import { BotConversation } from "./types/botConversation"
 
 //USERS
 import userEdit from "./users/edit"
+import userAddRole from "./users/addRole"
+import userRemoveRole from "./users/removeRole"
 import userToPsychologist from "./users/toPsychologist"
-//PSYCHOLOGISTS
-import psychologistsToUser from "./psychologists/toUser"
 //CLIENTS
 import clientAdd from "./clients/add"
 import clientDelete from "./clients/delete"
@@ -42,9 +42,9 @@ export const BotConversations = {
       menuItemSelect,
 
       userEdit,
+      userAddRole,
+      userRemoveRole,
       userToPsychologist,
-
-      psychologistsToUser,
 
       clientAdd,
       clientEdit,

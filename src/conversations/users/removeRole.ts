@@ -1,20 +1,23 @@
 import { Conversation } from "@grammyjs/conversations"
-import { createPsychologistFromUser } from "../../api/controllerPsychologists/createPsychologistFromUser"
+import { editUser } from "../../api/controllerUsers/editUser"
+import { EditUserDto } from "../../api/dto/editUser.dto"
 import { UserDto } from "../../common/dto/user.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors"
+import { ROLES } from "../../common/enums/roles"
+import { ROLES_DESCR } from "../../common/enums/rolesDescr"
 import { MyContext } from "../../common/types/myContext"
-import { notEmpty } from "../../common/utils/notEmpty"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
+import { MENU_ITEM_TYPES } from "../../components/MenuBlock/enums/menuItemTypes"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-const userToPsychologist: BotConversation = {
+const userRemoveRole: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.USER_TO_PSYCHOLOGIST
+    return CONVERSATION_NAMES.USER_REMOVE_ROLE
   },
 
-  getConversation(user: UserDto) {
+  getConversation(user: UserDto, role: ROLES) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
@@ -22,22 +25,24 @@ const userToPsychologist: BotConversation = {
       let result = false
 
       try {
-        result = notEmpty(
-          await conversation.external(async () => {
-            return await createPsychologistFromUser(ctx, { userId: user._id })
+        const editedUser = (await conversation.external(async () => {
+          return await editUser(ctx, user._id, {
+            roles: user.roles.filter((userRole) => userRole !== role),
           })
-        )
+        })) as EditUserDto
+
+        result = !(editedUser?.roles || []).includes(role)
       } catch (e) {
         conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {
         if (result === true) {
           await ctx.reply(
-            "*Добавлены права психолога*",
+            `*Удалена роль "${ROLES_DESCR.get(role) || role}*"`,
             ReplyMarkup.parseModeV2
           )
         } else {
           await ctx.reply(
-            "*Не удалось добавить права психолога*",
+            `*Не удалось удалить роль "${ROLES_DESCR.get(role) || role}*"`,
             ReplyMarkup.parseModeV2
           )
         }
@@ -45,11 +50,12 @@ const userToPsychologist: BotConversation = {
 
       return result
         ? {
-            stepsBack: 2,
+            goToFromTheTop: true,
+            goTo: MENU_ITEM_TYPES.USERS,
           }
         : undefined
     }
   },
 }
 
-export default userToPsychologist
+export default userRemoveRole

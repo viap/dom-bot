@@ -7,7 +7,7 @@ export async function editUser(
   ctx: MyContext,
   userId: string,
   user: EditUserDto
-): Promise<boolean> {
+): Promise<EditUserDto> {
   return putRequest(
     ctx,
     API_PATHS.users.PUT.edit,

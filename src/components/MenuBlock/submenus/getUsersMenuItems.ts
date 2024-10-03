@@ -2,10 +2,12 @@ import { getAllUsers } from "../../../api/controllerUsers/getAllUsers"
 import { PropType } from "../../../api/type/propType"
 import { UserDto } from "../../../common/dto/user.dto"
 import { ROLES } from "../../../common/enums/roles"
+import { ROLES_DESCR } from "../../../common/enums/rolesDescr"
 import { MyContext } from "../../../common/types/myContext"
 import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
 import { getTextOfData } from "../../../common/utils/getTextOfData"
 import { notEmpty } from "../../../common/utils/notEmpty"
+import { ReplyMarkup } from "../../../common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
 import MenuBlock from "../menuBlock"
 import {
@@ -15,12 +17,19 @@ import {
 
 export async function loadUsersMenuItems(
   ctx: MyContext,
+  parent: MenuBlockItemsProps,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _props: PropType<MenuBlockItemsProps, "props"> = []
 ): Promise<Array<PartialMenuBlockItemsProps>> {
-  return (await getAllUsers(ctx)).reverse().map((user) => getUserMenuItem(user))
+  return (await getAllUsers(ctx))
+    .reverse()
+    .map((user) => getUserMenuItem(parent, user))
 }
 
-export function getUserMenuItem(user: UserDto): PartialMenuBlockItemsProps {
+export function getUserMenuItem(
+  parent: MenuBlockItemsProps,
+  user: UserDto
+): PartialMenuBlockItemsProps {
   const props = [user]
 
   const content: string = [
@@ -36,12 +45,35 @@ export function getUserMenuItem(user: UserDto): PartialMenuBlockItemsProps {
     getTextOfContactsData(user.contacts),
   ]
     .filter(notEmpty)
-    .join("\r\n\r\n")
+    .join(ReplyMarkup.doubleNewLine)
 
-  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
-    name: user.name,
-    content,
-    props,
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu(
+    {
+      name: user.name,
+      content,
+      props,
+    },
+    parent
+  )
+
+  const rolesList = Object.values(ROLES).filter((roleName) => {
+    return roleName != ROLES.USER && roleName != ROLES.PSYCHOLOGIST
+  })
+
+  const editRoleItems = rolesList.map((roleName) => {
+    return !user.roles.includes(roleName)
+      ? {
+          name: `Добавить роль "${ROLES_DESCR.get(roleName) || roleName}"`,
+          conversation: CONVERSATION_NAMES.USER_ADD_ROLE,
+          props: [...props, roleName],
+          roles: [ROLES.ADMIN],
+        }
+      : {
+          name: `Удалить роль "${ROLES_DESCR.get(roleName) || roleName}"`,
+          conversation: CONVERSATION_NAMES.USER_REMOVE_ROLE,
+          props: [...props, roleName],
+          roles: [ROLES.ADMIN],
+        }
   })
 
   result.items = [
@@ -52,15 +84,22 @@ export function getUserMenuItem(user: UserDto): PartialMenuBlockItemsProps {
     },
     !user.roles.includes(ROLES.PSYCHOLOGIST)
       ? {
-          name: "Дать права психолога",
+          name: `Добавить роль "${
+            ROLES_DESCR.get(ROLES.PSYCHOLOGIST) || ROLES.PSYCHOLOGIST
+          }"`,
           conversation: CONVERSATION_NAMES.USER_TO_PSYCHOLOGIST,
+          roles: [ROLES.ADMIN],
           props,
         }
       : {
-          name: "Убрать права психолога",
-          conversation: CONVERSATION_NAMES.PSYCHOLOGIST_TO_USER,
-          props,
+          name: `Удалить роль "${
+            ROLES_DESCR.get(ROLES.PSYCHOLOGIST) || ROLES.PSYCHOLOGIST
+          }"`,
+          conversation: CONVERSATION_NAMES.USER_REMOVE_ROLE,
+          roles: [ROLES.ADMIN],
+          props: [...props, ROLES.PSYCHOLOGIST],
         },
+    ...editRoleItems,
   ].filter(notEmpty) as Array<PartialMenuBlockItemsProps>
 
   return result

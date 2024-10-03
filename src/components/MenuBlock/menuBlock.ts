@@ -2,10 +2,10 @@ import { Conversation } from "@grammyjs/conversations"
 import { randomUUID } from "crypto"
 import { Keyboard } from "grammy"
 import { PropType } from "../../api/type/propType"
-import { ClientDto } from "../../common/dto/client.dto"
-import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
-import { TherapySessionDto } from "../../common/dto/therapySession.dto"
-import { UserDto } from "../../common/dto/user.dto"
+// import { ClientDto } from "../../common/dto/client.dto"
+// import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
+// import { TherapySessionDto } from "../../common/dto/therapySession.dto"
+// import { UserDto } from "../../common/dto/user.dto"
 import { ACTION_BUTTON_TEXTS } from "../../common/enums/actionButtonTexts"
 import { BOT_ERRORS } from "../../common/enums/botErrors"
 import { ROLES } from "../../common/enums/roles"
@@ -19,23 +19,23 @@ import { defaultRoles } from "./consts/defaultRoles"
 import { MENU_ITEM_TYPES } from "./enums/menuItemTypes"
 import { SUBMENU_TYPES } from "./enums/submenuTypes"
 import {
-  getClientMenuItem,
+  // getClientMenuItem,
   loadClientsMenuItems,
 } from "./submenus/getClientsMenuItems"
 import {
-  getPsychologistTherapyRequestMenuItem,
+  // getPsychologistTherapyRequestMenuItem,
   loadPsychologistTherapyRequestsMenuItems,
 } from "./submenus/getPsychologistTherapyRequestsMenuItems"
 import {
-  getTherapyRequestMenuItem,
+  // getTherapyRequestMenuItem,
   loadTherapyRequestsMenuItems,
 } from "./submenus/getTherapyRequestsMenuItems"
 import {
-  getTherapySessionMenuItem,
+  // getTherapySessionMenuItem,
   loadTherapySessionsMenuItems,
 } from "./submenus/getTherapySessionsMenuItems"
 import {
-  getUserMenuItem,
+  // getUserMenuItem,
   loadUsersMenuItems,
 } from "./submenus/getUsersMenuItems"
 import { MenuBlockItemsParams } from "./types/menuBlockItemsParams"
@@ -271,10 +271,11 @@ export default class MenuBlock {
   private async loadSubmenuItems(parent: MenuBlockItemsProps = this.current) {
     let items: Array<PartialMenuBlockItemsProps> = []
 
-    const props: [MyContext, PropType<MenuBlockItemsProps, "props">] = [
-      this.ctx,
-      parent.props || [],
-    ]
+    const props: [
+      MyContext,
+      MenuBlockItemsProps,
+      PropType<MenuBlockItemsProps, "props">
+    ] = [this.ctx, parent, parent.props || []]
 
     switch (parent.submenu) {
       case SUBMENU_TYPES.ALL_USERS:
@@ -310,7 +311,14 @@ export default class MenuBlock {
     }
 
     parent.items = items.map((item) => {
-      return MenuBlock.getPreparedMenu(item, parent)
+      const filteredItems = MenuBlock.getPreparedMenu(
+        MenuBlock.getMenuFilteredByRoles(
+          item,
+          this.ctx.user.roles.length ? this.ctx.user.roles : undefined
+        )
+      )
+
+      return filteredItems
     })
   }
 
@@ -460,8 +468,6 @@ export default class MenuBlock {
       this.ctx
     )) as ConversationResult | undefined
 
-    this.conversation.log("conversationResult", conversationResult)
-
     if (conversationResult) {
       // FIXME: -------------------------- Might need to be removed:start --------------------------------- //
       // if (conversationResult.current) {
@@ -528,40 +534,40 @@ export default class MenuBlock {
   }
 
   // FIXME: -------------------------- Might need to be removed:start --------------------------------- //
-  private updateItemByProps(item: MenuBlockItemsProps, props: Array<unknown>) {
-    if (item.parent?.submenu) {
-      this.getSubmenuItem(item.parent.submenu, props)
-    } else {
-      return { ...item, props }
-    }
-  }
+  // private updateItemByProps(item: MenuBlockItemsProps, props: Array<unknown>) {
+  //   if (item.parent?.submenu) {
+  //     this.getSubmenuItem(item.parent.submenu, props)
+  //   } else {
+  //     return { ...item, props }
+  //   }
+  // }
 
-  private getSubmenuItem(
-    submenuType: SUBMENU_TYPES,
-    props: Array<unknown> = []
-  ): PartialMenuBlockItemsProps {
-    switch (submenuType) {
-      case SUBMENU_TYPES.ALL_USERS:
-        return getUserMenuItem(...(props as [UserDto]))
+  // private getSubmenuItem(
+  //   submenuType: SUBMENU_TYPES,
+  //   props: Array<unknown> = []
+  // ): PartialMenuBlockItemsProps {
+  //   switch (submenuType) {
+  //     case SUBMENU_TYPES.ALL_USERS:
+  //       return getUserMenuItem(...(props as [UserDto]))
 
-      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
-        return getClientMenuItem(
-          ...(props as [ClientDto, Array<TherapySessionDto>])
-        )
-      case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
-        return getTherapySessionMenuItem(
-          ...(props as [ClientDto, TherapySessionDto])
-        )
+  //     case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
+  //       return getClientMenuItem(
+  //         ...(props as [ClientDto, Array<TherapySessionDto>])
+  //       )
+  //     case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
+  //       return getTherapySessionMenuItem(
+  //         ...(props as [ClientDto, TherapySessionDto])
+  //       )
 
-      case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
-        return getTherapyRequestMenuItem(...(props as [TherapyRequestDto]))
+  //     case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
+  //       return getTherapyRequestMenuItem(...(props as [TherapyRequestDto]))
 
-      case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
-        return getPsychologistTherapyRequestMenuItem(
-          ...(props as [TherapyRequestDto])
-        )
-    }
-  }
+  //     case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
+  //       return getPsychologistTherapyRequestMenuItem(
+  //         ...(props as [TherapyRequestDto])
+  //       )
+  //   }
+  // }
   // -------------------------- Might need to be removed:end --------------------------------- //
 
   getItemOnStepsBack(

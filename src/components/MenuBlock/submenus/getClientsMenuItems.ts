@@ -1,3 +1,4 @@
+import { ReplyMarkup } from "../../../common/utils/replyMarkup"
 import { getPsychologistClients } from "../../../api/controllerPsychologists/getPsychologistClients"
 import { getTherapySessions } from "../../../api/controllerTherapySessions/getTherapySessions"
 import { PropType } from "../../../api/type/propType"
@@ -18,6 +19,7 @@ import {
 
 export async function loadClientsMenuItems(
   ctx: MyContext,
+  parent: MenuBlockItemsProps,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _props: PropType<MenuBlockItemsProps, "props">
 ): Promise<Array<PartialMenuBlockItemsProps>> {
@@ -29,11 +31,16 @@ export async function loadClientsMenuItems(
   return (await getPsychologistClients(ctx))
     .reverse()
     .map((client) =>
-      getClientMenuItem(client, therapySessionsByClient[client.user._id])
+      getClientMenuItem(
+        parent,
+        client,
+        therapySessionsByClient[client.user._id]
+      )
     )
 }
 
 export function getClientMenuItem(
+  parent: MenuBlockItemsProps,
   client: ClientDto,
   sessions: Array<TherapySessionDto> = []
 ): PartialMenuBlockItemsProps {
@@ -61,17 +68,20 @@ export function getClientMenuItem(
     getTextOfContactsData(client.user.contacts),
   ]
     .filter(notEmpty)
-    .join("\r\n\r\n")
+    .join(ReplyMarkup.doubleNewLine)
 
-  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
-    name: `${client.user.name} | ${sessions.length} (${Math.round(
-      sessions.reduce((acc, session) => {
-        return acc + session.duration
-      }, 0) / 60
-    )} ч.)`,
-    content,
-    props,
-  })
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu(
+    {
+      name: `${client.user.name} | ${sessions.length} (${Math.round(
+        sessions.reduce((acc, session) => {
+          return acc + session.duration
+        }, 0) / 60
+      )} ч.)`,
+      content,
+      props,
+    },
+    parent
+  )
 
   result.items = [
     sessions.length > 0

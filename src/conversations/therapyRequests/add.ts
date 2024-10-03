@@ -123,7 +123,7 @@ const therapyRequestAdd: BotConversation = {
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
-          if (result) {
+          if (result === true) {
             await ctx.reply("*Ваш запрос отправлен*", ReplyMarkup.parseModeV2)
           } else {
             await ctx.reply(

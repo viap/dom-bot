@@ -2,8 +2,8 @@ export enum CONVERSATION_NAMES {
   //USERS
   USER_EDIT = "user_edit",
   USER_TO_PSYCHOLOGIST = "user_to-psychologist",
-  //PSYCHOLOGISTS
-  PSYCHOLOGIST_TO_USER = "psychologist_to-user",
+  USER_ADD_ROLE = "user_add-role",
+  USER_REMOVE_ROLE = "user_remove-role",
   //CLIENTS
   CLIENT_ADD = "client_add",
   CLIENT_EDIT = "client_edit",

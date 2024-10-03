@@ -12,26 +12,31 @@ import {
 
 export async function loadTherapySessionsMenuItems(
   _ctx: MyContext,
+  parent: MenuBlockItemsProps,
   props: PropType<MenuBlockItemsProps, "props"> = []
 ): Promise<Array<PartialMenuBlockItemsProps>> {
   const [client, sessions] = props as [ClientDto, TherapySessionDto[]]
 
   return [...(sessions || [])]
     .sort((s1, s2) => s2.dateTime - s1.dateTime)
-    .map((session) => getTherapySessionMenuItem(client, session))
+    .map((session) => getTherapySessionMenuItem(parent, client, session))
 }
 
 export function getTherapySessionMenuItem(
+  parent: MenuBlockItemsProps,
   client: ClientDto,
   session: TherapySessionDto
 ): PartialMenuBlockItemsProps {
   const props = [client, session]
 
-  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu({
-    name: `Сессия от ${getLocalDateString(session.dateTime)}`,
-    conversation: CONVERSATION_NAMES.THERAPY_SESSION_SHOW,
-    props,
-  })
+  const result: PartialMenuBlockItemsProps = MenuBlock.getPreparedMenu(
+    {
+      name: `Сессия от ${getLocalDateString(session.dateTime)}`,
+      conversation: CONVERSATION_NAMES.THERAPY_SESSION_SHOW,
+      props,
+    },
+    parent
+  )
 
   return result
 }

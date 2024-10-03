@@ -192,7 +192,7 @@ export class Form<T extends ObjectWithPrimitiveValues> {
               break
             case FORM_BUTTON_ACTIONS.NEXT:
               if (this.input.default) {
-                this.saveToResult(this.input.default)
+                await this.saveToResult(this.input.default)
               }
               break
             case FORM_BUTTON_ACTIONS.REJECT:
@@ -212,8 +212,9 @@ export class Form<T extends ObjectWithPrimitiveValues> {
             await buttonAction.callback(this.conversation, this.ctx)
           }
         } else {
-          this.saveToResult(useInput || this.input.default || "")
+          await this.saveToResult(useInput || this.input.default || "")
         }
+
         await this.requestInputs()
       } else {
         this.status = FORM_RESULT_STATUSES.FINISHED

@@ -4,19 +4,20 @@ import { EditUserDto } from "../../api/dto/editUser.dto"
 import { UserDto } from "../../common/dto/user.dto"
 import { BOT_ERRORS } from "../../common/enums/botErrors"
 import { ROLES } from "../../common/enums/roles"
+import { ROLES_DESCR } from "../../common/enums/rolesDescr"
 import { MyContext } from "../../common/types/myContext"
-import { notEmpty } from "../../common/utils/notEmpty"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
+import { MENU_ITEM_TYPES } from "../../components/MenuBlock/enums/menuItemTypes"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
-const psychologistToUser: BotConversation = {
+const userAddRole: BotConversation = {
   getName() {
-    return CONVERSATION_NAMES.PSYCHOLOGIST_TO_USER
+    return CONVERSATION_NAMES.USER_ADD_ROLE
   },
 
-  getConversation(user: UserDto) {
+  getConversation(user: UserDto, role: ROLES) {
     return async (
       conversation: Conversation<MyContext>,
       ctx: MyContext
@@ -24,21 +25,26 @@ const psychologistToUser: BotConversation = {
       let result = false
 
       try {
-        result = notEmpty(
-          await conversation.external(async () => {
-            return await editUser(ctx, user._id, {
-              roles: user.roles.filter((role) => role !== ROLES.PSYCHOLOGIST),
-            } as EditUserDto)
+        const editedUser = (await conversation.external(async () => {
+          return await editUser(ctx, user._id, {
+            roles: user.roles
+              .filter((userRole) => userRole !== role)
+              .concat([role]),
           })
-        )
+        })) as EditUserDto
+
+        result = (editedUser?.roles || []).includes(role)
       } catch (e) {
         conversation.log(BOT_ERRORS.REQUEST, e)
       } finally {
-        if (result) {
-          await ctx.reply("*Удалены права психолога*", ReplyMarkup.parseModeV2)
+        if (result === true) {
+          await ctx.reply(
+            `*Добавлена роль "${ROLES_DESCR.get(role) || role}*"`,
+            ReplyMarkup.parseModeV2
+          )
         } else {
           await ctx.reply(
-            "*Не удалось удалить права психолога*",
+            `*Не удалось добавить роль "${ROLES_DESCR.get(role) || role}*"`,
             ReplyMarkup.parseModeV2
           )
         }
@@ -46,11 +52,12 @@ const psychologistToUser: BotConversation = {
 
       return result
         ? {
-            stepsBack: 2,
+            goToFromTheTop: true,
+            goTo: MENU_ITEM_TYPES.USERS,
           }
         : undefined
     }
   },
 }
 
-export default psychologistToUser
+export default userAddRole

@@ -46,7 +46,7 @@ const clientEdit: BotConversation = {
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
-          if (result) {
+          if (result === true) {
             Object.assign(clientResult, formResult.data)
             await ctx.reply("*Описание изменено*", ReplyMarkup.parseModeV2)
           } else {
