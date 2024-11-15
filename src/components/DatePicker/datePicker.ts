@@ -14,7 +14,7 @@ const defaultOptions: CalendarOptions = {
 
 export class DatePicker {
   private static bot: Bot<MyContext>
-  private static calendar?: Calendar
+  private static mapOptionToCalendar = new Map<string, Calendar>()
 
   static setBotInstance(bot: Bot<MyContext>) {
     this.bot = bot
@@ -22,17 +22,20 @@ export class DatePicker {
 
   static getCalendar(options?: CalendarOptions) {
     if (this.bot) {
-      this.calendar = new Calendar(this.bot, {
+      const finalOptions = {
         ...defaultOptions,
         ...options,
-      })
-      return this.getCurrentCalendar()
-    }
-  }
+      }
+      const optionsString = JSON.stringify(finalOptions)
 
-  static getCurrentCalendar() {
-    if (this.calendar) {
-      return this.calendar
+      if (!this.mapOptionToCalendar.get(optionsString)) {
+        this.mapOptionToCalendar.set(
+          optionsString,
+          new Calendar(this.bot, finalOptions)
+        )
+      }
+
+      return this.mapOptionToCalendar.get(optionsString)
     }
   }
 }

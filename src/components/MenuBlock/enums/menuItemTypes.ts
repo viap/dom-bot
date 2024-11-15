@@ -25,4 +25,5 @@ export enum MENU_ITEM_TYPES {
   WEEK = "week",
   FORTNIGHT = "fortnight",
   MONTH = "month",
+  ARBITRARY = "arbitrary",
 }

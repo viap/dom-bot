@@ -16,7 +16,7 @@ export const ReplyMarkup = {
     dateRu: "DD.MM.YYYY",
   },
   regExp: {
-    dateRu: /[0-9]{2}\.[0-9]{2}\.[0-9]{4}/i,
+    dateRu: /([0-9]{2})\.([0-9]{2})\.([0-9]{4})/i,
   },
   emptyKeyboard: {
     reply_markup: { remove_keyboard: true } as ReplyKeyboardRemove,
