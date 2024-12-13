@@ -1,8 +1,8 @@
-import { ReplyMarkup } from "../../../common/utils/replyMarkup"
-import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
+import { ObjectWithPrimitiveValues } from "@/common/types/objectWithPrimitiveValues"
 import { FormInputProps } from "../types/formInputProps"
-import { notEmpty } from "../../../common/utils/notEmpty"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "../enums/formInputTypes"
+import { notEmpty } from "@/common/utils/notEmpty"
 
 export const defaultTexts = {
   beforeInput: (

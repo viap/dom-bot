@@ -1,12 +1,12 @@
 import { InlineKeyboard } from "grammy"
-import botCommandsInfo from "../consts/botCommandsInfo"
-import { SessionData } from "../types/sessionData"
+import { SessionData } from "@/common/types/sessionData"
+import botCommandsInfo from "@/common/consts/botCommandsInfo"
 
 export default function getAvailableCommandButtons(
   session: SessionData
 ): InlineKeyboard {
   const availableCommands = Object.entries(botCommandsInfo)
-    .filter(([_command, info]) => {
+    .filter(([, info]) => {
       return session.hasTermsAgreement || !info.withAgreements
     })
     .map(([command, info]) => {

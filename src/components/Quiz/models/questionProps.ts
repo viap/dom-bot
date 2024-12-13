@@ -1,5 +1,5 @@
-import { AnswerProps } from "../types/answerProps"
 import { QUESTION_TYPES } from "../enums/quiestionTypes"
+import { AnswerProps } from "../types/answerProps"
 
 export type QuestionProps = {
   content: string

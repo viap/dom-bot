@@ -1,9 +1,9 @@
-import { currentUserAlias } from "../../common/consts/currentUserAlias"
-import { TherapySessionDto } from "../../common/dto/therapySession.dto"
-import { MyContext } from "../../common/types/myContext"
-import { postRequest } from "../common/postRequest"
-import { API_PATHS } from "../consts/apiPaths"
-import { AddTherapySessionDto } from "../dto/addTherapySession.dto"
+import { currentUserAlias } from "@/common/consts/currentUserAlias"
+import { TherapySessionDto } from "@/common/dto/therapySession.dto"
+import { MyContext } from "@/common/types/myContext"
+import { postRequest } from "@/api/common/postRequest"
+import { API_PATHS } from "@/api/consts/apiPaths"
+import { AddTherapySessionDto } from "@/api/dto/addTherapySession.dto"
 
 export async function addTherapySession(
   ctx: MyContext,

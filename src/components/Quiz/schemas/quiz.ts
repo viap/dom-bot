@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
-import { QuestionProps } from "../types/questionProps"
 import { QuizProps } from "../types/quizProps"
+import { QuestionProps } from "../types/questionProps"
 
 export const QuizSchema = new mongoose.Schema<QuizProps>({
   // _id: { type: mongoose.Types.ObjectId, required: true },

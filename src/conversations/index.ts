@@ -1,6 +1,6 @@
 import { createConversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "./enums/conversationNames"
-import { MyContext } from "../common/types/myContext"
+import { MyContext } from "@/common/types/myContext"
 import { MiddlewareFn } from "grammy"
 import { BotConversation } from "./types/botConversation"
 

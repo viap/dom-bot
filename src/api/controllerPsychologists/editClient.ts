@@ -1,5 +1,5 @@
-import { currentUserAlias } from "../../common/consts/currentUserAlias"
-import { MyContext } from "../../common/types/myContext"
+import { currentUserAlias } from "@/common/consts/currentUserAlias"
+import { MyContext } from "@/common/types/myContext"
 import { putRequest } from "../common/putRequest"
 import { API_PATHS } from "../consts/apiPaths"
 import { EditClientDto } from "../dto/editClient.dto"

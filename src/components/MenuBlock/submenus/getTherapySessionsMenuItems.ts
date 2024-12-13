@@ -1,9 +1,9 @@
-import { getLocalDateString } from "../../../common/utils/getLocalDateString"
-import { PropType } from "../../../api/type/propType"
-import { ClientDto } from "../../../common/dto/client.dto"
-import { TherapySessionDto } from "../../../common/dto/therapySession.dto"
-import { MyContext } from "../../../common/types/myContext"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
+import { getLocalDateString } from "@/common/utils/getLocalDateString"
+import { PropType } from "@/api/type/propType"
+import { ClientDto } from "@/common/dto/client.dto"
+import { TherapySessionDto } from "@/common/dto/therapySession.dto"
+import { MyContext } from "@/common/types/myContext"
+import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import MenuBlock from "../menuBlock"
 import {
   MenuBlockItemsProps,

@@ -1,5 +1,5 @@
-import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
-import { MyContext } from "../../common/types/myContext"
+import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
+import { MyContext } from "@/common/types/myContext"
 import { postRequest } from "../common/postRequest"
 import { API_PATHS } from "../consts/apiPaths"
 import { CreateTherapyRequestDto } from "../dto/createTherapyRequest.dto"

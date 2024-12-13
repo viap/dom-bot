@@ -1,21 +1,21 @@
-import { SocialNetworks } from "../../../common/enums/socialNetworks"
-import { getAllTherapyRequests } from "../../../api/controllerTherapyRequests/getAllTherapyRequests"
-import { PropType } from "../../../api/type/propType"
-import { TherapyRequestDto } from "../../../common/dto/therapyRequest.dto"
-import { MyContext } from "../../../common/types/myContext"
-import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
-import { getLocalDateString } from "../../../common/utils/getLocalDateString"
-import { getLocalTimeString } from "../../../common/utils/getLocalTimeString"
-import { getTextOfContactsData } from "../../../common/utils/getTextOfContactsData"
-import { getTextOfData } from "../../../common/utils/getTextOfData"
-import { notEmpty } from "../../../common/utils/notEmpty"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
+import { SocialNetworks } from "@/common/enums/socialNetworks"
+import { getAllTherapyRequests } from "@/api/controllerTherapyRequests/getAllTherapyRequests"
+import { PropType } from "@/api/type/propType"
+import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
+import { MyContext } from "@/common/types/myContext"
+import { ObjectWithPrimitiveValues } from "@/common/types/objectWithPrimitiveValues"
+import { getLocalDateString } from "@/common/utils/getLocalDateString"
+import { getLocalTimeString } from "@/common/utils/getLocalTimeString"
+import { getTextOfContactsData } from "@/common/utils/getTextOfContactsData"
+import { getTextOfData } from "@/common/utils/getTextOfData"
+import { notEmpty } from "@/common/utils/notEmpty"
+import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import MenuBlock from "../menuBlock"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
 } from "../types/menuBlockItemsProps"
-import { ReplyMarkup } from "../../../common/utils/replyMarkup"
 
 export async function loadTherapyRequestsMenuItems(
   ctx: MyContext,

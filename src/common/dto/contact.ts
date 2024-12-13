@@ -1,4 +1,4 @@
-import { SocialNetworks } from "../enums/socialNetworks"
+import { SocialNetworks } from "@/common/enums/socialNetworks"
 
 export type ContactDto = {
   id?: string

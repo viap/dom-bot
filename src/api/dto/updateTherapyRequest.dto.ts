@@ -1,4 +1,4 @@
-import { ContactDto } from "../../common/dto/contact.dto"
+import { ContactDto } from "@/common/dto/contact.dto"
 
 export type UpdateTherapyRequestDto = {
   name?: string

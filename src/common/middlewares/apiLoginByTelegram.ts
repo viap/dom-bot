@@ -1,12 +1,12 @@
-import { MyContext } from "../../common/types/myContext"
-import { hasValidToken } from "../../api/controllerAuth/isValidToken"
-import { loginByTelegram } from "../../api/controllerAuth/loginByTelegram"
-import { TelegramUserDto } from "../dto/telegramUser.dto"
-import { BOT_TEXTS } from "../enums/botTexts"
 import { NextFunction } from "grammy"
-import { getUser } from "../../api/controllerUsers/getUser"
-import { getPsychologist } from "../../api/controllerPsychologists/getPsychologist"
+import { MyContext } from "../types/myContext"
+import { hasValidToken } from "@/api/controllerAuth/isValidToken"
+import { loginByTelegram } from "@/api/controllerAuth/loginByTelegram"
+import { getUser } from "@/api/controllerUsers/getUser"
+import { getPsychologist } from "@/api/controllerPsychologists/getPsychologist"
+import { TelegramUserDto } from "../dto/telegramUser.dto"
 import { ROLES } from "../enums/roles"
+import { BOT_TEXTS } from "../enums/botTexts"
 
 export const apiLoginByTelegram = async (
   ctx: MyContext,

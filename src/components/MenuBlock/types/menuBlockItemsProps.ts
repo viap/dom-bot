@@ -1,7 +1,7 @@
-import { ROLES } from "../../../common/enums/roles"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
-import { SUBMENU_TYPES } from "../enums/submenuTypes"
+import { ROLES } from "@/common/enums/roles"
+import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import { MenuBlockOptions } from "./menuBlockOptions"
+import { SUBMENU_TYPES } from "../enums/submenuTypes"
 
 export type MenuBlockItemsProps = {
   key: string

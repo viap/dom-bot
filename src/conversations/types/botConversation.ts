@@ -1,5 +1,5 @@
 import { ConversationFn } from "@grammyjs/conversations"
-import { MyContext } from "../../common/types/myContext"
+import { MyContext } from "@/common/types/myContext"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 
 export type BotConversation = {

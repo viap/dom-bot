@@ -1,4 +1,4 @@
-import { PriceDto } from "../../common/dto/price.dto"
+import { PriceDto } from "@/common/dto/price.dto"
 
 export type AddTherapySessionDto = {
   dateTime: number

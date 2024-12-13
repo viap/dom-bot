@@ -1,5 +1,5 @@
-import { FromInputValue } from "./formInputValue"
 import { FORM_INPUT_TYPES } from "../enums/formInputTypes"
+import { FromInputValue } from "./formInputValue"
 import { CalendarOptions } from "telegram-inline-calendar"
 
 export type FormInputProps = {
