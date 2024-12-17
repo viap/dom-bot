@@ -1,29 +1,41 @@
 import { Conversation } from "@grammyjs/conversations"
-import { PERIODS } from "../../common/enums/periods"
 import { getStatisticForPeriod } from "../../api/controllerTherapySessions/getStatisticForPeriod"
 import { numberOfCommissionHours } from "../../common/consts/numberOfCommissionHours"
+import { PriceDto } from "../../common/dto/price.dto"
 import { TherapySessionsStatisticDto } from "../../common/dto/therapySessionsStatistic.dto"
+import { PERIODS } from "../../common/enums/periods"
 import { MyContext } from "../../common/types/myContext"
+import { getLocalDateString } from "../../common/utils/getLocalDateString"
 import { getSumsForPrices } from "../../common/utils/getSumsForPrices"
 import { getTimeRange } from "../../common/utils/getTimeRange"
 import { groupBy } from "../../common/utils/groupBy"
 import { ReplyMarkup } from "../../common/utils/replyMarkup"
+import { FORM_INPUT_TYPES } from "../../components/Form/enums/formInputTypes"
+import { FORM_RESULT_STATUSES } from "../../components/Form/enums/formResultStatuses"
+import { Form } from "../../components/Form/form"
+import { FormInputProps } from "../../components/Form/types/formInputProps"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
-import { PriceDto } from "../../common/dto/price.dto"
+import { getDateFromRuDateString } from "../../common/utils/getDateFromRuDateString"
 
 const therapySessionsGeneralStatistic: BotConversation = {
   getName() {
     return CONVERSATION_NAMES.THERAPY_SESSIONS_GENERAL_STATISTIC
   },
 
-  getConversation(period: PERIODS) {
+  getConversation(period?: PERIODS) {
     return async (
-      _conversation: Conversation<MyContext>,
+      conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
-      const [startDate, endDate] = getTimeRange(period)
+      const [startDate, endDate] = period
+        ? getTimeRange(period)
+        : await selectPeriod(conversation, ctx)
+
+      if (!(startDate instanceof Date && endDate instanceof Date)) {
+        return
+      }
 
       const datesOfPeriod = ReplyMarkup.escapeForParseModeV2(
         `${startDate.toLocaleDateString("ru")} - ${endDate.toLocaleDateString(
@@ -50,7 +62,7 @@ const therapySessionsGeneralStatistic: BotConversation = {
         const fullComissions: Array<PriceDto> = []
         const content: Array<string> = []
         Object.entries(sessionsByPsychologist).forEach(
-          ([_id, sessions]: [string, Array<TherapySessionsStatisticDto>]) => {
+          ([, sessions]: [string, Array<TherapySessionsStatisticDto>]) => {
             const psychologistName = sessions[0]?.psychologist?.user?.name || ""
             content.push(`*${psychologistName}*`)
 
@@ -97,9 +109,51 @@ const therapySessionsGeneralStatistic: BotConversation = {
         await ctx.reply("*Записей нет*", ReplyMarkup.parseModeV2)
       }
 
-      return undefined
+      return
     }
   },
+}
+
+async function selectPeriod(
+  conversation: Conversation<MyContext>,
+  ctx: MyContext
+): Promise<[Date, Date] | [undefined, undefined]> {
+  const now = await conversation.now()
+  const inputs: Array<FormInputProps> = [
+    {
+      name: "startDate",
+      alias: "Начальная дата",
+      type: FORM_INPUT_TYPES.DATE,
+      calendarOptions: {
+        stop_date: "now",
+      },
+    },
+    {
+      name: "endDate",
+      alias: "Конечная дата",
+      type: FORM_INPUT_TYPES.DATE,
+      default: getLocalDateString(now),
+      calendarOptions: {
+        stop_date: "now",
+      },
+    },
+  ]
+
+  type resultType = {
+    startDate: string
+    endDate: string
+  }
+  const form = new Form<resultType>(conversation, ctx, inputs)
+  const formResult = await form.requestData()
+
+  if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
+    return [
+      getDateFromRuDateString(formResult.data.startDate),
+      getDateFromRuDateString(formResult.data.endDate),
+    ]
+  }
+
+  return [undefined, undefined]
 }
 
 export default therapySessionsGeneralStatistic

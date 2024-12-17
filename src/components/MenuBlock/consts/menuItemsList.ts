@@ -117,6 +117,10 @@ const menuItemsList: Array<
     name: "Текущий месяц",
     props: [PERIODS.MONTH],
   },
+  {
+    key: MENU_ITEM_TYPES.ARBITRARY,
+    name: "Произвольный период",
+  },
 ]
 
 export default menuItemsList

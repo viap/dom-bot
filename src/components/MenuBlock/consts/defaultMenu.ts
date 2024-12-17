@@ -69,6 +69,10 @@ const defaultMenu = {
           ...mappedMenuItemsList[MENU_ITEM_TYPES.MONTH],
           conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_GENERAL_STATISTIC,
         },
+        {
+          ...mappedMenuItemsList[MENU_ITEM_TYPES.ARBITRARY],
+          conversation: CONVERSATION_NAMES.THERAPY_SESSIONS_GENERAL_STATISTIC,
+        },
       ],
     },
     {
