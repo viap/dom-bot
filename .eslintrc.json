@@ -12,7 +12,8 @@
   "rules": {
     "no-var": "error",
     "@typescript-eslint/no-unused-vars":"off",
-    "@typescript-eslint/no-this-alias": "off"
+    "@typescript-eslint/no-this-alias": "off",
+    "@typescript-eslint/triple-slash-reference": "off"
   },
   "settings": {
     "import/resolver": {
