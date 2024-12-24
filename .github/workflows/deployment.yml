@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Get the project code
         uses: actions/checkout@v4
+        with:
+          path: ${{secrets.REMOTE_TARGET}}
       - name: Make env file with secrets
         uses: SpicyPizza/create-envfile@v2.0
         with:
