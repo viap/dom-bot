@@ -1,7 +1,7 @@
-import { MyContext } from "../../common/types/myContext"
-import { putRequest } from "../common/putRequest"
-import { API_PATHS } from "../consts/apiPaths"
-import { EditUserDto } from "../dto/editUser.dto"
+import { MyContext } from "@/common/types/myContext"
+import { putRequest } from "@/api/common/putRequest"
+import { API_PATHS } from "@/api/consts/apiPaths"
+import { EditUserDto } from "@/api/dto/editUser.dto"
 
 export async function editUser(
   ctx: MyContext,

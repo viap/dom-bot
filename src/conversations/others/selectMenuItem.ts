@@ -1,13 +1,13 @@
 import { Conversation } from "@grammyjs/conversations"
-import MenuBlock from "../../components/MenuBlock/menuBlock"
+import MenuBlock from "@/components/MenuBlock/menuBlock"
 
-import { MyContext } from "../../common/types/myContext"
-import defaultMenu from "../../components/MenuBlock/consts/defaultMenu"
-import { CONVERSATION_ERRORS } from "../enums/conversationErrors"
-import { CONVERSATION_NAMES } from "../enums/conversationNames"
-import { BotConversation } from "../types/botConversation"
+import { MyContext } from "@/common/types/myContext"
+import defaultMenu from "@/components/MenuBlock/consts/defaultMenu"
 
 import { BotConversations } from "../index"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
+import { CONVERSATION_ERRORS } from "../enums/conversationErrors"
 
 async function checkAgreemensts(
   conversation: Conversation<MyContext>,

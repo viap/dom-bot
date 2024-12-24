@@ -1,7 +1,7 @@
-import { TherapySessionsStatisticDto } from "../../common/dto/therapySessionsStatistic.dto"
-import { MyContext } from "../../common/types/myContext"
-import { getRequest } from "../common/getRequest"
-import { API_PATHS } from "../consts/apiPaths"
+import { TherapySessionsStatisticDto } from "@/common/dto/therapySessionsStatistic.dto"
+import { MyContext } from "@/common/types/myContext"
+import { getRequest } from "@/api/common/getRequest"
+import { API_PATHS } from "@/api/consts/apiPaths"
 
 export async function getStatisticForPeriod(
   ctx: MyContext,

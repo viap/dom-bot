@@ -1,4 +1,4 @@
-import { MyContext } from "../../common/types/myContext"
+import { MyContext } from "@/common/types/myContext"
 import { postRequest } from "../common/postRequest"
 import { API_PATHS } from "../consts/apiPaths"
 

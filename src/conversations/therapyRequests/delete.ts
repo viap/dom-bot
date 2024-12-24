@@ -1,11 +1,11 @@
 import { Conversation } from "@grammyjs/conversations"
-import { deleteTherapyRequest } from "../../api/controllerTherapyRequests/deleteTherapyRequest"
-import { TherapyRequestDto } from "../../common/dto/therapyRequest.dto"
-import { BOT_ERRORS } from "../../common/enums/botErrors"
-import { MyContext } from "../../common/types/myContext"
-import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { deleteTherapyRequest } from "@/api/controllerTherapyRequests/deleteTherapyRequest"
+import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
+import { BOT_ERRORS } from "@/common/enums/botErrors"
+import { MyContext } from "@/common/types/myContext"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { BotConversation } from "../types/botConversation"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { ConversationResult } from "../types/conversationResult"
 
 const therapyRequestDelete: BotConversation = {

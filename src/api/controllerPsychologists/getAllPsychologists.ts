@@ -1,5 +1,5 @@
-import { PsychologistDto } from "../../common/dto/psychologist.dto"
-import { MyContext } from "../../common/types/myContext"
+import { PsychologistDto } from "@/common/dto/psychologist.dto"
+import { MyContext } from "@/common/types/myContext"
 import { getRequest } from "../common/getRequest"
 import { API_PATHS } from "../consts/apiPaths"
 

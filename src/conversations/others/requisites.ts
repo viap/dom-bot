@@ -1,10 +1,9 @@
 import { Conversation, ConversationFn } from "@grammyjs/conversations"
-import { BOT_COMMANDS_DESCR } from "../../common/enums/botCommandsDescr"
-import { getTextOfData } from "../../common/utils/getTextOfData"
-import { MyContext } from "../../common/types/myContext"
-import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { getTextOfData } from "@/common/utils/getTextOfData"
+import { MyContext } from "@/common/types/myContext"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { BotConversation } from "../types/botConversation"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 
 const termsAgreementShow: BotConversation = {
   getName(): CONVERSATION_NAMES {

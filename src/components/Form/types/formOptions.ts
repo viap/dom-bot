@@ -1,6 +1,6 @@
-import { ObjectWithPrimitiveValues } from "../../../common/types/objectWithPrimitiveValues"
+import { ObjectWithPrimitiveValues } from "@/common/types/objectWithPrimitiveValues"
+import { FormInputProps } from "./formInputProps"
 import { FORM_TEXT_TYPES } from "../enums/formTextTypes"
-import { FormInputProps } from "../types/formInputProps"
 
 export type FormOptions = {
   texts?: {

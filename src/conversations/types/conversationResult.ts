@@ -1,5 +1,5 @@
-import { MENU_ITEM_TYPES } from "../../components/MenuBlock/enums/menuItemTypes"
-import { MenuBlockItemsProps } from "../../components/MenuBlock/types/menuBlockItemsProps"
+import { MENU_ITEM_TYPES } from "@/components/MenuBlock/enums/menuItemTypes"
+import { MenuBlockItemsProps } from "@/components/MenuBlock/types/menuBlockItemsProps"
 
 export type ConversationResult = {
   stepsBack?: number

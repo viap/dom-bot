@@ -1,13 +1,13 @@
 import { Conversation } from "@grammyjs/conversations"
-import { deleteClient } from "../../api/controllerPsychologists/deleteClient"
-import { ClientDto } from "../../common/dto/client.dto"
-import { TherapySessionDto } from "../../common/dto/therapySession.dto"
-import { MyContext } from "../../common/types/myContext"
-import { ReplyMarkup } from "../../common/utils/replyMarkup"
-import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { deleteClient } from "@/api/controllerPsychologists/deleteClient"
+import { ClientDto } from "@/common/dto/client.dto"
+import { TherapySessionDto } from "@/common/dto/therapySession.dto"
+import { MyContext } from "@/common/types/myContext"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
+import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { BotConversation } from "../types/botConversation"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { ConversationResult } from "../types/conversationResult"
-import { BOT_ERRORS } from "../../common/enums/botErrors"
 
 const clientDelete: BotConversation = {
   getName() {

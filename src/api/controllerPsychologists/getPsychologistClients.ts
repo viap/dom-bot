@@ -1,8 +1,8 @@
-import { MyContext } from "../../common/types/myContext"
+import { MyContext } from "@/common/types/myContext"
 import { getRequest } from "../common/getRequest"
 import { API_PATHS } from "../consts/apiPaths"
-import { ClientDto } from "../../common/dto/client.dto"
-import { currentUserAlias } from "../../common/consts/currentUserAlias"
+import { ClientDto } from "@/common/dto/client.dto"
+import { currentUserAlias } from "@/common/consts/currentUserAlias"
 
 export async function getPsychologistClients(
   ctx: MyContext,

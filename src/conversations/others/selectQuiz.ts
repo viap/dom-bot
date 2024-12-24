@@ -1,9 +1,9 @@
 import { Conversation } from "@grammyjs/conversations"
 import { Keyboard } from "grammy"
-import { BOT_COMMANDS_DESCR } from "../../common/enums/botCommandsDescr"
-import { QUIZ_STATUS } from "../../components/Quiz/enums/quizStatus"
-import { QuizModel } from "../../components/Quiz/models/quiz"
-import { MyContext } from "../../common/types/myContext"
+import { BOT_COMMANDS_DESCR } from "@/common/enums/botCommandsDescr"
+import { QUIZ_STATUS } from "@/components/Quiz/enums/quizStatus"
+import { QuizModel } from "@/components/Quiz/models/quiz"
+import { MyContext } from "@/common/types/myContext"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
 

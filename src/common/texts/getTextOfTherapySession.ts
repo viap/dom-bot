@@ -1,6 +1,6 @@
-import { getLocalDateString } from "../utils/getLocalDateString"
-import { TherapySessionDto } from "../../common/dto/therapySession.dto"
-import { getTextOfData } from "../../common/utils/getTextOfData"
+import { getLocalDateString } from "@/common/utils/getLocalDateString"
+import { TherapySessionDto } from "@/common/dto/therapySession.dto"
+import { getTextOfData } from "@/common/utils/getTextOfData"
 
 export function getTextOfTherapySession(
   session: TherapySessionDto,

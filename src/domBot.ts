@@ -1,6 +1,6 @@
 import { conversations } from "@grammyjs/conversations"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
-import dotenv from "dotenv"
+import { config } from "dotenv"
 import { Bot, Context, GrammyError, HttpError, session } from "grammy"
 import { BOT_COMMANDS } from "./common/enums/botCommands"
 import { BOT_COMMANDS_DESCR } from "./common/enums/botCommandsDescr"
@@ -25,7 +25,7 @@ import NotificationListener from "./components/NotificationListener/notification
 import { DatePicker } from "./components/DatePicker/datePicker"
 
 /** ENVIROMENT */
-dotenv.config({ path: cwd() + "/config/.env" })
+config({ path: cwd() + "/config/.env" })
 
 /** DB CONNECTION */
 
@@ -128,7 +128,7 @@ domBot.on("callback_query:data", async (ctx: MyContext) => {
 
   try {
     data = JSON.parse(ctx.callbackQuery?.data || "")
-  } catch (e) {
+  } catch {
     data = undefined
   }
 

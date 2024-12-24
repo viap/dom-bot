@@ -1,6 +1,6 @@
 import { Bot } from "grammy"
-import { MyContext } from "../../common/types/myContext"
-import { ReplyMarkup } from "../../common/utils/replyMarkup"
+import { MyContext } from "@/common/types/myContext"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
 
 import { Calendar, CalendarOptions } from "telegram-inline-calendar"
 

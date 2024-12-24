@@ -1,4 +1,4 @@
-import { ROLES } from "../enums/roles"
+import { ROLES } from "@/common/enums/roles"
 import { ContactDto } from "./contact.dto"
 
 export type UserDto = {

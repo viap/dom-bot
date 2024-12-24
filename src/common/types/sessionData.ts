@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
-import { MENU_ITEM_TYPES } from "../../components/MenuBlock/enums/menuItemTypes"
-import { QuizGivenAnswers } from "../../components/Quiz/types/quizGivenAnswers"
+import { MENU_ITEM_TYPES } from "@/components/MenuBlock/enums/menuItemTypes"
+import { QuizGivenAnswers } from "@/components/Quiz/types/quizGivenAnswers"
 
 export type DeepLink = {
   goTo: MENU_ITEM_TYPES

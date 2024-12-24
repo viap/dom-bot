@@ -1,4 +1,4 @@
-import { PrimitiveValues } from "../../common/types/primitiveValues"
+import { PrimitiveValues } from "@/common/types/primitiveValues"
 
 export function getValueByKey(
   type: { [keyL: string]: PrimitiveValues },

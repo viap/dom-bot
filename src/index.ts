@@ -1,5 +1,3 @@
-// import "./tsConfigBootstrap"
-
 import { run } from "@grammyjs/runner"
 import domBot from "./domBot"
 

@@ -1,4 +1,4 @@
-import { CURRENCIES } from "../enums/currencies"
+import { CURRENCIES } from "@/common/enums/currencies"
 import { UserDto } from "./user.dto"
 import { ClientDto } from "./client.dto"
 

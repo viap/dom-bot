@@ -1,6 +1,6 @@
-import { NOTIFICATION_STATUSES } from "../enums/notificationStatuses"
-import { NOTIFICATION_TYPES } from "../enums/notificationTypes"
-import { ROLES } from "../enums/roles"
+import { NOTIFICATION_STATUSES } from "@/common/enums/notificationStatuses"
+import { NOTIFICATION_TYPES } from "@/common/enums/notificationTypes"
+import { ROLES } from "@/common/enums/roles"
 
 export type NotificationDto = {
   _id: string

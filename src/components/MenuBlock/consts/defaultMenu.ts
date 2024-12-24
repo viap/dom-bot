@@ -1,9 +1,9 @@
-import { ROLES } from "../../../common/enums/roles"
-import { CONVERSATION_NAMES } from "../../../conversations/enums/conversationNames"
+import { ROLES } from "@/common/enums/roles"
 import { MENU_ITEM_TYPES } from "../enums/menuItemTypes"
-import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 import getMenuItemsMap from "../utils/getMenuItemsMap"
 import { defaultRoles } from "./defaultRoles"
+import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 
 const mappedMenuItemsList = getMenuItemsMap()
 const defaultMenu = {
