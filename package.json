@@ -7,7 +7,7 @@
   "scripts": {
     "copy-assets": "cp -r ./src/assets ./dist/assets",
     "build": "rm -rf ./dist && tspc && npm run copy-assets",
-    "start": "node --es-module-specifier-resolution=node dist/index.js",
+    "start": "node --experimental-specifier-resolution=node --experimental-loader=extensionless dist/index.js",
     "startInspect": "node --inspect --es-module-specifier-resolution=node dist/index.js",
     "restart:node": "npm run build && npm run start",
     "restart:dev": "tsx ./src",
@@ -40,6 +40,7 @@
     "@grammyjs/storage-mongodb": "^2.1.1",
     "axios": "^1.4.0",
     "dotenv": "^16.0.3",
+    "extensionless": "^1.9.9",
     "grammy": "^1.19.2",
     "jwt-decode": "^4.0.0",
     "mongoose": "^7.0.1",
