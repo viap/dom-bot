@@ -1,9 +1,8 @@
-import { Bot } from "grammy"
 import { MyContext } from "@/common/types/myContext"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
+import { Bot } from "grammy"
 
 import { Calendar, CalendarOptions } from "telegram-inline-calendar"
-
 const defaultOptions: CalendarOptions = {
   language: "ru",
   bot_api: "grammy",
@@ -14,7 +13,6 @@ const defaultOptions: CalendarOptions = {
 
 export class DatePicker {
   private static bot: Bot<MyContext>
-  private static mapOptionToCalendar = new Map<string, Calendar>()
 
   static setBotInstance(bot: Bot<MyContext>) {
     this.bot = bot
@@ -26,16 +24,10 @@ export class DatePicker {
         ...defaultOptions,
         ...options,
       }
-      const optionsString = JSON.stringify(finalOptions)
 
-      if (!this.mapOptionToCalendar.get(optionsString)) {
-        this.mapOptionToCalendar.set(
-          optionsString,
-          new Calendar(this.bot, finalOptions)
-        )
-      }
-
-      return this.mapOptionToCalendar.get(optionsString)
+      return new Calendar(this.bot, finalOptions)
+    } else {
+      throw new Error("Bot does not exist")
     }
   }
 }
