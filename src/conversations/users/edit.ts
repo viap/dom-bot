@@ -8,9 +8,8 @@ import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
 import { Form } from "@/components/Form/form"
-import { BotConversation } from "../types/botConversation"
+import { BotConversation, ConversationResult } from "../types"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
-import { ConversationResult } from "../types/conversationResult"
 
 const userEdit: BotConversation = {
   getName() {

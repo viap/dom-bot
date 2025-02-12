@@ -8,9 +8,8 @@ import { getTextOfTherapySession } from "@/common/texts/getTextOfTherapySession"
 import { MyContext } from "@/common/types/myContext"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { MENU_ITEM_TYPES } from "@/components/MenuBlock/enums/menuItemTypes"
-import { BotConversation } from "../types/botConversation"
+import { BotConversation, ConversationResult } from "../types"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
-import { ConversationResult } from "../types/conversationResult"
 import { BotConversations } from "../index"
 
 enum ACTIONS {

@@ -5,9 +5,8 @@ import { TherapySessionDto } from "@/common/dto/therapySession.dto"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { MyContext } from "@/common/types/myContext"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
-import { BotConversation } from "../types/botConversation"
+import { BotConversation, ConversationResult } from "../types"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
-import { ConversationResult } from "../types/conversationResult"
 
 const therapySessionDelete: BotConversation = {
   getName() {

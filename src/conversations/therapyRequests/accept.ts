@@ -1,11 +1,10 @@
 import { Conversation } from "@grammyjs/conversations"
-import { ConversationResult } from "conversations/types/conversationResult"
+import { ConversationResult, BotConversation } from "../types"
 import { acceptTherapyRequest } from "@/api/controllerTherapyRequests/acceptTherapyRequest"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { MyContext } from "@/common/types/myContext"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
-import { BotConversation } from "../types/botConversation"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 
 const therapyRequestAccept: BotConversation = {
