@@ -10,8 +10,9 @@ import { getTextOfData } from "@/common/utils/getTextOfData"
 import { getTimeRange } from "@/common/utils/getTimeRange"
 import { groupBy } from "@/common/utils/groupBy"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
-import { BotConversation, ConversationResult } from "../types"
+import { BotConversation } from "../types/botConversation"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { ConversationResult } from "../types/conversationResult"
 
 const therapySessionsPersonalStatistic: BotConversation = {
   getName() {

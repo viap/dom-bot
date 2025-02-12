@@ -15,8 +15,9 @@ import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses
 import { Form } from "@/components/Form/form"
 import { FormInputProps } from "@/components/Form/types/formInputProps"
 import { getDateFromRuDateString } from "@/common/utils/getDateFromRuDateString"
-import { BotConversation, ConversationResult } from "../types"
+import { BotConversation } from "../types/botConversation"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { ConversationResult } from "../types/conversationResult"
 
 const therapySessionsGeneralStatistic: BotConversation = {
   getName() {

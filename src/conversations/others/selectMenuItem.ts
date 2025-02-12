@@ -6,7 +6,7 @@ import defaultMenu from "@/components/MenuBlock/consts/defaultMenu"
 
 import { BotConversations } from "../index"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
-import { BotConversation } from "../types"
+import { BotConversation } from "../types/botConversation"
 import { CONVERSATION_ERRORS } from "../enums/conversationErrors"
 
 async function checkAgreemensts(

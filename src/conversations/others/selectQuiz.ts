@@ -5,7 +5,7 @@ import { QUIZ_STATUS } from "@/components/Quiz/enums/quizStatus"
 import { QuizModel } from "@/components/Quiz/models/quiz"
 import { MyContext } from "@/common/types/myContext"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
-import { BotConversation } from "../types"
+import { BotConversation } from "../types/botConversation"
 
 const qiuzSelect: BotConversation = {
   getName() {

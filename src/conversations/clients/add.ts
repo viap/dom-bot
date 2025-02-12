@@ -6,7 +6,7 @@ import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
 import { Form } from "@/components/Form/form"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
-import { BotConversation } from "../types"
+import { BotConversation } from "../types/botConversation"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 
 const clientAdd: BotConversation = {

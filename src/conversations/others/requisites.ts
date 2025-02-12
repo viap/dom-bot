@@ -2,7 +2,7 @@ import { Conversation, ConversationFn } from "@grammyjs/conversations"
 import { getTextOfData } from "@/common/utils/getTextOfData"
 import { MyContext } from "@/common/types/myContext"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
-import { BotConversation } from "../types"
+import { BotConversation } from "../types/botConversation"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 
 const termsAgreementShow: BotConversation = {
