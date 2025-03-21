@@ -80,7 +80,7 @@ const defaultMenu = {
       roles: [ROLES.PSYCHOLOGIST],
       items: [
         mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW],
-        mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_ACCEPT],
+        mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_ACCEPTED],
       ],
     },
     {
