@@ -15,7 +15,7 @@ export enum MENU_ITEM_TYPES {
 
   THERAPY_REQUESTS = "therapyRequests",
   THERAPY_REQUESTS_NEW = "therapyRequestsNew",
-  THERAPY_REQUESTS_ACCEPT = "therapyRequestsAccept",
+  THERAPY_REQUESTS_ACCEPTED = "therapyRequestsAccepted",
   THERAPY_REQUESTS_SEND = "therapyRequestsSend",
 
   PERSONAL_STATISTIC = "personalStatistic",

@@ -6,5 +6,5 @@ export enum ACTION_BUTTON_TEXTS {
   BACK = "Назад",
   REJECT = "Отмена",
 
-  SEARCH = "ПОИСК",
+  SEARCH_CLEAN = "Очистить поиск",
 }
