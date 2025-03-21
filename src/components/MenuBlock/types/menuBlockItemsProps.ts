@@ -13,7 +13,7 @@ export type MenuBlockItemsProps = {
   items?: Array<MenuBlockItemsProps>
   options?: Partial<MenuBlockOptions>
 
-  submenuPreload?: boolean
+  submenuPreloaded?: boolean
   submenu?: SUBMENU_TYPES
 
   conversation?: CONVERSATION_NAMES

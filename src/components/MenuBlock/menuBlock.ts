@@ -46,12 +46,13 @@ import {
 import { MenuBlockOptions } from "./types/menuBlockOptions"
 
 const defaultItemsParams: MenuBlockItemsParams = {
+  filter: "",
   pageNumber: 0,
   pagesCount: 1,
 }
 
 const defaultMenuOptions: MenuBlockOptions = {
-  maxItemsOnScreen: 100,
+  maxItemsOnScreen: 10,
   withNavigationButtons: true,
   columns: 1,
   withSearch: false,
@@ -114,6 +115,7 @@ export default class MenuBlock {
   private options: MenuBlockOptions = defaultMenuOptions
 
   private itemsParams: MenuBlockItemsParams = {
+    filter: defaultItemsParams.filter,
     pageNumber: defaultItemsParams.pageNumber,
     pagesCount: defaultItemsParams.pagesCount,
   }
@@ -175,8 +177,8 @@ export default class MenuBlock {
   private get filterKeyboard(): Keyboard {
     const filterKeyboard = new Keyboard()
 
-    if (this.currentOptions.withSearch && this.currentItems.length > 0) {
-      filterKeyboard.row({ text: ACTION_BUTTON_TEXTS.SEARCH })
+    if (this.currentOptions.withSearch && this.itemsParams.filter) {
+      filterKeyboard.row({ text: ACTION_BUTTON_TEXTS.SEARCH_CLEAN })
     }
 
     return filterKeyboard
@@ -185,11 +187,10 @@ export default class MenuBlock {
   private get paginationKeyboard(): Keyboard {
     const bottomButtonsKeyboard = new Keyboard()
 
-    this.updateItemsParams()
-
     if (this.itemsParams.pagesCount > 1 && this.itemsParams.pageNumber > 0) {
       bottomButtonsKeyboard.add(ACTION_BUTTON_TEXTS.PREV)
     }
+
     if (
       this.itemsParams.pagesCount > 1 &&
       this.itemsParams.pageNumber < this.itemsParams.pagesCount - 1
@@ -205,13 +206,14 @@ export default class MenuBlock {
   }
 
   private setDefaultItemsParams() {
+    this.itemsParams.filter = ""
     this.itemsParams.pageNumber = defaultItemsParams.pageNumber
     this.itemsParams.pagesCount = defaultItemsParams.pagesCount
   }
 
-  private updateItemsParams() {
+  private updatePaginationParams(itemsLength: number) {
     this.itemsParams.pagesCount = Math.ceil(
-      this.currentItems.length / this.currentOptions.maxItemsOnScreen
+      itemsLength / this.currentOptions.maxItemsOnScreen
     )
 
     this.itemsParams.pageNumber =
@@ -247,8 +249,8 @@ export default class MenuBlock {
 
   private async makeAction(text: string) {
     switch (text) {
-      case ACTION_BUTTON_TEXTS.SEARCH:
-        // this.nextPage()
+      case ACTION_BUTTON_TEXTS.SEARCH_CLEAN:
+        this.itemsParams.filter = ""
         break
       case ACTION_BUTTON_TEXTS.NEXT:
         this.nextPage()
@@ -263,7 +265,7 @@ export default class MenuBlock {
         this.selectRoot()
         break
       default:
-        this.selectItem(this.getKeyByName(text))
+        this.selectByText(text)
         break
     }
   }
@@ -335,8 +337,16 @@ export default class MenuBlock {
   }
 
   getItemContent(item: MenuBlockItemsProps = this.current) {
+    const filterValue = this.itemsParams.filter
+      ? `🔎 по "${this.itemsParams.filter}"`
+      : "🔍"
+
+    const searchText = item.options?.withSearch ? `, ${filterValue}` : ""
+
     const itemContent = [
-      ReplyMarkup.escapeForParseModeV2(`${toFirstCapitalLetter(item.name)}:`),
+      ReplyMarkup.escapeForParseModeV2(
+        `${toFirstCapitalLetter(item.name)}${searchText}:`
+      ),
     ]
 
     if (item.content) {
@@ -402,7 +412,7 @@ export default class MenuBlock {
       // NOTICE: load currentItems if they were not preloaded
       if (
         this.current.submenu &&
-        !(this.current.submenuPreload && this.currentItems.length)
+        !(this.current.submenuPreloaded && this.currentItems.length)
       ) {
         await this.loadSubmenuItems(this.current)
       }
@@ -583,20 +593,33 @@ export default class MenuBlock {
     }
   }
 
+  getKeyByName(itemName?: string): string | undefined {
+    return itemName
+      ? this.currentItems.find((item) => item.name === itemName)?.key
+      : undefined
+  }
+
   selectRoot() {
     return this.selectItem(undefined, true)
   }
 
   selectParent() {
     if (this.current.parent) {
-      this.current = this.current.parent
+      this.selectItem(this.current.parent.key, false, "up")
+    } else {
+      this.selectRoot()
     }
   }
 
-  getKeyByName(itemName?: string): string | undefined {
-    return itemName
-      ? this.currentItems.find((item) => item.name === itemName)?.key
-      : undefined
+  selectByText(text: string) {
+    const key = this.getKeyByName(text)
+    if (!key) {
+      if (text && this.currentOptions.withSearch) {
+        this.itemsParams.filter = text
+      }
+    } else {
+      this.selectItem(key)
+    }
   }
 
   selectItem(
@@ -608,6 +631,7 @@ export default class MenuBlock {
     const item = fromTheTop ? this.menu : this.current
 
     const result = this.findItem(itemKey, item, resultDirection)
+
     this.current = result ? result : this.menu
 
     this.setDefaultItemsParams()
@@ -626,32 +650,38 @@ export default class MenuBlock {
   }
 
   async getCurrentKeyboard(): Promise<Keyboard> {
-    this.updateItemsParams()
-
     const availableItems = []
     for (let i = 0; i < this.currentItems.length; i++) {
       const item = this.currentItems[i]
-      if (item.submenu && item.submenuPreload) {
+      if (item.submenu && item.submenuPreloaded) {
         await this.loadSubmenuItems(item)
 
         if (!item.items?.length) {
           continue
         }
       }
-      availableItems.push(item)
+
+      if (
+        item.name.toLowerCase().includes(this.itemsParams.filter.toLowerCase())
+      ) {
+        availableItems.push(item)
+      }
     }
 
-    const currentItems = availableItems.slice(
+    this.updatePaginationParams(availableItems.length)
+
+    this.currentItems = availableItems.slice(
       this.itemsParams.pageNumber * this.currentOptions.maxItemsOnScreen,
       this.itemsParams.pageNumber * this.currentOptions.maxItemsOnScreen +
         this.currentOptions.maxItemsOnScreen
     )
 
     const keyboard = new Keyboard(
-      currentItems.map((item: MenuBlockItemsProps) => [item.name])
+      this.currentItems.map((item: MenuBlockItemsProps) => [item.name])
     ).toFlowed(this.currentOptions.columns)
 
     return this.navigationKeyboard
+      .append(this.filterKeyboard)
       .append(keyboard)
       .append(this.paginationKeyboard)
   }
