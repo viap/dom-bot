@@ -44,6 +44,10 @@ import {
   PartialMenuBlockItemsProps,
 } from "./types/menuBlockItemsProps"
 import { MenuBlockOptions } from "./types/menuBlockOptions"
+import {
+  getNextButtonText,
+  getPrevButtonText,
+} from "./utils/getPaginationButtons"
 
 const defaultItemsParams: MenuBlockItemsParams = {
   filter: "",
@@ -188,14 +192,14 @@ export default class MenuBlock {
     const bottomButtonsKeyboard = new Keyboard()
 
     if (this.itemsParams.pagesCount > 1 && this.itemsParams.pageNumber > 0) {
-      bottomButtonsKeyboard.add(ACTION_BUTTON_TEXTS.PREV)
+      bottomButtonsKeyboard.add(getPrevButtonText(this.itemsParams))
     }
 
     if (
       this.itemsParams.pagesCount > 1 &&
       this.itemsParams.pageNumber < this.itemsParams.pagesCount - 1
     ) {
-      bottomButtonsKeyboard.add(ACTION_BUTTON_TEXTS.NEXT)
+      bottomButtonsKeyboard.add(getNextButtonText(this.itemsParams))
     }
 
     if (bottomButtonsKeyboard.keyboard.length) {
@@ -252,10 +256,10 @@ export default class MenuBlock {
       case ACTION_BUTTON_TEXTS.SEARCH_CLEAN:
         this.itemsParams.filter = ""
         break
-      case ACTION_BUTTON_TEXTS.NEXT:
+      case getNextButtonText(this.itemsParams):
         this.nextPage()
         break
-      case ACTION_BUTTON_TEXTS.PREV:
+      case getPrevButtonText(this.itemsParams):
         this.prevPage()
         break
       case ACTION_BUTTON_TEXTS.BACK:
