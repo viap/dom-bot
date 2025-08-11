@@ -1,6 +1,6 @@
 import { NextFunction } from "grammy"
 import { MyContext } from "../types/myContext"
-import { hasValidToken } from "@/api/controllerAuth/isValidToken"
+import { isValidToken } from "@/api/controllerAuth/isValidToken"
 import { loginByTelegram } from "@/api/controllerAuth/loginByTelegram"
 import { getUser } from "@/api/controllerUsers/getUser"
 import { getPsychologist } from "@/api/controllerPsychologists/getPsychologist"
@@ -13,7 +13,7 @@ export const apiLoginByTelegram = async (
   next: NextFunction
 ) => {
   if (ctx.from && !ctx.from.is_bot) {
-    if (!(await hasValidToken(ctx))) {
+    if (!(await isValidToken(ctx))) {
       delete ctx.session.token
     }
 
