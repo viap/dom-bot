@@ -1,4 +1,3 @@
-import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { getPsychologistTherapyRequests } from "@/api/controllerTherapyRequests/getPsychologistTherapyRequests"
 import { PropType } from "@/api/type/propType"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
@@ -9,6 +8,7 @@ import { getLocalTimeString } from "@/common/utils/getLocalTimeString"
 import { getTextOfContactsData } from "@/common/utils/getTextOfContactsData"
 import { getTextOfData } from "@/common/utils/getTextOfData"
 import { notEmpty } from "@/common/utils/notEmpty"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import MenuBlock from "../menuBlock"
 import {
@@ -49,7 +49,7 @@ export function getPsychologistTherapyRequestMenuItem(
         dateTime: `${requestDate} в ${requestTime}`,
         name: therapyRequest.name,
         descr: therapyRequest.descr,
-        psychologist: therapyRequest.psychologist?.user?.name || "",
+        psychologist: therapyRequest.psychologist?.user.name || "",
         accepted: therapyRequest.accepted ? "да" : "нет",
       },
       {

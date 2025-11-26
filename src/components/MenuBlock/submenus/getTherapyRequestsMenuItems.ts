@@ -1,7 +1,7 @@
-import { SocialNetworks } from "@/common/enums/socialNetworks"
 import { getAllTherapyRequests } from "@/api/controllerTherapyRequests/getAllTherapyRequests"
 import { PropType } from "@/api/type/propType"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
+import { SocialNetworks } from "@/common/enums/socialNetworks"
 import { MyContext } from "@/common/types/myContext"
 import { ObjectWithPrimitiveValues } from "@/common/types/objectWithPrimitiveValues"
 import { getLocalDateString } from "@/common/utils/getLocalDateString"
@@ -9,9 +9,9 @@ import { getLocalTimeString } from "@/common/utils/getLocalTimeString"
 import { getTextOfContactsData } from "@/common/utils/getTextOfContactsData"
 import { getTextOfData } from "@/common/utils/getTextOfData"
 import { notEmpty } from "@/common/utils/notEmpty"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import MenuBlock from "../menuBlock"
-import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
@@ -52,11 +52,13 @@ export function getTherapyRequestMenuItem(
         descr: therapyRequest.descr,
         psychologist: therapyRequest.psychologist
           ? [
-              psychologistTelegramUserName,
               therapyRequest.psychologist.user.name,
+              psychologistTelegramUserName
+                ? `@${psychologistTelegramUserName}`
+                : "",
             ]
               .filter(notEmpty)
-              .join(", ")
+              .join(" - ")
           : "",
         accepted: therapyRequest.accepted ? "да" : "нет",
       },
