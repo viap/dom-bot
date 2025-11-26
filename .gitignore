@@ -12,6 +12,10 @@
 yarn.lock
 yarn-error.log
 
+# TypeScript build cache
+.tsbuildinfo
+*.tsbuildinfo
+
 #others
 .DS_Store
 .vscode
