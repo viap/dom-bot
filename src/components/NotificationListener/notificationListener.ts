@@ -1,19 +1,19 @@
-import { Api, Bot, InlineKeyboard, RawApi } from "grammy"
-import { io, Socket } from "socket.io-client"
 import { NotificationDto } from "@/common/dto/notification.dto"
+import { TokenPayloadDto } from "@/common/dto/tokenPayload.dto"
 import { NOTIFICATION_TYPES } from "@/common/enums/notificationTypes"
 import { MyContext } from "@/common/types/myContext"
-import { MENU_ITEM_TYPES } from "../MenuBlock/enums/menuItemTypes"
+import { SessionData } from "@/common/types/sessionData"
+import { getApiClientHeader } from "@/common/utils/getApiClientHeader"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import getMenuItemBreadCrumbs from "@/components/MenuBlock/utils/getMenuItemBreadCrumbs"
-import { getApiClientHeader } from "@/common/utils/getApiClientHeader"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import { Collection } from "@grammyjs/storage-mongodb/dist/cjs/deps.node"
-import { SessionData } from "@/common/types/sessionData"
+import { Api, Bot, InlineKeyboard, RawApi } from "grammy"
 import { jwtDecode } from "jwt-decode"
-import { TokenPayloadDto } from "@/common/dto/tokenPayload.dto"
+import { io, Socket } from "socket.io-client"
+import { MENU_ITEM_TYPES } from "../MenuBlock/enums/menuItemTypes"
 
-type NotificationRecipient = { chatId: string; token: string }
+type NotificationRecipient = { chatId: string; userId: string; token: string }
 
 export default class NotificationListener {
   private static bot: Bot<MyContext, Api<RawApi>>
@@ -22,20 +22,20 @@ export default class NotificationListener {
   private static socket: Socket | undefined
   private static isConnected: boolean
   private static pollingInterval: NodeJS.Timeout | undefined
-  private static polingDelay: number
+  private static pollingDelay: number
 
   static async start(
     bot: Bot<MyContext, Api<RawApi>>,
     sessions: Collection<MongoStorage.ISession>,
-    params?: { polingDelay: number }
+    params?: { pollingDelay: number }
   ) {
     if (!NotificationListener.isConnected) {
       NotificationListener.bot = bot
       NotificationListener.sessions = sessions
 
-      NotificationListener.polingDelay =
-        params?.polingDelay ||
-        (process.env.POLING_DELAY ? parseInt(process.env.POLING_DELAY) : 3000)
+      NotificationListener.pollingDelay =
+        params?.pollingDelay ||
+        (process.env.POLLING_DELAY ? parseInt(process.env.POLLING_DELAY) : 3000)
 
       NotificationListener.socket = io(process.env.API_WEBSOCKET_URL || "", {
         transports: ["websocket"],
@@ -90,7 +90,7 @@ export default class NotificationListener {
         "value.token": { $exists: true, $ne: "" },
       })
 
-      let session = undefined
+      let session: { key: string; value: SessionData } | undefined = undefined
       while ((await allSessionsWithToken.hasNext()) && !recipient) {
         session = (await allSessionsWithToken.next()) as {
           key: string
@@ -114,6 +114,7 @@ export default class NotificationListener {
             !notification.received.includes(userId)
           ) {
             recipient = {
+              userId,
               chatId: session.key.split("/")[1],
               token: session.value.token,
             }
@@ -139,7 +140,21 @@ export default class NotificationListener {
     let message:
       | { text: string; options: { [key: string]: unknown } }
       | undefined = undefined
+
     switch (notification.type) {
+      case NOTIFICATION_TYPES.MESSAGE:
+        message = {
+          text:
+            (notification.title
+              ? `*${ReplyMarkup.escapeForParseModeV2(notification.title)}*:` +
+                ReplyMarkup.doubleNewLine
+              : "") + ReplyMarkup.escapeForParseModeV2(notification.message),
+          options: {
+            ...ReplyMarkup.parseModeV2,
+          },
+        }
+        break
+
       case NOTIFICATION_TYPES.NEW_THERAPY_REQUEST:
       case NOTIFICATION_TYPES.TRANSFER_THERAPY_REQUEST:
         menuItemBreadCrumbs = getMenuItemBreadCrumbs(
@@ -150,9 +165,10 @@ export default class NotificationListener {
           text:
             "*Пришел новый терапевтический запрос*" +
             (menuItemBreadCrumbs?.length
-              ? `\r\n${ReplyMarkup.escapeForParseModeV2(
+              ? ReplyMarkup.newLine +
+                ReplyMarkup.escapeForParseModeV2(
                   menuItemBreadCrumbs.join(" > ")
-                )}`
+                )
               : ""),
           options: {
             ...ReplyMarkup.parseModeV2,
@@ -176,6 +192,8 @@ export default class NotificationListener {
         )
 
         if (result) {
+          //NOTICE: important to push userId into notification.received after successful sending to avoid extra messages
+          notification.received.push(recipient.userId)
           await NotificationListener.bot.api.sendMessage(
             recipient.chatId,
             message.text,
@@ -191,7 +209,7 @@ export default class NotificationListener {
   private static sendNotificationOfReceipt(
     notificationId: string,
     token: string
-  ) {
+  ): Promise<boolean> | undefined {
     return NotificationListener.emitWithAck("notifications/add-received", {
       notificationId,
       token,
@@ -211,7 +229,7 @@ export default class NotificationListener {
 
     NotificationListener.pollingInterval = setInterval(() => {
       NotificationListener.emit("notifications/get-all")
-    }, NotificationListener.polingDelay)
+    }, NotificationListener.pollingDelay)
 
     NotificationListener.isConnected = true
   }

@@ -1,9 +1,9 @@
 import { ROLES } from "@/common/enums/roles"
+import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import { MENU_ITEM_TYPES } from "../enums/menuItemTypes"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 import getMenuItemsMap from "../utils/getMenuItemsMap"
 import { defaultRoles } from "./defaultRoles"
-import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
-import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 
 const mappedMenuItemsList = getMenuItemsMap()
 const defaultMenu = {
@@ -86,6 +86,10 @@ const defaultMenu = {
     {
       ...mappedMenuItemsList[MENU_ITEM_TYPES.THERAPY_REQUESTS_SEND],
       roles: [ROLES.ADMIN, ROLES.EDITOR],
+    },
+    {
+      ...mappedMenuItemsList[MENU_ITEM_TYPES.NOTIFICATIONS],
+      roles: [ROLES.ADMIN],
     },
   ],
 } as PartialMenuBlockItemsProps

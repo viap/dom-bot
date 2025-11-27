@@ -80,4 +80,12 @@ export const API_PATHS: ApiPaths = {
       one: "/therapy-requests/:therapyRequestId",
     },
   },
+  notifications: {
+    GET: {},
+    POST: {
+      create: "/notifications",
+    },
+    PUT: {},
+    DELETE: {},
+  },
 }

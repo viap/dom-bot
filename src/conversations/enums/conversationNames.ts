@@ -1,4 +1,6 @@
 export enum CONVERSATION_NAMES {
+  //COMMON
+  NOTIFICATIONS = "notifications",
   //USERS
   USER_EDIT = "user_edit",
   USER_TO_PSYCHOLOGIST = "user_to-psychologist",
