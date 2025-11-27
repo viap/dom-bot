@@ -1,8 +1,8 @@
 import { PERIODS } from "@/common/enums/periods"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
-import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 import { MENU_ITEM_TYPES } from "../enums/menuItemTypes"
 import { SUBMENU_TYPES } from "../enums/submenuTypes"
+import { PartialMenuBlockItemsProps } from "../types/menuBlockItemsProps"
 
 const menuItemsList: Array<
   PartialMenuBlockItemsProps & Required<{ key: string }>
@@ -120,6 +120,11 @@ const menuItemsList: Array<
   {
     key: MENU_ITEM_TYPES.ARBITRARY,
     name: "Произвольный период",
+  },
+  {
+    key: MENU_ITEM_TYPES.NOTIFICATIONS,
+    name: "Рассылка уведомлений",
+    conversation: CONVERSATION_NAMES.NOTIFICATIONS,
   },
 ]
 

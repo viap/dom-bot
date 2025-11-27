@@ -1,4 +1,4 @@
-import { ContactDto } from "@/common/dto/contact"
+import { ContactDto } from "@/common/dto/contact.dto"
 import { ROLES } from "@/common/enums/roles"
 
 export type EditUserDto = {

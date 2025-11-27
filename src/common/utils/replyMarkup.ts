@@ -15,6 +15,9 @@ export const ReplyMarkup = {
   patterns: {
     dateRu: "DD.MM.YYYY",
   },
+  emoji: {
+    cross: "❌",
+  },
   regExp: {
     dateRu: /([0-9]{2})\.([0-9]{2})\.([0-9]{4})/i,
   },
@@ -29,7 +32,7 @@ export const ReplyMarkup = {
   keyboardButtons: (buttons: Array<Array<KeyboardButton>>) => {
     return { reply_markup: new Keyboard(buttons) as ReplyKeyboardMarkup }
   },
-  escapeForParseModeV2(text: string): string {
-    return telegramParseModeV2CharsEscape(text)
+  escapeForParseModeV2(text?: string): string {
+    return telegramParseModeV2CharsEscape(text || "")
   },
 }

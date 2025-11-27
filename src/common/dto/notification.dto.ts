@@ -8,6 +8,8 @@ export type NotificationDto = {
   timesatamp: number
   startsAt: number
   finishAt: number
+  title?: string
+  message?: string
 
   roles: Array<ROLES>
   recipients: Array<string>
