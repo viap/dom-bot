@@ -1,5 +1,4 @@
 import { MyContext } from "@/common/types/myContext"
-import { ObjectWithPrimitiveValues } from "@/common/types/objectWithPrimitiveValues"
 import { PrimitiveValues } from "@/common/types/primitiveValues"
 import { getLocalDateString } from "@/common/utils/getLocalDateString"
 import { notEmpty } from "@/common/utils/notEmpty"
@@ -19,24 +18,25 @@ import { FormInputProps } from "./types/formInputProps"
 import { FromInputValue } from "./types/formInputValue"
 import { FormOptions } from "./types/formOptions"
 import { FormResultProps } from "./types/formResultProps"
+import { InferFormResultSimple } from "./types/inferFormResult"
 import { inputValueToString } from "./utils/inputValueToString"
 
-export class Form<T extends ObjectWithPrimitiveValues> {
+export class Form<T extends readonly FormInputProps[]> {
   private status: FORM_RESULT_STATUSES
-  private data: T
+  private data: Record<string, PrimitiveValues>
   private inputIndex: number
   private keyboard?: Keyboard
 
   constructor(
     private conversation: Conversation<MyContext>,
     private ctx: MyContext,
-    private inputs: Array<FormInputProps>,
+    private inputs: T,
     private options: FormOptions = { texts: defaultTexts },
     private buttonRows: Array<Array<FormButtonProps>> = defaultButtonsRow
   ) {
     this.inputIndex = -1
     this.status = FORM_RESULT_STATUSES.INITED
-    this.data = {} as T
+    this.data = {}
 
     this.refreshKeyboardButtons()
   }
@@ -223,7 +223,7 @@ export class Form<T extends ObjectWithPrimitiveValues> {
 
     return {
       status: this.status,
-      data: this.data,
+      data: this.data as InferFormResultSimple<T>,
     } as FormResultProps<T>
   }
 
@@ -273,7 +273,7 @@ export class Form<T extends ObjectWithPrimitiveValues> {
         this.data = {
           ...this.data,
           [this.input.name]: await this.convertValue(value, this.input),
-        } as T
+        }
 
         await this.showText(
           FORM_TEXT_TYPES.AFTER_INPUT,
@@ -357,4 +357,15 @@ export class Form<T extends ObjectWithPrimitiveValues> {
         return "Некорректная дата"
     }
   }
+}
+
+
+export function createForm<T extends readonly FormInputProps[]>(
+  conversation: Conversation<MyContext>,
+  ctx: MyContext,
+  inputs: T,
+  options: FormOptions = { texts: defaultTexts },
+  buttonRows: Array<Array<FormButtonProps>> = defaultButtonsRow
+) {
+  return new Form(conversation, ctx, inputs, options, buttonRows)
 }

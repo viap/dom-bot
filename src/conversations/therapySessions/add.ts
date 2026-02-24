@@ -1,4 +1,3 @@
-import { Conversation } from "@grammyjs/conversations"
 import { addTherapySession } from "@/api/controllerTherapySessions/addTherapySession"
 import { currentUserAlias } from "@/common/consts/currentUserAlias"
 import { numberOfCommissionHours } from "@/common/consts/numberOfCommissionHours"
@@ -11,14 +10,14 @@ import { getTextOfTherapySession } from "@/common/texts/getTextOfTherapySession"
 import { MyContext } from "@/common/types/myContext"
 import { getLocalDateString } from "@/common/utils/getLocalDateString"
 import { notEmpty } from "@/common/utils/notEmpty"
+import { parseRuDate } from "@/common/utils/parseRuDate"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
-import { Form } from "@/components/Form/form"
-import { FormInputProps } from "@/components/Form/types/formInputProps"
-import { parseRuDate } from "@/common/utils/parseRuDate"
-import { BotConversation } from "../types/botConversation"
+import { createForm } from "@/components/Form/form"
+import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
 const therapySessionAdd: BotConversation = {
@@ -49,7 +48,7 @@ const therapySessionAdd: BotConversation = {
           (session1, session2) => session2.timestamp - session1.timestamp
         )[0]
 
-      const inputs: Array<FormInputProps> = [
+      const inputs = [
         {
           name: "date",
           alias: "Дата",
@@ -93,21 +92,15 @@ const therapySessionAdd: BotConversation = {
           type: FORM_INPUT_TYPES.FLOAT,
           default: theLastSession?.price.value.toString(),
         },
-      ]
+      ] as const
 
-      type resultType = {
-        date: string
-        descr: string
-        duration: number
-        priceCurrency: CURRENCIES
-        priceValue: number
-      }
-      const form = new Form<resultType>(conversation, ctx, inputs)
+      const form = createForm(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
       let result = false
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
-        const sessionDurationInHours = formResult.data.duration / 60
+        const duration = typeof formResult.data.duration === 'number' ? formResult.data.duration : 0;
+        const sessionDurationInHours = duration / 60
         const commisionPartOfSession =
           commissionHoursLeft >= sessionDurationInHours
             ? 2 // 50%
@@ -123,13 +116,13 @@ const therapySessionAdd: BotConversation = {
               dateTime: parseRuDate(formResult.data.date) || Date.now(),
               psychologist: currentUserAlias,
               client: client.user._id,
-              duration: formResult.data.duration,
+              duration: duration,
               price: {
-                currency: formResult.data.priceCurrency,
+                currency: formResult.data.priceCurrency as CURRENCIES,
                 value: formResult.data.priceValue,
               },
               comission: {
-                currency: formResult.data.priceCurrency,
+                currency: formResult.data.priceCurrency as CURRENCIES,
                 value: commissionAmount,
               },
               descr: formResult.data.descr || undefined,
