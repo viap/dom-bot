@@ -7,7 +7,7 @@ import { notEmpty } from "@/common/utils/notEmpty"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
-import { Form } from "@/components/Form/form"
+import { createForm } from "@/components/Form/form"
 import { FormInputProps } from "@/components/Form/types/formInputProps"
 import { BotConversation } from "../types/botConversation"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
@@ -23,7 +23,7 @@ const therapyRequestEdit: BotConversation = {
       conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
-      const inputs: Array<FormInputProps> = [
+      const inputs = [
         {
           name: "name",
           alias: "имя",
@@ -38,14 +38,9 @@ const therapyRequestEdit: BotConversation = {
           optional: true,
           type: FORM_INPUT_TYPES.STRING,
         },
-      ]
+      ] as const
 
-      type returnType = {
-        name: string
-        descr: string
-      }
-
-      const form = new Form<returnType>(conversation, ctx, inputs)
+      const form = createForm(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {

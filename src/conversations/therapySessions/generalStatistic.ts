@@ -12,7 +12,7 @@ import { groupBy } from "@/common/utils/groupBy"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
-import { Form } from "@/components/Form/form"
+import { createForm } from "@/components/Form/form"
 import { FormInputProps } from "@/components/Form/types/formInputProps"
 import { getDateFromRuDateString } from "@/common/utils/getDateFromRuDateString"
 import { BotConversation } from "../types/botConversation"
@@ -119,7 +119,7 @@ async function selectPeriod(
   ctx: MyContext
 ): Promise<[Date, Date] | [undefined, undefined]> {
   const now = await conversation.now()
-  const inputs: Array<FormInputProps> = [
+  const inputs = [
     {
       name: "startDate",
       alias: "Начальная дата",
@@ -137,13 +137,9 @@ async function selectPeriod(
         stop_date: "now",
       },
     },
-  ]
+  ] as const
 
-  type resultType = {
-    startDate: string
-    endDate: string
-  }
-  const form = new Form<resultType>(conversation, ctx, inputs)
+  const form = createForm(conversation, ctx, inputs)
   const formResult = await form.requestData()
 
   if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {

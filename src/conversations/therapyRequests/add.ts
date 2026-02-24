@@ -1,19 +1,17 @@
-import { Conversation } from "@grammyjs/conversations"
 import { getAllPsychologists } from "@/api/controllerPsychologists/getAllPsychologists"
 import { createTherapyRequest } from "@/api/controllerTherapyRequests/createTherapyRequest"
 import { TelegramUserDto } from "@/common/dto/telegramUser.dto"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
-import { ROLES } from "@/common/enums/roles"
 import { SocialNetworks } from "@/common/enums/socialNetworks"
 import { MyContext } from "@/common/types/myContext"
 import { notEmpty } from "@/common/utils/notEmpty"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
-import { Form } from "@/components/Form/form"
-import { FormInputProps } from "@/components/Form/types/formInputProps"
-import { BotConversation } from "../types/botConversation"
+import { createForm } from "@/components/Form/form"
+import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
 const therapyRequestAdd: BotConversation = {
@@ -43,7 +41,7 @@ const therapyRequestAdd: BotConversation = {
         return
       }
 
-      const inputs: Array<FormInputProps> = [
+      const inputs = [
         {
           name: "name",
           alias: "имя",
@@ -66,25 +64,15 @@ const therapyRequestAdd: BotConversation = {
             }
           }),
         },
-        ctx.user.roles.includes(ROLES.EDITOR) ||
-        ctx.user.roles.includes(ROLES.ADMIN) ||
-        ctx.user.roles.includes(ROLES.PSYCHOLOGIST)
-          ? {
-              name: "telegramUser",
-              alias: "логин в телеграм",
-              type: FORM_INPUT_TYPES.STRING,
-              optional: true,
-            }
-          : undefined,
-      ].filter(notEmpty) as Array<FormInputProps>
+        {
+          name: "telegramUser",
+          alias: "логин в телеграм",
+          type: FORM_INPUT_TYPES.STRING,
+          optional: true,
+        }
+      ] as const
 
-      type resultType = {
-        name: string
-        descr: string
-        psychologist?: string
-        telegramUser?: string
-      }
-      const form = new Form<resultType>(conversation, ctx, inputs)
+      const form = createForm(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
@@ -99,15 +87,15 @@ const therapyRequestAdd: BotConversation = {
                 return notEmpty(
                   await createTherapyRequest(ctx, {
                     name:
-                      formResult.data.name ||
+                      formResult.data.name  ||
                       [telegramUser.last_name, telegramUser.first_name]
                         .filter(notEmpty)
                         .join(" ") ||
                       telegramUser.username ||
                       "",
-                    descr: formResult.data.descr,
+                    descr: formResult.data.descr ,
                     user: ctx.user._id,
-                    psychologist: formResult.data.psychologist,
+                    psychologist: typeof formResult.data.psychologist === 'string' ? formResult.data.psychologist: undefined ,
                     contacts: [
                       {
                         id: enteredTelegramUser ? undefined : telegramUser.id,

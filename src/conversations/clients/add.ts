@@ -1,13 +1,13 @@
-import { Conversation } from "@grammyjs/conversations"
 import { addNewClient } from "@/api/controllerPsychologists/addNewClient"
+import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { MyContext } from "@/common/types/myContext"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
-import { Form } from "@/components/Form/form"
-import { BOT_ERRORS } from "@/common/enums/botErrors"
-import { BotConversation } from "../types/botConversation"
+import { createForm } from "@/components/Form/form"
+import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 
 const clientAdd: BotConversation = {
   getName() {
@@ -34,11 +34,9 @@ const clientAdd: BotConversation = {
           owner: "клиентa",
           optional: true,
         },
-      ]
+      ] as const
 
-      type resultType = { name: string; descr: string }
-
-      const form = new Form<resultType>(conversation, ctx, inputs)
+      const form = createForm(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {

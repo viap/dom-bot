@@ -1,4 +1,3 @@
-import { Conversation } from "@grammyjs/conversations"
 import { getAllPsychologists } from "@/api/controllerPsychologists/getAllPsychologists"
 import { updateTherapyRequest } from "@/api/controllerTherapyRequests/updateTherapyRequest"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
@@ -8,10 +7,10 @@ import { notEmpty } from "@/common/utils/notEmpty"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
-import { Form } from "@/components/Form/form"
-import { FormInputProps } from "@/components/Form/types/formInputProps"
-import { BotConversation } from "../types/botConversation"
+import { createForm } from "@/components/Form/form"
+import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
 const therapyRequestTransfer: BotConversation = {
@@ -26,7 +25,7 @@ const therapyRequestTransfer: BotConversation = {
     ): Promise<ConversationResult | undefined> => {
       const psychologists = await getAllPsychologists(ctx)
 
-      const inputs: Array<FormInputProps> = [
+      const inputs = [
         {
           name: "psychologist",
           alias: "психолог",
@@ -41,13 +40,9 @@ const therapyRequestTransfer: BotConversation = {
               return { text: psychologist.user.name, value: psychologist._id }
             }),
         },
-      ]
+      ] as const
 
-      type returnType = {
-        psychologist: string
-      }
-
-      const form = new Form<returnType>(conversation, ctx, inputs)
+      const form = createForm(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
@@ -56,7 +51,7 @@ const therapyRequestTransfer: BotConversation = {
           result = notEmpty(
             await conversation.external(async () => {
               return await updateTherapyRequest(ctx, therapyRequest._id, {
-                psychologist: formResult.data.psychologist,
+                psychologist: typeof formResult.data.psychologist === 'string' ? formResult.data.psychologist: undefined,
               })
             })
           )
