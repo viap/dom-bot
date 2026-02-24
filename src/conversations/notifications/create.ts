@@ -12,8 +12,7 @@ import { notEmpty } from "@/common/utils/notEmpty"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
-import { Form } from "@/components/Form/form"
-import { FormInputProps } from "@/components/Form/types/formInputProps"
+import { createForm } from "@/components/Form/form"
 import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
@@ -32,7 +31,7 @@ const notificationCreate: BotConversation = {
       // NOTICE: don't use conversation.now inside of conversation.external
       const now = await conversation.now()
 
-      const inputs: Array<FormInputProps> = [
+      const inputs = [
         {
           name: "roles",
           alias: "Получателей",
@@ -75,17 +74,9 @@ const notificationCreate: BotConversation = {
         //   },
         //   optional: true,
         // },
-      ]
+      ] as const
 
-      type resultType = {
-        startsAt: string
-        finishAt: string
-        roles: ROLES
-        title?: string
-        message: string
-      }
-
-      const form = new Form<resultType>(conversation, ctx, inputs)
+      const form = createForm(conversation, ctx, inputs)
       const formResult = await form.requestData()
 
       let result = false
@@ -97,10 +88,8 @@ const notificationCreate: BotConversation = {
               startsAt: formResult.data.startsAt
                 ? getDateFromRuDateString(formResult.data.startsAt).getTime()
                 : undefined,
-              finishAt: formResult.data.finishAt
-                ? getDateFromRuDateString(formResult.data.finishAt).getTime()
-                : undefined,
-              roles: [formResult.data.roles],
+              finishAt: undefined,
+              roles: [formResult.data.roles as ROLES],
               title: formResult.data.title,
               message: formResult.data.message,
               type: NOTIFICATION_TYPES.MESSAGE,
