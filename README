@@ -1,9 +1,0 @@
-
-# Бот команды DOM'a
-https://www.instagram.com/psydom_tbilisi/
-
-# Команды
-- Проверить максимально доступный объем кучи для ноды:
-  `node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1024*1024))'`
-- Увеличить максимально доступный объем кучи для ноды:
-  `export NODE_OPTIONS="--max-old-space-size=8192"`
