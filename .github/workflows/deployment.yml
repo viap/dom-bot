@@ -64,7 +64,7 @@ jobs:
             npm install &&
             mkdir -p logs &&
             sleep 1 &&
-            pm2 start ecosystem.config.js &&
+            pm2 start ecosystem.config.cjs &&
             sleep 5 &&
             pm2 status &&
             pm2 logs domBot --lines 20 --no-stream
