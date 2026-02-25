@@ -4,6 +4,7 @@ module.exports = {
     {
       name: "domBot",
       script: "./dist/index.js",
+      interpreter: "/root/.nvm/versions/node/v20.18.1/bin/node",
       node_args:
         "--experimental-specifier-resolution=node --experimental-loader=extensionless",
       instances: 1,
