@@ -67,7 +67,7 @@ jobs:
             pm2 start ecosystem.config.cjs &&
             sleep 5 &&
             pm2 status &&
-            pm2 logs domBot --lines 20 --no-stream
+            pm2 logs domBot --lines 20
           host: ${{secrets.REMOTE_HOST}}
           user: ${{secrets.REMOTE_USER}}
           key: ${{secrets.SSH_PRIVATE_KEY}}
