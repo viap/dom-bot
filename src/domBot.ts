@@ -40,7 +40,14 @@ const domBot = new Bot<MyContext>(process.env.TOKEN || "")
 DatePicker.setBotInstance(domBot)
 
 // NOTICE: connection to the api websocket for listening events and show notifications
-NotificationListener.start(domBot, sessions)
+// Start NotificationListener with error handling
+try {
+  await NotificationListener.start(domBot, sessions)
+  console.info("NotificationListener started successfully")
+} catch (error) {
+  // Don't fail the entire bot if notifications fail
+  console.error("Failed to start NotificationListener:", error)
+}
 
 export default domBot
 // const privateBot = domBot.chatType("private")
