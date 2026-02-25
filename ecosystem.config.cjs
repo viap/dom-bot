@@ -4,13 +4,16 @@ module.exports = {
     {
       name: "domBot",
       script: "./dist/index.js",
-      interpreter: "/root/.nvm/versions/node/v20.18.1/bin/node",
       node_args:
         "--experimental-specifier-resolution=node --experimental-loader=extensionless",
       instances: 1,
       exec_mode: "fork",
       env: {
         NODE_ENV: "production",
+        // Set PATH to include NVM Node.js location - fixes "node not found" error in PM2
+        // System PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+        // NVM PATH: /root/.nvm/versions/node/v20.18.1/bin
+        PATH: "/root/.nvm/versions/node/v20.18.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
       },
       // Restart settings
       max_restarts: 5,
