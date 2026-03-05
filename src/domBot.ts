@@ -24,6 +24,8 @@ import NotificationListener from "./components/NotificationListener/notification
 
 import { DatePicker } from "./components/DatePicker/datePicker"
 
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
+
 /** ENVIROMENT */
 config({ path: cwd() + "/config/.env" })
 
@@ -189,9 +191,14 @@ domBot.on("message", async (ctx) => {
   // const activeConversations = await ctx.conversation.active()
   // if (Object.keys(activeConversations).length === 0) {
   // }
-  await ctx.reply(`${BOT_TEXTS.DEFAULT} - ${ctx.message.text}`, {
-    reply_markup: getAvailableCommandButtons(ctx.session),
-  })
+  await ctx.reply(
+    `${BOT_TEXTS.DEFAULT} \\- ${ReplyMarkup.bold(ctx.message.text)}` +
+      `${ReplyMarkup.newLine}${BOT_TEXTS.RELOAD} /${BOT_COMMANDS.START}`,
+    {
+      reply_markup: getAvailableCommandButtons(ctx.session),
+      ...ReplyMarkup.parseModeV2,
+    }
+  )
 })
 
 /** ERROR HANDLERS */
