@@ -26,6 +26,7 @@ export const ReplyMarkup = {
   },
   oneTime: { one_time_keyboard: true } as ReplyKeyboardMarkup,
   parseModeV2: { parse_mode: "MarkdownV2" as ParseMode },
+  bold: (text?: string) => `*${ReplyMarkup.escapeForParseModeV2(text || "")}*`,
   keyboard: (keyboard: Keyboard) => {
     return { reply_markup: keyboard as ReplyKeyboardMarkup }
   },
