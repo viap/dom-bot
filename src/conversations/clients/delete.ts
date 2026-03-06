@@ -1,12 +1,12 @@
-import { Conversation } from "@grammyjs/conversations"
 import { deleteClient } from "@/api/controllerPsychologists/deleteClient"
 import { ClientDto } from "@/common/dto/client.dto"
 import { TherapySessionDto } from "@/common/dto/therapySession.dto"
+import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { MyContext } from "@/common/types/myContext"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
-import { BOT_ERRORS } from "@/common/enums/botErrors"
-import { BotConversation } from "../types/botConversation"
+import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
 const clientDelete: BotConversation = {

@@ -1,4 +1,3 @@
-import { Conversation } from "@grammyjs/conversations"
 import { editClient } from "@/api/controllerPsychologists/editClient"
 import { ClientDto } from "@/common/dto/client.dto"
 import { TherapySessionDto } from "@/common/dto/therapySession.dto"
@@ -8,8 +7,9 @@ import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
 import { FORM_RESULT_STATUSES } from "@/components/Form/enums/formResultStatuses"
 import { createForm } from "@/components/Form/form"
-import { BotConversation } from "../types/botConversation"
+import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
 const clientEdit: BotConversation = {

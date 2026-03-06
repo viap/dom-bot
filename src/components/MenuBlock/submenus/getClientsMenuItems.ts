@@ -1,4 +1,3 @@
-import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { getPsychologistClients } from "@/api/controllerPsychologists/getPsychologistClients"
 import { getTherapySessions } from "@/api/controllerTherapySessions/getTherapySessions"
 import { PropType } from "@/api/type/propType"
@@ -9,14 +8,15 @@ import { getTextOfContactsData } from "@/common/utils/getTextOfContactsData"
 import { getTextOfData } from "@/common/utils/getTextOfData"
 import { groupBy } from "@/common/utils/groupBy"
 import { notEmpty } from "@/common/utils/notEmpty"
+import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 
+import { SUBMENU_TYPES } from "../enums/submenuTypes"
 import MenuBlock from "../menuBlock"
 import {
   MenuBlockItemsProps,
   PartialMenuBlockItemsProps,
 } from "../types/menuBlockItemsProps"
-import { SUBMENU_TYPES } from "../enums/submenuTypes"
 
 export async function loadClientsMenuItems(
   ctx: MyContext,
@@ -24,8 +24,9 @@ export async function loadClientsMenuItems(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _props: PropType<MenuBlockItemsProps, "props">
 ): Promise<Array<PartialMenuBlockItemsProps>> {
+  const sessions = await getTherapySessions(ctx)
   const therapySessionsByClient = groupBy<TherapySessionDto>(
-    await getTherapySessions(ctx),
+    sessions,
     (ts: TherapySessionDto) => ts.client?._id
   )
 

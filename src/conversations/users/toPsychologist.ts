@@ -1,12 +1,12 @@
-import { Conversation } from "@grammyjs/conversations"
 import { createPsychologistFromUser } from "@/api/controllerPsychologists/createPsychologistFromUser"
 import { UserDto } from "@/common/dto/user.dto"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { MyContext } from "@/common/types/myContext"
 import { notEmpty } from "@/common/utils/notEmpty"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
-import { BotConversation } from "../types/botConversation"
+import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
 const userToPsychologist: BotConversation = {

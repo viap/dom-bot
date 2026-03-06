@@ -1,4 +1,3 @@
-import { Conversation } from "@grammyjs/conversations"
 import { getStatisticForPeriod } from "@/api/controllerTherapySessions/getStatisticForPeriod"
 import { getTherapySessions } from "@/api/controllerTherapySessions/getTherapySessions"
 import { PriceDto } from "@/common/dto/price.dto"
@@ -10,8 +9,9 @@ import { getTextOfData } from "@/common/utils/getTextOfData"
 import { getTimeRange } from "@/common/utils/getTimeRange"
 import { groupBy } from "@/common/utils/groupBy"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
-import { BotConversation } from "../types/botConversation"
+import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversation } from "../types/botConversation"
 import { ConversationResult } from "../types/conversationResult"
 
 const therapySessionsPersonalStatistic: BotConversation = {

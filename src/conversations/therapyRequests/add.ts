@@ -69,7 +69,7 @@ const therapyRequestAdd: BotConversation = {
           alias: "логин в телеграм",
           type: FORM_INPUT_TYPES.STRING,
           optional: true,
-        }
+        },
       ] as const
 
       const form = createForm(conversation, ctx, inputs)
@@ -87,15 +87,18 @@ const therapyRequestAdd: BotConversation = {
                 return notEmpty(
                   await createTherapyRequest(ctx, {
                     name:
-                      formResult.data.name  ||
+                      formResult.data.name ||
                       [telegramUser.last_name, telegramUser.first_name]
                         .filter(notEmpty)
                         .join(" ") ||
                       telegramUser.username ||
                       "",
-                    descr: formResult.data.descr ,
+                    descr: formResult.data.descr,
                     user: ctx.user._id,
-                    psychologist: typeof formResult.data.psychologist === 'string' ? formResult.data.psychologist: undefined ,
+                    psychologist:
+                      typeof formResult.data.psychologist === "string"
+                        ? formResult.data.psychologist
+                        : undefined,
                     contacts: [
                       {
                         id: enteredTelegramUser ? undefined : telegramUser.id,

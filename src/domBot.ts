@@ -95,6 +95,7 @@ domBot.use(
   })
 )
 
+// FIXME: not necessary to send check token before all requests
 /** API: login */
 domBot.use(apiLoginByTelegram)
 
