@@ -99,7 +99,10 @@ const therapySessionAdd: BotConversation = {
 
       let result = false
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
-        const duration = typeof formResult.data.duration === 'number' ? formResult.data.duration : 0;
+        const duration =
+          typeof formResult.data.duration === "number"
+            ? formResult.data.duration
+            : 0
         const sessionDurationInHours = duration / 60
         const commisionPartOfSession =
           commissionHoursLeft >= sessionDurationInHours
