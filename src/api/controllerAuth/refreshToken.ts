@@ -10,7 +10,7 @@ export async function refreshToken(
     throw new Error("Refresh token is possible only with existed one")
   }
 
-  return postRequest<AuthTokenDto>(ctx, API_PATHS.auth.POST.refreshToken).then(
+  return postRequest<AuthTokenDto>(ctx, API_PATHS.auth.refreshToken).then(
     (data: AuthTokenDto) => {
       // NOTICE: save token into session
       ctx.session.token = data.auth_token

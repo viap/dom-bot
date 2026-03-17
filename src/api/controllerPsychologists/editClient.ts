@@ -12,8 +12,7 @@ export async function editClient(
 ): Promise<boolean> {
   return putRequest(
     ctx,
-    API_PATHS.psychologists.PUT.editClient,
-    { psychologistId, userId },
+    API_PATHS.psychologists.editClient(psychologistId, userId),
     {
       ...client,
     }

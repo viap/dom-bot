@@ -8,10 +8,5 @@ export async function createTherapyRequest(
   ctx: MyContext,
   createData: CreateTherapyRequestDto
 ): Promise<TherapyRequestDto> {
-  return postRequest(
-    ctx,
-    API_PATHS.therapyRequests.POST.create,
-    undefined,
-    createData
-  )
+  return postRequest(ctx, API_PATHS.therapyRequests.create, createData)
 }

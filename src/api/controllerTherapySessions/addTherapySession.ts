@@ -1,9 +1,9 @@
-import { currentUserAlias } from "@/common/consts/currentUserAlias"
-import { TherapySessionDto } from "@/common/dto/therapySession.dto"
-import { MyContext } from "@/common/types/myContext"
 import { postRequest } from "@/api/common/postRequest"
 import { API_PATHS } from "@/api/consts/apiPaths"
 import { AddTherapySessionDto } from "@/api/dto/addTherapySession.dto"
+import { currentUserAlias } from "@/common/consts/currentUserAlias"
+import { TherapySessionDto } from "@/common/dto/therapySession.dto"
+import { MyContext } from "@/common/types/myContext"
 
 export async function addTherapySession(
   ctx: MyContext,
@@ -12,8 +12,7 @@ export async function addTherapySession(
 ): Promise<TherapySessionDto> {
   return postRequest(
     ctx,
-    API_PATHS.therapySessions.POST.createForPsychologist,
-    { psychologistId },
+    API_PATHS.therapySessions.createForPsychologist(psychologistId),
     therapySession
   )
 }

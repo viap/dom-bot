@@ -7,12 +7,11 @@ import { getUrl } from "./getUrl"
 export function postRequest<T>(
   ctx: MyContext,
   url: string,
-  params?: object,
   data?: object,
   config?: AxiosRequestConfig
 ): Promise<T> | never {
   return axios
-    .post(getUrl(url, params), data, {
+    .post(getUrl(url), data, {
       ...config,
       headers: getHeaders(ctx, config),
     })

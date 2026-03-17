@@ -7,12 +7,11 @@ import { getUrl } from "./getUrl"
 export function putRequest<T>(
   ctx: MyContext,
   url: string,
-  params?: object,
   data?: object,
   config?: AxiosRequestConfig
 ): Promise<T> | never {
   return axios
-    .put(getUrl(url, params), data, {
+    .put(getUrl(url), data, {
       ...config,
       headers: getHeaders(ctx, config),
     })

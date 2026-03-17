@@ -12,23 +12,18 @@ export async function loginByTelegram(
     throw new Error("Only real users can log in")
   }
 
-  return postRequest<AuthTokenDto>(
-    ctx,
-    API_PATHS.auth.GET.loginByTelegram,
-    undefined,
-    {
-      apiClient: {
-        name: process.env.API_CLIENT_NAME || "",
-        password: process.env.API_CLIENT_PASSWORD || "",
-      },
-      telegram: {
-        id: telegramUser.id,
-        username: telegramUser.username || "",
-        first_name: telegramUser.first_name || "",
-        last_name: telegramUser.last_name || "",
-      },
-    }
-  ).then((data: AuthTokenDto) => {
+  return postRequest<AuthTokenDto>(ctx, API_PATHS.auth.loginByTelegram, {
+    apiClient: {
+      name: process.env.API_CLIENT_NAME || "",
+      password: process.env.API_CLIENT_PASSWORD || "",
+    },
+    telegram: {
+      id: telegramUser.id,
+      username: telegramUser.username || "",
+      first_name: telegramUser.first_name || "",
+      last_name: telegramUser.last_name || "",
+    },
+  }).then((data: AuthTokenDto) => {
     // NOTICE: save token into session
     ctx.session.token = data.auth_token
     return data
