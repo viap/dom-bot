@@ -24,6 +24,7 @@ const therapySessionsPersonalStatistic: BotConversation = {
       _conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
+      const sessionPsychologist = ctx.session.psychologist
       const [startDate, endDate] = getTimeRange(period)
 
       const datesOfPeriod = ReplyMarkup.escapeForParseModeV2(
@@ -43,12 +44,12 @@ const therapySessionsPersonalStatistic: BotConversation = {
             from: startDate.getTime(),
             to: endDate.getTime(),
           },
-          ctx.psychologist?._id
+          sessionPsychologist?._id
         )
 
       const sessions = await getTherapySessions(
         ctx,
-        ctx.psychologist?._id,
+        sessionPsychologist?._id,
         undefined,
         {
           from: startDate.getTime(),

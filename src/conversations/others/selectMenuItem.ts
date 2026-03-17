@@ -1,20 +1,18 @@
-import { Conversation } from "@grammyjs/conversations"
 import MenuBlock from "@/components/MenuBlock/menuBlock"
+import { Conversation } from "@grammyjs/conversations"
 
 import { MyContext } from "@/common/types/myContext"
 import defaultMenu from "@/components/MenuBlock/consts/defaultMenu"
 
-import { BotConversations } from "../index"
-import { CONVERSATION_NAMES } from "../enums/conversationNames"
-import { BotConversation } from "../types/botConversation"
 import { CONVERSATION_ERRORS } from "../enums/conversationErrors"
+import { CONVERSATION_NAMES } from "../enums/conversationNames"
+import { BotConversations } from "../index"
+import { BotConversation } from "../types/botConversation"
 
 async function checkAgreemensts(
   conversation: Conversation<MyContext>,
   ctx: MyContext
 ): Promise<boolean> {
-  conversation.log("checkAgreemensts", conversation.session.hasTermsAgreement)
-
   // ask for agreement if it is not get yet
   if (!conversation.session.hasTermsAgreement) {
     const termsComversation = BotConversations.getByName(
@@ -22,7 +20,6 @@ async function checkAgreemensts(
     )
 
     if (termsComversation) {
-      conversation.log("checkAgreemensts:", termsComversation)
       return !!(await termsComversation.getConversation()(conversation, ctx))
     }
   }

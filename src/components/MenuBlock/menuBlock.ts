@@ -1,7 +1,7 @@
+import { PropType } from "@/api/type/propType"
 import { Conversation } from "@grammyjs/conversations"
 import { randomUUID } from "crypto"
 import { Keyboard } from "grammy"
-import { PropType } from "@/api/type/propType"
 // import { ClientDto } from "@/common/dto/client.dto"
 // import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
 // import { TherapySessionDto } from "@/common/dto/therapySession.dto"
@@ -130,11 +130,11 @@ export default class MenuBlock {
     menu: PartialMenuBlockItemsProps,
     options?: Partial<MenuBlockOptions>
   ) {
+    const sessionUser = ctx.session.user
+    const userRoles = sessionUser?.roles?.length ? sessionUser.roles : undefined
+
     this.menu = MenuBlock.getPreparedMenu(
-      MenuBlock.getMenuFilteredByRoles(
-        menu as MenuBlockItemsProps,
-        ctx.user.roles.length ? ctx.user.roles : undefined
-      )
+      MenuBlock.getMenuFilteredByRoles(menu as MenuBlockItemsProps, userRoles)
     )
 
     this.current = this.menu
@@ -316,12 +316,12 @@ export default class MenuBlock {
         break
     }
 
+    const sessionUser = this.ctx.session.user
+    const userRoles = sessionUser?.roles?.length ? sessionUser.roles : undefined
+
     parent.items = items.map((item) => {
       const filteredItems = MenuBlock.getPreparedMenu(
-        MenuBlock.getMenuFilteredByRoles(
-          item,
-          this.ctx.user.roles.length ? this.ctx.user.roles : undefined
-        )
+        MenuBlock.getMenuFilteredByRoles(item, userRoles)
       )
 
       return filteredItems

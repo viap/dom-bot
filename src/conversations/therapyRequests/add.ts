@@ -33,11 +33,14 @@ const therapyRequestAdd: BotConversation = {
             }
           : undefined
 
-      if (!(ctx.user && telegramUser)) {
+      const sessionUser = ctx.session.user
+
+      if (!sessionUser || !telegramUser) {
         await ctx.reply(
           "*Не возможно отправить заявку*",
           ReplyMarkup.parseModeV2
         )
+
         return
       }
 
@@ -82,35 +85,33 @@ const therapyRequestAdd: BotConversation = {
           .replace("@", "")
 
         try {
-          result = telegramUser
-            ? await conversation.external(async () => {
-                return notEmpty(
-                  await createTherapyRequest(ctx, {
-                    name:
-                      formResult.data.name ||
-                      [telegramUser.last_name, telegramUser.first_name]
-                        .filter(notEmpty)
-                        .join(" ") ||
-                      telegramUser.username ||
-                      "",
-                    descr: formResult.data.descr,
-                    user: ctx.user._id,
-                    psychologist:
-                      typeof formResult.data.psychologist === "string"
-                        ? formResult.data.psychologist
-                        : undefined,
-                    contacts: [
-                      {
-                        id: enteredTelegramUser ? undefined : telegramUser.id,
-                        network: SocialNetworks.Telegram,
-                        username:
-                          enteredTelegramUser || telegramUser.username || "",
-                      },
-                    ],
-                  })
-                )
+          result = await conversation.external(async () => {
+            return notEmpty(
+              await createTherapyRequest(ctx, {
+                name:
+                  formResult.data.name ||
+                  [telegramUser.last_name, telegramUser.first_name]
+                    .filter(notEmpty)
+                    .join(" ") ||
+                  telegramUser.username ||
+                  "",
+                descr: formResult.data.descr,
+                user: sessionUser._id,
+                psychologist:
+                  typeof formResult.data.psychologist === "string"
+                    ? formResult.data.psychologist
+                    : undefined,
+                contacts: [
+                  {
+                    id: enteredTelegramUser ? undefined : telegramUser.id,
+                    network: SocialNetworks.Telegram,
+                    username:
+                      enteredTelegramUser || telegramUser.username || "",
+                  },
+                ],
               })
-            : false
+            )
+          })
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)
         } finally {
