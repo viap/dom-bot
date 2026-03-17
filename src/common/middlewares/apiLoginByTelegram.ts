@@ -27,10 +27,15 @@ export const apiLoginByTelegram = async (
 
   if (ctx.session.token && isStartBotCommand) {
     await refreshToken(ctx)
-      .catch(() => {
+      .then((data) => {
+        ctx.session.token = data.auth_token
+      })
+      .catch((error) => {
+        console.error("[apiLoginByTelegram] refreshToken failed:", error)
         delete ctx.session.token
       })
       .finally(() => {
+        // NOTICE: сlearing user and psychologist data for re-query
         delete ctx.session.user
         delete ctx.session.psychologist
       })
@@ -40,9 +45,14 @@ export const apiLoginByTelegram = async (
     await loginByTelegram(ctx, {
       ...ctx.from,
       id: String(ctx.from.id),
-    } as TelegramUserDto).catch((err) => {
-      console.error("[apiLoginByTelegram] loginByTelegram failed:", err)
-    })
+    } as TelegramUserDto)
+      .then((data) => {
+        // NOTICE: save token into session
+        ctx.session.token = data.auth_token
+      })
+      .catch((error) => {
+        console.error("[apiLoginByTelegram] loginByTelegram failed:", error)
+      })
   }
 
   if (ctx.session.token) {

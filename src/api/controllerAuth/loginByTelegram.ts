@@ -23,9 +23,5 @@ export async function loginByTelegram(
       first_name: telegramUser.first_name || "",
       last_name: telegramUser.last_name || "",
     },
-  }).then((data: AuthTokenDto) => {
-    // NOTICE: save token into session
-    ctx.session.token = data.auth_token
-    return data
   })
 }
