@@ -1,5 +1,6 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios"
 import { MyContext } from "@/common/types/myContext"
+import { AxiosRequestConfig, AxiosResponse } from "axios"
+import { apiClient as axios } from "./apiClient"
 import { getHeaders } from "./getHeaders"
 import { getUrl } from "./getUrl"
 

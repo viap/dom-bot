@@ -1,18 +1,18 @@
+import { TelegramUserDto } from "@/common/dto/telegramUser.dto"
 import { MyContext } from "@/common/types/myContext"
 import { postRequest } from "../common/postRequest"
 import { API_PATHS } from "../consts/apiPaths"
-import { LoginByTelegramDto } from "../dto/loginByTelegram.dto"
-import { TelegramUserDto } from "@/common/dto/telegramUser.dto"
+import { AuthTokenDto } from "../dto/authToken.dto"
 
 export async function loginByTelegram(
   ctx: MyContext,
   telegramUser: TelegramUserDto
-): Promise<LoginByTelegramDto> | never {
+): Promise<AuthTokenDto> | never {
   if (telegramUser.is_bot) {
     throw new Error("Only real users can log in")
   }
 
-  return postRequest<LoginByTelegramDto>(
+  return postRequest<AuthTokenDto>(
     ctx,
     API_PATHS.auth.GET.loginByTelegram,
     undefined,
@@ -28,7 +28,7 @@ export async function loginByTelegram(
         last_name: telegramUser.last_name || "",
       },
     }
-  ).then((data: LoginByTelegramDto) => {
+  ).then((data: AuthTokenDto) => {
     // NOTICE: save token into session
     ctx.session.token = data.auth_token
     return data

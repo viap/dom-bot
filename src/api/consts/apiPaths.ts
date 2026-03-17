@@ -6,7 +6,9 @@ export const API_PATHS: ApiPaths = {
       loginByTelegram: "/auth/login/telegram",
       checkToken: "/auth/check-token",
     },
-    POST: {},
+    POST: {
+      refreshToken: "/auth/refresh-token",
+    },
     PUT: {},
     DELETE: {},
   },
