@@ -7,11 +7,10 @@ import { getUrl } from "./getUrl"
 export function deleteRequest<T>(
   ctx: MyContext,
   url: string,
-  params?: object,
   config?: AxiosRequestConfig
 ): Promise<T> | never {
   return axios
-    .delete(getUrl(url, params), {
+    .delete(getUrl(url), {
       ...config,
       headers: getHeaders(ctx, config),
     })

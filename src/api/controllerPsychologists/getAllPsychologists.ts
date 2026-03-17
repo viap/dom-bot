@@ -6,8 +6,5 @@ import { API_PATHS } from "../consts/apiPaths"
 export async function getAllPsychologists(
   ctx: MyContext
 ): Promise<Array<PsychologistDto>> {
-  return getRequest<Array<PsychologistDto>>(
-    ctx,
-    API_PATHS.psychologists.GET.all
-  )
+  return getRequest<Array<PsychologistDto>>(ctx, API_PATHS.psychologists.all)
 }

@@ -8,10 +8,5 @@ export async function createNotification(
   ctx: MyContext,
   createData: CreateNotificationDto
 ): Promise<NotificationDto | false> {
-  return postRequest(
-    ctx,
-    API_PATHS.notifications.POST.create,
-    undefined,
-    createData
-  )
+  return postRequest(ctx, API_PATHS.notifications.create, createData)
 }

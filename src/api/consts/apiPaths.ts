@@ -1,93 +1,70 @@
-import { ApiPaths } from "../type/apiPaths"
-
-export const API_PATHS: ApiPaths = {
+export const API_PATHS = {
   auth: {
-    GET: {
-      loginByTelegram: "/auth/login/telegram",
-      checkToken: "/auth/check-token",
-    },
-    POST: {
-      refreshToken: "/auth/refresh-token",
-    },
-    PUT: {},
-    DELETE: {},
+    loginByTelegram: "/auth/login/telegram",
+    checkToken: "/auth/check-token",
+    refreshToken: "/auth/refresh-token",
   },
   users: {
-    GET: {
-      all: "/users",
-      one: "/users/:userId",
-    },
-    POST: {},
-    PUT: {
-      edit: "/users/:userId",
-    },
-    DELETE: {},
+    all: "/users",
+    one: (userId: string) => `/users/${userId}`,
+    edit: (userId: string) => `/users/${userId}`,
   },
   psychologists: {
-    GET: {
-      all: "/psychologists",
-      one: "/psychologists/:psychologistId",
-      clients: "/psychologists/:psychologistId/clients",
-    },
-    POST: {
-      create: "/psychologists",
-      newClient: "/psychologists/:psychologistId/add-new-client",
-    },
-    PUT: {
-      editClient: "/psychologists/:psychologistId/edit-client/:userId",
-    },
-    DELETE: {
-      one: "/psychologists/:psychologistId",
-      client: "/psychologists/:psychologistId/delete-client/:userId",
-    },
+    all: "/psychologists",
+    one: (psychologistId: string) => `/psychologists/${psychologistId}`,
+    clients: (psychologistId: string) =>
+      `/psychologists/${psychologistId}/clients`,
+    create: "/psychologists",
+    addClient: (psychologistId: string) =>
+      `/psychologists/${psychologistId}/add-new-client`,
+    editClient: (psychologistId: string, userId: string) =>
+      `/psychologists/${psychologistId}/edit-client/${userId}`,
+    deleteOne: (psychologistId: string) => `/psychologists/${psychologistId}`,
+    deleteClient: (psychologistId: string, userId: string) =>
+      `/psychologists/${psychologistId}/delete-client/${userId}`,
   },
   therapySessions: {
-    GET: {
-      all: "/therapy-sessions",
-      allForPeriod: "/therapy-sessions/from/:from/to/:to",
-      one: "/therapy-sessions/:therapySessionId",
-      forPsychologist: "/therapy-sessions/psychologist/:psychologistId",
-      forPsychologistForPeriod:
-        "/therapy-sessions/psychologist/:psychologistId/from/:from/to/:to",
-      forPsychologistWithClient:
-        "/therapy-sessions/psychologist/:psychologistId/client/:userId",
-      statisticForPeriod: "/therapy-sessions/statistic/from/:from/to/:to",
-      statisticForPsychologistForPeriod:
-        "/therapy-sessions/statistic/psychologist/:psychologistId/from/:from/to/:to",
-    },
-    POST: {
-      create: "/therapy-sessions",
-      createForPsychologist: "/therapy-sessions/:psychologistId",
-    },
-    PUT: {},
-    DELETE: {
-      one: "/therapy-sessions/:therapySessionId",
-    },
+    all: "/therapy-sessions",
+    allForPeriod: (from: number, to: number) =>
+      `/therapy-sessions/from/${from}/to/${to}`,
+    one: (therapySessionId: string) => `/therapy-sessions/${therapySessionId}`,
+    create: "/therapy-sessions",
+    createForPsychologist: (psychologistId: string) =>
+      `/therapy-sessions/${psychologistId}`,
+    forPsychologist: (psychologistId: string) =>
+      `/therapy-sessions/psychologist/${psychologistId}`,
+    forPsychologistForPeriod: (
+      psychologistId: string,
+      from: number,
+      to: number
+    ) =>
+      `/therapy-sessions/psychologist/${psychologistId}/from/${from}/to/${to}`,
+    forPsychologistWithClient: (psychologistId: string, userId: string) =>
+      `/therapy-sessions/psychologist/${psychologistId}/client/${userId}`,
+    statisticForPeriod: (from: number, to: number) =>
+      `/therapy-sessions/statistic/from/${from}/to/${to}`,
+    statisticForPsychologistForPeriod: (
+      psychologistId: string,
+      from: number,
+      to: number
+    ) =>
+      `/therapy-sessions/statistic/psychologist/${psychologistId}/from/${from}/to/${to}`,
   },
   therapyRequests: {
-    GET: {
-      all: "/therapy-requests",
-      one: "/therapy-requests/:therapyRequestId",
-      forPsychologist: "/therapy-requests/psychologist/:psychologistId",
-    },
-    POST: {
-      create: "/therapy-requests",
-      accept: "/therapy-requests/:therapyRequestId/accept",
-      reject: "/therapy-requests/:therapyRequestId/reject",
-    },
-    PUT: {
-      edit: "/therapy-requests/:therapyRequestId",
-    },
-    DELETE: {
-      one: "/therapy-requests/:therapyRequestId",
-    },
+    all: "/therapy-requests",
+    one: (therapyRequestId: string) => `/therapy-requests/${therapyRequestId}`,
+    forPsychologist: (psychologistId: string) =>
+      `/therapy-requests/psychologist/${psychologistId}`,
+    create: "/therapy-requests",
+    accept: (therapyRequestId: string) =>
+      `/therapy-requests/${therapyRequestId}/accept`,
+    reject: (therapyRequestId: string) =>
+      `/therapy-requests/${therapyRequestId}/reject`,
+    edit: (therapyRequestId: string) => `/therapy-requests/${therapyRequestId}`,
+    deleteOne: (therapyRequestId: string) =>
+      `/therapy-requests/${therapyRequestId}`,
   },
   notifications: {
-    GET: {},
-    POST: {
-      create: "/notifications",
-    },
-    PUT: {},
-    DELETE: {},
+    create: "/notifications",
   },
 }

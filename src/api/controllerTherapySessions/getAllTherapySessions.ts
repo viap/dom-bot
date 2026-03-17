@@ -1,7 +1,7 @@
-import { TherapySessionDto } from "@/common/dto/therapySession.dto"
-import { MyContext } from "@/common/types/myContext"
 import { getRequest } from "@/api/common/getRequest"
 import { API_PATHS } from "@/api/consts/apiPaths"
+import { TherapySessionDto } from "@/common/dto/therapySession.dto"
+import { MyContext } from "@/common/types/myContext"
 
 export async function getAllTherapySessions(
   ctx: MyContext,
@@ -10,8 +10,7 @@ export async function getAllTherapySessions(
   return getRequest<Array<TherapySessionDto>>(
     ctx,
     period
-      ? API_PATHS.therapySessions.GET.allForPeriod
-      : API_PATHS.therapySessions.GET.all,
-    period ? { ...period } : undefined
+      ? API_PATHS.therapySessions.allForPeriod(period.from, period.to)
+      : API_PATHS.therapySessions.all
   )
 }

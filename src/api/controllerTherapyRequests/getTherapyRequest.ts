@@ -7,7 +7,5 @@ export async function getTherapyRequest(
   ctx: MyContext,
   therapyRequestId: string
 ): Promise<TherapyRequestDto> {
-  return getRequest(ctx, API_PATHS.therapyRequests.GET.one, {
-    therapyRequestId,
-  })
+  return getRequest(ctx, API_PATHS.therapyRequests.one(therapyRequestId))
 }

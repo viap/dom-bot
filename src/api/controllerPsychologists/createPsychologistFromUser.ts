@@ -8,10 +8,5 @@ export async function createPsychologistFromUser(
   ctx: MyContext,
   data: CreatePsychologistFromUserDto
 ): Promise<PsychologistDto> {
-  return postRequest<PsychologistDto>(
-    ctx,
-    API_PATHS.psychologists.POST.create,
-    undefined,
-    data
-  )
+  return postRequest<PsychologistDto>(ctx, API_PATHS.psychologists.create, data)
 }

@@ -9,12 +9,7 @@ export async function addNewClient(
   user: AddNewClientDto,
   psychologistId: string = currentUserAlias
 ): Promise<boolean> {
-  return postRequest(
-    ctx,
-    API_PATHS.psychologists.POST.newClient,
-    { psychologistId },
-    {
-      ...user,
-    }
-  )
+  return postRequest(ctx, API_PATHS.psychologists.addClient(psychologistId), {
+    ...user,
+  })
 }
