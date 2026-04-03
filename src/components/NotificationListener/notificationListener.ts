@@ -30,6 +30,14 @@ export default class NotificationListener {
     params?: { pollingDelay: number }
   ) {
     if (!NotificationListener.isConnected) {
+      const wsUrl = process.env.API_WEBSOCKET_URL
+      if (!wsUrl) {
+        console.error(
+          "NotificationListener: API_WEBSOCKET_URL is not set — notifications disabled"
+        )
+        return
+      }
+
       NotificationListener.bot = bot
       NotificationListener.sessions = sessions
 
@@ -37,10 +45,11 @@ export default class NotificationListener {
         params?.pollingDelay ||
         (process.env.POLLING_DELAY ? parseInt(process.env.POLLING_DELAY) : 3000)
 
-      NotificationListener.socket = io(process.env.API_WEBSOCKET_URL || "", {
+      NotificationListener.socket = io(wsUrl, {
         transports: ["websocket"],
         autoConnect: true,
         reconnectionDelayMax: 10000,
+        reconnectionAttempts: 5,
         extraHeaders: {
           // Authorization: `Bearer ${NotificationListener.ctx.session.token}`,
           Authorization: getApiClientHeader(
@@ -51,6 +60,10 @@ export default class NotificationListener {
       })
 
       NotificationListener.socket.io.on("error", NotificationListener.onError)
+      NotificationListener.socket.io.on(
+        "reconnect_failed",
+        NotificationListener.onReconnectFailed
+      )
       NotificationListener.socket.on("connect", NotificationListener.onConnect)
       NotificationListener.socket.on(
         "notification",
@@ -221,7 +234,16 @@ export default class NotificationListener {
   }
 
   private static async onError(error: unknown) {
-    console.log("Notifications: error", error)
+    console.error(
+      `Notifications: connection error (${process.env.API_WEBSOCKET_URL})`,
+      error
+    )
+  }
+
+  private static onReconnectFailed() {
+    console.error(
+      `Notifications: gave up reconnecting to ${process.env.API_WEBSOCKET_URL} — notifications disabled`
+    )
   }
 
   private static async onConnect() {
@@ -239,7 +261,6 @@ export default class NotificationListener {
     clearInterval(NotificationListener.pollingInterval)
     NotificationListener.isConnected = false
     delete NotificationListener.pollingInterval
-    delete NotificationListener.socket
   }
 
   private static async onException(exception: unknown) {
