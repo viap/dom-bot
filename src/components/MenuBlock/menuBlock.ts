@@ -251,7 +251,7 @@ export default class MenuBlock {
     }
   }
 
-  private async makeAction(text: string) {
+  private makeAction(text: string) {
     switch (text) {
       case ACTION_BUTTON_TEXTS.SEARCH_CLEAN:
         this.itemsParams.filter = ""
@@ -418,7 +418,15 @@ export default class MenuBlock {
         this.current.submenu &&
         !(this.current.submenuPreloaded && this.currentItems.length)
       ) {
-        await this.loadSubmenuItems(this.current)
+        const loaderMsg = await this.ctx.reply("⏳ Загрузка...")
+        try {
+          await this.loadSubmenuItems(this.current)
+        } catch (e) {
+          this.conversation.log(BOT_ERRORS.REQUEST, e)
+          await this.ctx.reply("❌ Ошибка загрузки. Попробуйте позже.")
+        } finally {
+          await this.ctx.api.deleteMessage(this.ctx.chat!.id, loaderMsg.message_id)
+        }
       }
 
       if (this.currentItems.length) {
