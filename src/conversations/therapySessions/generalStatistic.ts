@@ -59,14 +59,14 @@ const therapySessionsGeneralStatistic: BotConversation = {
           (item) => item.psychologist._id
         )
 
-        const fullComissions: Array<PriceDto> = []
+        const fullCommissions: Array<PriceDto> = []
         const content: Array<string> = []
         Object.entries(sessionsByPsychologist).forEach(
           ([, sessions]: [string, Array<TherapySessionsStatisticDto>]) => {
             const psychologistName = sessions[0]?.psychologist?.user?.name || ""
             content.push(`*${psychologistName}*`)
 
-            const comissionSumm = sessions.reduce((acc, stat, index) => {
+            const commissionSumm = sessions.reduce((acc, stat, index) => {
               content.push(
                 ReplyMarkup.escapeForParseModeV2(
                   `${index + 1}. ${stat.client.name}: сессий - ${
@@ -74,28 +74,28 @@ const therapySessionsGeneralStatistic: BotConversation = {
                   }, всего - ${
                     stat.countAll
                   }/${numberOfCommissionHours}, комиссия - ${getSumsForPrices(
-                    stat.comission
+                    stat.commission
                   ).join(", ")};`
                 )
               )
 
-              acc.push(...stat.comission)
+              acc.push(...stat.commission)
               return acc
             }, [] as Array<PriceDto>)
 
-            fullComissions.push(...comissionSumm)
+            fullCommissions.push(...commissionSumm)
 
             content.push(
-              `Комиссия за период: *${getSumsForPrices(comissionSumm).join(
+              `Комиссия за период: *${getSumsForPrices(commissionSumm).join(
                 ", "
               )}*${ReplyMarkup.newLine}`
             )
           }
         )
 
-        if (fullComissions.length) {
+        if (fullCommissions.length) {
           content.push(
-            `Общая комиссия за период: *${getSumsForPrices(fullComissions).join(
+            `Общая комиссия за период: *${getSumsForPrices(fullCommissions).join(
               ", "
             )}*`
           )

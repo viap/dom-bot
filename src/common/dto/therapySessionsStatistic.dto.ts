@@ -10,7 +10,7 @@ export type TherapySessionsStatisticDto = {
   to: string
 
   price: Array<PriceDto>
-  comission: Array<PriceDto>
+  commission: Array<PriceDto>
 
   countForPeriod: number
   countAll: number

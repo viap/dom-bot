@@ -31,7 +31,7 @@ const therapySessionShow: BotConversation = {
       const content = getTextOfTherapySession(session)
 
       const deletionIsAvailable =
-        Date.now() - session.timestamp < oneDayInMilliseconds * 7
+        Date.now() - new Date(session.createdAt).getTime() < oneDayInMilliseconds * 7
 
       const keyboard = new Keyboard()
 

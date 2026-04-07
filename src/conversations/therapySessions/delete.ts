@@ -23,7 +23,7 @@ const therapySessionDelete: BotConversation = {
 
       try {
         const deletionIsAvailable =
-          Date.now() - session.timestamp < oneDayInMilliseconds * 7
+          Date.now() - new Date(session.createdAt).getTime() < oneDayInMilliseconds * 7
 
         result = deletionIsAvailable
           ? await conversation.external(async () => {

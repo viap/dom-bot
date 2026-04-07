@@ -39,8 +39,8 @@ export function getPsychologistTherapyRequestMenuItem(
 ): PartialMenuBlockItemsProps {
   const props = [therapyRequest]
 
-  const requestDate = getLocalDateString(therapyRequest.timestamp)
-  const requestTime = getLocalTimeString(therapyRequest.timestamp)
+  const requestDate = getLocalDateString(therapyRequest.createdAt)
+  const requestTime = getLocalTimeString(therapyRequest.createdAt)
 
   const content: string = [
     getTextOfData(

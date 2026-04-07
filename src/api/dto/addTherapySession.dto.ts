@@ -6,6 +6,6 @@ export type AddTherapySessionDto = {
   client: string
   duration: number
   price: PriceDto
-  comission: PriceDto
+  commission?: PriceDto
   descr?: string
 }

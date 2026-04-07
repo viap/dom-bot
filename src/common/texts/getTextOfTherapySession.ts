@@ -14,8 +14,8 @@ export function getTextOfTherapySession(
       date: getLocalDateString(session.dateTime),
       duration: session.duration,
       price: [session.price.value, session.price.currency].join(" "),
-      comission: session.comission
-        ? [session.comission.value, session.price.currency].join(" ")
+      commission: session.commission
+        ? [session.commission.value, session.price.currency].join(" ")
         : "",
     },
     {
@@ -23,7 +23,7 @@ export function getTextOfTherapySession(
       date: "дата",
       duration: "продолжительность",
       price: "цена",
-      comission: "комиссия",
+      commission: "комиссия",
     },
     separator
   )

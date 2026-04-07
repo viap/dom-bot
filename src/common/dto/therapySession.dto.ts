@@ -5,9 +5,11 @@ import { UserDto } from "./user.dto"
 export type TherapySessionDto = {
   _id: string
 
-  date: string
+  /** @deprecated No longer sent by the API. Use `dateTime` to derive a display date. */
+  date?: string
   dateTime: number
-  timestamp: number
+  createdAt: string
+  updatedAt: string
 
   client: UserDto
   psychologist: PsychologistDto
@@ -16,5 +18,5 @@ export type TherapySessionDto = {
   duration: number
 
   price: PriceDto
-  comission: PriceDto
+  commission: PriceDto
 }

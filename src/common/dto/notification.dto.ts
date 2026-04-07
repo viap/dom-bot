@@ -5,7 +5,8 @@ import { ROLES } from "@/common/enums/roles"
 export type NotificationDto = {
   _id: string
 
-  timesatamp: number
+  createdAt: string
+  updatedAt: string
   startsAt: number
   finishAt: number
   title?: string
