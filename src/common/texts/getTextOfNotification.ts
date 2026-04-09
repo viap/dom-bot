@@ -13,7 +13,9 @@ export function getTextOfNotification(
       title: notification.title,
       message: notification.message,
       startsAt: getLocalDateString(notification.startsAt),
-      finishAt: getLocalDateString(notification.finishAt),
+      finishAt: notification.finishAt
+        ? getLocalDateString(notification.finishAt)
+        : undefined,
       roles: notification.roles.join(", "),
       recipients: notification.recipients.join(", "),
       status: notification.status,

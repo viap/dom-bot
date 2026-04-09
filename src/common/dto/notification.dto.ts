@@ -7,8 +7,8 @@ export type NotificationDto = {
 
   createdAt: string
   updatedAt: string
-  startsAt: number
-  finishAt: number
+  startsAt: string
+  finishAt?: string
   title?: string
   message?: string
 

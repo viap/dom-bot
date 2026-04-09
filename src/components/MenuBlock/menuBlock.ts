@@ -425,7 +425,10 @@ export default class MenuBlock {
           this.conversation.log(BOT_ERRORS.REQUEST, e)
           await this.ctx.reply("❌ Ошибка загрузки. Попробуйте позже.")
         } finally {
-          await this.ctx.api.deleteMessage(this.ctx.chat!.id, loaderMsg.message_id)
+          await this.ctx.api.deleteMessage(
+            this.ctx.chat!.id,
+            loaderMsg.message_id
+          )
         }
       }
 
