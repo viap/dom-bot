@@ -9,6 +9,7 @@ import { getTextOfData } from "@/common/utils/getTextOfData"
 import { getTimeRange } from "@/common/utils/getTimeRange"
 import { groupBy } from "@/common/utils/groupBy"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
+import { getLocalDateString } from "@/common/utils/getLocalDateString"
 import { Conversation } from "@grammyjs/conversations"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
 import { BotConversation } from "../types/botConversation"
@@ -70,10 +71,10 @@ const therapySessionsPersonalStatistic: BotConversation = {
           sessionDetailsByClientId[clientId].push(
             ...sessions.map((session) => {
               return `${ReplyMarkup.tab} - ${
-                session.date
+                getLocalDateString(session.dateTime)
               }, сумма ${getSumsForPrices([session.price]).join(
                 ", "
-              )}, комиссия ${getSumsForPrices([session.comission]).join(", ")}`
+              )}, комиссия ${getSumsForPrices([session.commission]).join(", ")}`
             })
           )
         })
@@ -81,13 +82,13 @@ const therapySessionsPersonalStatistic: BotConversation = {
 
       if (sessionsStatistic.length) {
         const commonSum: Array<PriceDto> = []
-        const commonComission: Array<PriceDto> = []
+        const commonCommission: Array<PriceDto> = []
         const content: Array<string> = sessionsStatistic.map((stat, index) => {
           const summ = getSumsForPrices(stat.price)
-          const comission = getSumsForPrices(stat.comission)
+          const commission = getSumsForPrices(stat.commission)
 
           commonSum.push(...stat.price)
-          commonComission.push(...stat.comission)
+          commonCommission.push(...stat.commission)
 
           return getTextOfData(
             ReplyMarkup.escapeForParseModeV2(
@@ -101,14 +102,14 @@ const therapySessionsPersonalStatistic: BotConversation = {
                   )
                 : stat.countForPeriod,
               summ: summ.join(", "),
-              comission: comission.join(", "),
+              commission: commission.join(", "),
               countAll: stat.countAll,
             },
             {
               countForPeriod: "сессии за период",
               countAll: "сессий всего",
               summ: "сумма за период",
-              comission: "комиссия за период",
+              commission: "комиссия за период",
             }
           )
         })
@@ -116,7 +117,7 @@ const therapySessionsPersonalStatistic: BotConversation = {
         content.push(
           `Общая сумма за период: *${getSumsForPrices(commonSum).join(",")}*${
             ReplyMarkup.newLine
-          }Общая комиссия за период: *${getSumsForPrices(commonComission).join(
+          }Общая комиссия за период: *${getSumsForPrices(commonCommission).join(
             ","
           )}*`
         )

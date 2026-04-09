@@ -5,7 +5,8 @@ import { UserDto } from "./user.dto"
 export type TherapyRequestDto = {
   _id: string
 
-  timestamp: number
+  createdAt: string
+  updatedAt: string
 
   name: string
   descr: string
