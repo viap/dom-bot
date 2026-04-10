@@ -86,7 +86,9 @@ const notificationCreate: BotConversation = {
           notification = await conversation.external(async () => {
             return createNotification(ctx, {
               startsAt: formResult.data.startsAt
-                ? getDateFromRuDateString(formResult.data.startsAt).getTime()
+                ? getDateFromRuDateString(
+                    formResult.data.startsAt
+                  ).toISOString()
                 : undefined,
               finishAt: undefined,
               roles: [formResult.data.roles as ROLES],
