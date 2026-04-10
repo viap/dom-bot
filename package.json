@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "copy-assets": "cp -r ./src/assets ./dist/assets",
-    "build": "rm -rf ./dist && tspc && npm run copy-assets",
+    "build": "rm -rf ./dist && tspc --incremental false && npm run copy-assets",
     "start": "node --experimental-specifier-resolution=node --experimental-loader=extensionless dist/index.js",
     "startInspect": "node --inspect --es-module-specifier-resolution=node dist/index.js",
     "restart:node": "npm run build && npm run start",
