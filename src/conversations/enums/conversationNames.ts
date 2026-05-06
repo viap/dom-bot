@@ -3,6 +3,7 @@ export enum CONVERSATION_NAMES {
   NOTIFICATIONS = "notifications",
   //USERS
   USER_EDIT = "user_edit",
+  USER_SET_PASSWORD = "user_set-password",
   USER_TO_PSYCHOLOGIST = "user_to-psychologist",
   USER_ADD_ROLE = "user_add-role",
   USER_REMOVE_ROLE = "user_remove-role",

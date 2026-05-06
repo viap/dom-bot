@@ -82,6 +82,11 @@ export function getUserMenuItem(
       conversation: CONVERSATION_NAMES.USER_EDIT,
       props,
     },
+    {
+      name: "Установить пароль",
+      conversation: CONVERSATION_NAMES.USER_SET_PASSWORD,
+      props,
+    },
     !user.roles.includes(ROLES.PSYCHOLOGIST)
       ? {
           name: `Добавить роль "${
