@@ -8,6 +8,7 @@ import { BotConversation } from "./types/botConversation"
 import userAddRole from "./users/addRole"
 import userEdit from "./users/edit"
 import userRemoveRole from "./users/removeRole"
+import userSetPassword from "./users/setPassword"
 import userToPsychologist from "./users/toPsychologist"
 //CLIENTS
 import clientAdd from "./clients/add"
@@ -46,6 +47,7 @@ export const BotConversations = {
       notificationCreate,
 
       userEdit,
+      userSetPassword,
       userAddRole,
       userRemoveRole,
       userToPsychologist,
