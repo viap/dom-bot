@@ -9,15 +9,15 @@ module.exports = {
       instances: 1,
       exec_mode: "fork",
       env: {
-        NODE_ENV: "production",
         // Set PATH to include NVM Node.js location - fixes "node not found" error in PM2
-        // System PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
-        // NVM PATH: /root/.nvm/versions/node/v20.18.1/bin
-        PATH: "/root/.nvm/versions/node/v20.18.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+        // NODE_BIN_DIR is injected at deploy time by post_sync_start.sh (e.g. via `dirname $(which node)`)
+        // Falls back to hardcoded NVM path for manual PM2 restarts outside of deploy scripts
+        PATH: `${process.env.NODE_BIN_DIR || "/root/.nvm/versions/node/v20.18.1/bin"}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin`,
       },
       // Restart settings
       max_restarts: 5,
       min_uptime: "10s",
+      max_memory_restart: "512M",
       // Logging
       log_file: "./logs/domBot.log",
       out_file: "./logs/domBot-out.log",
