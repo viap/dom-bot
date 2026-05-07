@@ -21,6 +21,9 @@ async function startBot() {
         if (runner.isRunning()) {
           clearTimeout(timeout)
           console.info("Bot was started successfully")
+          if (process.send) {
+            process.send('ready')
+          }
           resolve(runner)
         } else {
           setTimeout(checkRunning, 100)
