@@ -1,5 +1,6 @@
 import { PriceDto } from "./price.dto"
 import { PsychologistDto } from "./psychologist.dto"
+import { TherapyRequestDto } from "./therapyRequest.dto"
 import { UserDto } from "./user.dto"
 
 export type TherapySessionDto = {
@@ -13,6 +14,7 @@ export type TherapySessionDto = {
 
   client: UserDto
   psychologist: PsychologistDto
+  therapyRequest?: TherapyRequestDto
 
   descr: string
   duration: number

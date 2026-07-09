@@ -45,7 +45,9 @@ const therapySessionAdd: BotConversation = {
       const theLastSession: TherapySessionDto | undefined = sessions
         .filter((session) => session.client._id === client.user._id)
         .sort(
-          (session1, session2) => new Date(session2.createdAt).getTime() - new Date(session1.createdAt).getTime()
+          (session1, session2) =>
+            new Date(session2.createdAt).getTime() -
+            new Date(session1.createdAt).getTime()
         )[0]
 
       const inputs = [
@@ -119,6 +121,7 @@ const therapySessionAdd: BotConversation = {
               dateTime: parseRuDate(formResult.data.date) || Date.now(),
               psychologist: currentUserAlias,
               client: client.user._id,
+              therapyRequest: client.therapyRequest?._id,
               duration: duration,
               price: {
                 currency: formResult.data.priceCurrency as CURRENCIES,

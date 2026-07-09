@@ -1,5 +1,9 @@
 import { getAllTherapyRequests } from "@/api/controllerTherapyRequests/getAllTherapyRequests"
 import { PropType } from "@/api/type/propType"
+import {
+  clientGenderLabels,
+  requestCategoryLabels,
+} from "@/common/consts/therapyRequestAnalytics"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
 import { SocialNetworks } from "@/common/enums/socialNetworks"
 import { MyContext } from "@/common/types/myContext"
@@ -50,6 +54,12 @@ export function getTherapyRequestMenuItem(
         dateTime: `${requestDate} в ${requestTime}`,
         name: therapyRequest.name,
         descr: therapyRequest.descr,
+        clientGender: therapyRequest.clientGender
+          ? clientGenderLabels[therapyRequest.clientGender]
+          : "",
+        requestCategory: therapyRequest.requestCategory
+          ? requestCategoryLabels[therapyRequest.requestCategory]
+          : "",
         psychologist: therapyRequest.psychologist
           ? [
               therapyRequest.psychologist.user.name,
@@ -66,6 +76,8 @@ export function getTherapyRequestMenuItem(
         dateTime: "дата и время",
         name: "имя",
         descr: "запрос",
+        clientGender: "пол",
+        requestCategory: "категория",
         psychologist: "психолог",
         accepted: "принята",
       }
