@@ -1,5 +1,11 @@
 import { getAllPsychologists } from "@/api/controllerPsychologists/getAllPsychologists"
 import { createTherapyRequest } from "@/api/controllerTherapyRequests/createTherapyRequest"
+import {
+  clientGenderOptions,
+  isTherapyRequestCategory,
+  isTherapyRequestClientGender,
+  requestCategoryOptions,
+} from "@/common/consts/therapyRequestAnalytics"
 import { TelegramUserDto } from "@/common/dto/telegramUser.dto"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { SocialNetworks } from "@/common/enums/socialNetworks"
@@ -56,6 +62,20 @@ const therapyRequestAdd: BotConversation = {
           type: FORM_INPUT_TYPES.STRING,
         },
         {
+          name: "clientGender",
+          alias: "пол клиента",
+          type: FORM_INPUT_TYPES.SELECT,
+          optional: true,
+          values: clientGenderOptions,
+        },
+        {
+          name: "requestCategory",
+          alias: "категорию запроса",
+          type: FORM_INPUT_TYPES.SELECT,
+          optional: true,
+          values: requestCategoryOptions,
+        },
+        {
           name: "psychologist",
           alias: "психолога",
           type: FORM_INPUT_TYPES.SELECT,
@@ -100,6 +120,14 @@ const therapyRequestAdd: BotConversation = {
                 psychologist:
                   typeof formResult.data.psychologist === "string"
                     ? formResult.data.psychologist
+                    : undefined,
+                clientGender:
+                  isTherapyRequestClientGender(formResult.data.clientGender)
+                    ? formResult.data.clientGender
+                    : undefined,
+                requestCategory:
+                  isTherapyRequestCategory(formResult.data.requestCategory)
+                    ? formResult.data.requestCategory
                     : undefined,
                 contacts: [
                   {
