@@ -23,10 +23,9 @@ export type TherapyRequestDto = {
   accepted: boolean
   clientGender?: THERAPY_REQUEST_CLIENT_GENDER
   requestCategory?: THERAPY_REQUEST_CATEGORY
-  topic?: string
   analyticsReviewRequired?: boolean
   analyticsInference?: Record<
-    "clientGender" | "requestCategory" | "topic",
+    "clientGender" | "requestCategory",
     {
       value: string
       confidence: number
