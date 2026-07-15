@@ -212,6 +212,9 @@ export class Form<T extends readonly FormInputProps[]> {
             await buttonAction.callback(this.conversation, this.ctx)
           }
         } else {
+          if ("onTextMessage" in this.input) {
+            await this.input.onTextMessage?.(this.ctx)
+          }
           await this.saveToResult(useInput || this.input.default || "")
         }
 
@@ -358,7 +361,6 @@ export class Form<T extends readonly FormInputProps[]> {
     }
   }
 }
-
 
 export function createForm<T extends readonly FormInputProps[]>(
   conversation: Conversation<MyContext>,

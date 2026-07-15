@@ -4,10 +4,16 @@ import { NOTIFICATION_TYPES } from "@/common/enums/notificationTypes"
 import { MyContext } from "@/common/types/myContext"
 import { SessionData } from "@/common/types/sessionData"
 import { getApiClientHeader } from "@/common/utils/getApiClientHeader"
+import {
+  offsetNotificationMessageEntities,
+  sanitizeNotificationMessageEntities,
+} from "@/common/utils/notificationMessageEntities"
+import { parseNotificationMessageLinks } from "@/common/utils/parseNotificationMessageLinks"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import getMenuItemBreadCrumbs from "@/components/MenuBlock/utils/getMenuItemBreadCrumbs"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import { Collection } from "@grammyjs/storage-mongodb/dist/cjs/deps.node"
+import type { MessageEntity } from "@grammyjs/types"
 import { Api, Bot, InlineKeyboard, RawApi } from "grammy"
 import { jwtDecode } from "jwt-decode"
 import { io, Socket } from "socket.io-client"
@@ -156,16 +162,7 @@ export default class NotificationListener {
 
     switch (notification.type) {
       case NOTIFICATION_TYPES.MESSAGE:
-        message = {
-          text:
-            (notification.title
-              ? `*${ReplyMarkup.escapeForParseModeV2(notification.title)}*:` +
-                ReplyMarkup.doubleNewLine
-              : "") + ReplyMarkup.escapeForParseModeV2(notification.message),
-          options: {
-            ...ReplyMarkup.parseModeV2,
-          },
-        }
+        message = NotificationListener.buildMessageNotification(notification)
         break
 
       case NOTIFICATION_TYPES.NEW_THERAPY_REQUEST:
@@ -216,6 +213,44 @@ export default class NotificationListener {
       } catch (error) {
         console.error("Notification delivery error", error)
       }
+    }
+  }
+
+  private static buildMessageNotification(notification: NotificationDto): {
+    text: string
+    options: { [key: string]: unknown }
+  } {
+    const storedEntities = sanitizeNotificationMessageEntities(
+      notification.message,
+      notification.messageEntities
+    )
+    const body = storedEntities.length
+      ? {
+          text: notification.message || "",
+          entities: storedEntities,
+        }
+      : parseNotificationMessageLinks(notification.message)
+    const entities: Array<MessageEntity> = []
+    let text = body.text
+
+    if (notification.title) {
+      const prefix = notification.title + ":" + ReplyMarkup.doubleNewLine
+      text = prefix + body.text
+      entities.push({
+        type: "bold",
+        offset: 0,
+        length: notification.title.length,
+      })
+      entities.push(
+        ...offsetNotificationMessageEntities(body.entities, prefix.length)
+      )
+    } else {
+      entities.push(...body.entities)
+    }
+
+    return {
+      text,
+      options: entities.length ? { entities } : {},
     }
   }
 

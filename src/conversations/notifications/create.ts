@@ -7,7 +7,9 @@ import { NOTIFICATION_TYPES } from "@/common/enums/notificationTypes"
 import { ROLES } from "@/common/enums/roles"
 import { getTextOfNotification } from "@/common/texts/getTextOfNotification"
 import { MyContext } from "@/common/types/myContext"
+import { NotificationMessageEntity } from "@/common/types/notificationMessageEntity"
 import { getDateFromRuDateString } from "@/common/utils/getDateFromRuDateString"
+import { sanitizeNotificationMessageEntities } from "@/common/utils/notificationMessageEntities"
 import { notEmpty } from "@/common/utils/notEmpty"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { FORM_INPUT_TYPES } from "@/components/Form/enums/formInputTypes"
@@ -30,6 +32,7 @@ const notificationCreate: BotConversation = {
     ): Promise<ConversationResult | undefined | unknown> => {
       // NOTICE: don't use conversation.now inside of conversation.external
       const now = await conversation.now()
+      let messageEntities: Array<NotificationMessageEntity> = []
 
       const inputs = [
         {
@@ -54,6 +57,12 @@ const notificationCreate: BotConversation = {
           name: "message",
           alias: "Текст сообщение",
           type: FORM_INPUT_TYPES.STRING,
+          onTextMessage: (messageCtx: MyContext) => {
+            messageEntities = sanitizeNotificationMessageEntities(
+              messageCtx.msg?.text,
+              messageCtx.msg?.entities
+            )
+          },
         },
         {
           name: "startsAt",
@@ -94,6 +103,9 @@ const notificationCreate: BotConversation = {
               roles: [formResult.data.roles as ROLES],
               title: formResult.data.title,
               message: formResult.data.message,
+              messageEntities: messageEntities.length
+                ? messageEntities
+                : undefined,
               type: NOTIFICATION_TYPES.MESSAGE,
             })
           })

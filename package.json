@@ -12,6 +12,7 @@
     "restart:node": "npm run build && npm run start",
     "restart:dev": "tsx ./src",
     "dev": "nodemon",
+    "test": "node --import tsx --test **/*.test.ts",
     "lint": "eslint --fix-dry-run ./src"
   },
   "author": "",
