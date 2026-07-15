@@ -28,5 +28,5 @@ module.exports = {
       },
     },
   },
-  ignorePatterns: ['global.d.ts'],
+  ignorePatterns: ['global.d.ts', '**/*.test.ts', '**/*.spec.ts'],
 };
