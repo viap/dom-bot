@@ -1,6 +1,7 @@
 export enum BOT_COMMANDS {
   START = "start",
   MENU = "menu",
+  MANUAL = "manual",
   REQUISITES = "requisites",
   TERMS_AGREEMENT = "terms",
 

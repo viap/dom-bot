@@ -3,7 +3,6 @@ import * as MongoStorage from "@grammyjs/storage-mongodb"
 import { config } from "dotenv"
 import { Bot, Context, GrammyError, HttpError, session } from "grammy"
 import { BOT_COMMANDS } from "./common/enums/botCommands"
-import { BOT_COMMANDS_DESCR } from "./common/enums/botCommandsDescr"
 import { BOT_ERRORS } from "./common/enums/botErrors"
 import { BOT_TEXTS } from "./common/enums/botTexts"
 import { BotConversations } from "./conversations"
@@ -14,10 +13,17 @@ import { SessionData, defaultSessionData } from "./common/types/sessionData"
 import { DbConnection, getSessions } from "./services/db/connectDB"
 
 import { cwd } from "process"
+import { DEFAULT_BOT_COMMANDS } from "./common/consts/botCommands"
 import { apiLoginByTelegram } from "./common/middlewares/apiLoginByTelegram"
 import { PrimitiveValues } from "./common/types/primitiveValues"
 import getAvailableCommandButtons from "./common/utils/getAvailableCommandButtons"
 import getFilterByCommand from "./common/utils/getFilterByCommand"
+import {
+  MANUAL_COMMAND_UNAVAILABLE_TEXT,
+  getManualInstructionText,
+  getRoleAwareBotCommands,
+  hasManualCommandAccess,
+} from "./common/utils/manualCommand"
 import { MENU_ITEM_TYPES } from "./components/MenuBlock/enums/menuItemTypes"
 import MenuBlock from "./components/MenuBlock/menuBlock"
 import NotificationListener from "./components/NotificationListener/notificationListener"
@@ -56,18 +62,26 @@ export default domBot
 
 /** COMMANDS */
 
-domBot.api.setMyCommands([
-  { command: BOT_COMMANDS.START, description: BOT_COMMANDS_DESCR.START },
-  { command: BOT_COMMANDS.MENU, description: BOT_COMMANDS_DESCR.MENU },
-  {
-    command: BOT_COMMANDS.REQUISITES,
-    description: BOT_COMMANDS_DESCR.REQUISITES,
-  },
-  // {
-  //   command: BOT_COMMANDS.TERMS_AGREEMENT,
-  //   description: BOT_COMMANDS_DESCR.TERMS_AGREEMENT,
-  // },
-])
+domBot.api.setMyCommands(DEFAULT_BOT_COMMANDS)
+
+async function syncRoleAwareBotCommands(ctx: MyContext): Promise<void> {
+  try {
+    if (ctx.chat?.type !== "private" || !ctx.session.user) {
+      return
+    }
+
+    const roles = ctx.session.user.roles
+    const scope = { type: "chat" as const, chat_id: ctx.chat.id }
+
+    if (hasManualCommandAccess(roles)) {
+      await ctx.api.setMyCommands(getRoleAwareBotCommands(roles), { scope })
+    } else {
+      await ctx.api.deleteMyCommands({ scope })
+    }
+  } catch (error) {
+    console.error("[syncRoleAwareBotCommands] sync failed:", error)
+  }
+}
 
 /** SESSION */
 
@@ -109,6 +123,8 @@ domBot.command(BOT_COMMANDS.START, async (ctx) => {
   } catch (error) {
     console.log(BOT_ERRORS.CONVERSATION_EXIT, error)
   }
+
+  await syncRoleAwareBotCommands(ctx)
 
   await ctx.reply(BOT_TEXTS.WELCOME, {
     reply_markup: getAvailableCommandButtons(ctx.session),
@@ -184,6 +200,19 @@ domBot.command(BOT_COMMANDS.REQUISITES, async (ctx) => {
 
 domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
   await ctx.conversation.enter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
+})
+
+domBot.command(BOT_COMMANDS.MANUAL, async (ctx) => {
+  try {
+    await ctx.conversation.exit()
+  } catch (error) {
+    console.log(BOT_ERRORS.CONVERSATION_EXIT, error)
+  }
+
+  await ctx.reply(
+    getManualInstructionText(ctx.session.user?.roles) ||
+      MANUAL_COMMAND_UNAVAILABLE_TEXT
+  )
 })
 
 /** MESSAGE HANDLERS */
