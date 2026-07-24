@@ -22,7 +22,7 @@ async function startBot() {
           clearTimeout(timeout)
           console.info("Bot was started successfully")
           if (process.send) {
-            process.send('ready')
+            process.send("ready")
           }
           resolve(runner)
         } else {
