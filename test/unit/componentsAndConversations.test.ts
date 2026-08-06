@@ -21,6 +21,22 @@ import { makeContext, makeFakeConversation } from "../helpers/fakeConversation"
 import { makePsychologist, makeUser } from "../helpers/fixtures"
 import { withMockedApiClient } from "../helpers/apiClientMock"
 
+const broadcastMessageWithUrl = `Здравствуйте! 👋
+
+Хотим напомнить, пожалуйста, отмечайте в боте информацию о проведённых встречах с клиентами.
+
+После каждой сессии нужно зайти в раздел «Мо клиенты» и отметить встречу у соответствующего клиента.
+
+Например:
+«Мои клиенты» → «Список клиентов» → Выбрать соответствующего клиента → «Добавить сессию»
+
+Эти данные помогают нам корректно вести статистику работы центра и лучше понимать общую динамику обращений и встреч.
+
+Полная инструкция по внесению информации доступна по ссылке:
+https://docs.google.com/presentation/d/1bpbpc5ipIrwF0QZY2E4XWddTmAkz6Cg2Lb4x8UjQK00/edit?usp=drive_link
+
+Спасибо за вашу помощь и внимательность! 💛`
+
 describe("utility and component characterization", () => {
   it("escapes Telegram MarkdownV2 content", () => {
     assert.equal(
@@ -47,6 +63,49 @@ describe("utility and component characterization", () => {
     const exits: Array<unknown> = []
     const ctx = {
       message: { text: `/${BOT_COMMANDS.MENU}` },
+      conversation: {
+        exit: async (...args: Array<unknown>) => exits.push(args),
+      },
+    }
+
+    assert.equal(await getFilterByCommand(BOT_COMMANDS.MENU)(ctx as never), true)
+    assert.equal(
+      await getFilterByCommand(BOT_COMMANDS.REQUISITES)(ctx as never),
+      false
+    )
+    assert.equal(exits.length, 1)
+  })
+
+  it("treats urls and slash-containing text as conversation input", async () => {
+    const exits: Array<unknown> = []
+    const ctx = {
+      message: { text: broadcastMessageWithUrl },
+      conversation: {
+        exit: async (...args: Array<unknown>) => exits.push(args),
+      },
+    }
+
+    assert.equal(await getFilterByCommand(BOT_COMMANDS.MENU)(ctx as never), true)
+    assert.equal(
+      await getFilterByCommand(BOT_COMMANDS.REQUISITES)(ctx as never),
+      true
+    )
+    assert.equal(exits.length, 0)
+  })
+
+  it("uses only leading Telegram bot commands for command filters", async () => {
+    const exits: Array<unknown> = []
+    const ctx = {
+      message: {
+        text: `/${BOT_COMMANDS.MENU}@dom_test_bot open`,
+        entities: [
+          {
+            type: "bot_command",
+            offset: 0,
+            length: `/${BOT_COMMANDS.MENU}@dom_test_bot`.length,
+          },
+        ],
+      },
       conversation: {
         exit: async (...args: Array<unknown>) => exits.push(args),
       },
