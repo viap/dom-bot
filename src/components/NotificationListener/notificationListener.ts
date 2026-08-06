@@ -195,19 +195,18 @@ export default class NotificationListener {
 
     if (message) {
       try {
-        await NotificationListener.sendTelegramMessage(
-          recipient.chatId,
-          message
-        )
-
         const result = await NotificationListener.sendNotificationOfReceipt(
           notification._id,
           recipient.token
         )
 
         if (result) {
-          // NOTICE: important to push userId into notification.received after successful sending to avoid extra messages
+          // NOTICE: important to push userId into notification.received before sending to avoid extra messages
           notification.received.push(recipient.userId)
+          await NotificationListener.sendTelegramMessage(
+            recipient.chatId,
+            message
+          )
         }
       } catch (error) {
         console.error("Notification delivery error", error)

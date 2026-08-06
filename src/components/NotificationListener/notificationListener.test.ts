@@ -123,7 +123,7 @@ describe("NotificationListener message delivery", () => {
     ])
   })
 
-  it("marks notifications as received only after Telegram accepts the message", async () => {
+  it("claims notifications before sending them to Telegram", async () => {
     const calls: Array<string> = []
     const tokenPayload = Buffer.from(
       JSON.stringify({ userId: "user-1", roles: [] })
@@ -212,7 +212,96 @@ describe("NotificationListener message delivery", () => {
       }
     ).makeEffect(notification)
 
-    assert.deepEqual(calls, ["send", "receipt"])
+    assert.deepEqual(calls, ["receipt", "send"])
     assert.deepEqual(notification.received, ["user-1"])
+  })
+
+  it("skips Telegram delivery when the notification was already claimed", async () => {
+    const calls: Array<string> = []
+    const tokenPayload = Buffer.from(
+      JSON.stringify({ userId: "user-1", roles: [] })
+    ).toString("base64url")
+    const token = `header.${tokenPayload}.signature`
+    const notification = {
+      _id: "notification-1",
+      type: "message",
+      message: broadcastMessage,
+      messageEntities: [],
+      roles: [],
+      recipients: [],
+      received: [],
+    }
+
+    ;(
+      NotificationListener as unknown as {
+        bot: {
+          api: {
+            sendMessage: () => Promise<unknown>
+          }
+        }
+        sessions: {
+          find: () => {
+            hasNext: () => Promise<boolean>
+            next: () => Promise<unknown>
+            rewind: () => void
+          }
+        }
+        socket: {
+          emitWithAck: (message: string, data?: unknown) => Promise<boolean>
+        }
+        makeEffect: (notification: unknown) => Promise<void>
+      }
+    ).bot = {
+      api: {
+        sendMessage: async () => {
+          calls.push("send")
+          return { message_id: 1 }
+        },
+      },
+    }
+    ;(
+      NotificationListener as unknown as {
+        sessions: {
+          find: () => {
+            hasNext: () => Promise<boolean>
+            next: () => Promise<unknown>
+            rewind: () => void
+          }
+        }
+      }
+    ).sessions = {
+      find: () => {
+        let consumed = false
+        return {
+          hasNext: async () => !consumed,
+          next: async () => {
+            consumed = true
+            return { key: "bot/chat-1", value: { token } }
+          },
+          rewind: () => undefined,
+        }
+      },
+    }
+    ;(
+      NotificationListener as unknown as {
+        socket: {
+          emitWithAck: (message: string, data?: unknown) => Promise<boolean>
+        }
+      }
+    ).socket = {
+      emitWithAck: async () => {
+        calls.push("receipt")
+        return false
+      },
+    }
+
+    await (
+      NotificationListener as unknown as {
+        makeEffect: (notification: unknown) => Promise<void>
+      }
+    ).makeEffect(notification)
+
+    assert.deepEqual(calls, ["receipt"])
+    assert.deepEqual(notification.received, [])
   })
 })
