@@ -195,24 +195,50 @@ export default class NotificationListener {
 
     if (message) {
       try {
-        // NOTICE: First we send a notification of receipt, then we send a notification to user to avoid repetitions
+        await NotificationListener.sendTelegramMessage(
+          recipient.chatId,
+          message
+        )
+
         const result = await NotificationListener.sendNotificationOfReceipt(
           notification._id,
           recipient.token
         )
 
         if (result) {
-          //NOTICE: important to push userId into notification.received after successful sending to avoid extra messages
+          // NOTICE: important to push userId into notification.received after successful sending to avoid extra messages
           notification.received.push(recipient.userId)
-          await NotificationListener.bot.api.sendMessage(
-            recipient.chatId,
-            message.text,
-            message.options
-          )
         }
       } catch (error) {
         console.error("Notification delivery error", error)
       }
+    }
+  }
+
+  private static async sendTelegramMessage(
+    chatId: string,
+    message: { text: string; options: { [key: string]: unknown } }
+  ) {
+    try {
+      return await NotificationListener.bot.api.sendMessage(
+        chatId,
+        message.text,
+        message.options
+      )
+    } catch (error) {
+      if (!("entities" in message.options)) {
+        throw error
+      }
+
+      console.error(
+        "Notification rich-text delivery failed, retrying as plain text",
+        error
+      )
+
+      return await NotificationListener.bot.api.sendMessage(
+        chatId,
+        message.text
+      )
     }
   }
 
