@@ -18,7 +18,7 @@ https://docs.google.com/presentation/d/1bpbpc5ipIrwF0QZY2E4XWddTmAkz6Cg2Lb4x8UjQ
 
 Спасибо за вашу помощь и внимательность! 💛`
 
-type ListenerInternals = typeof NotificationListener & {
+type ListenerInternals = {
   bot: unknown
   sessions: unknown
   socket: unknown
@@ -599,7 +599,7 @@ describe("NotificationListener polling lifecycle", () => {
       { _id: "notification-2" },
       { _id: "notification-3" },
     ]
-    listener.makeEffect = async (notification) => {
+    listener.makeEffect = async (notification: unknown) => {
       const id = (notification as { _id: string })._id
       processed.push(id)
       if (id === "notification-1") {
