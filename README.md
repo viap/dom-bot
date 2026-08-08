@@ -154,7 +154,9 @@ MONGO_DB_PASSWORD=
 # Backend API
 API_URL=your_api_base_url
 API_WEBSOCKET_URL=your_websocket_url
+POLING_DELAY=30000
 ```
+`POLING_DELAY` defaults to `30000` ms and is clamped to a minimum of `5000` ms.
 
 ## 💻 Development
 

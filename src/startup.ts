@@ -31,3 +31,14 @@ export async function startNotificationListener(
     console.error("Failed to start NotificationListener:", error)
   }
 }
+
+export function stopNotificationListener(
+  stopper: () => void = NotificationListener.stop
+): void {
+  try {
+    stopper()
+    console.info("NotificationListener stopped successfully")
+  } catch (error) {
+    console.error("Failed to stop NotificationListener:", error)
+  }
+}

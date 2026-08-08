@@ -293,7 +293,7 @@ All loaded from `config/.env` via `process.env`.
 | `API_CLIENT_NAME` | Bot's API client name for dom-api auth |
 | `API_CLIENT_PASSWORD` | Bot's API client password |
 | `API_WEBSOCKET_URL` | dom-api WebSocket URL for `NotificationListener` |
-| `POLLING_DELAY` | Polling delay in ms for notification listener |
+| `POLING_DELAY` | Polling delay in ms for notification listener (default 30000, minimum 5000) |
 
 ---
 

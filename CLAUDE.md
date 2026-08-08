@@ -108,6 +108,7 @@ Environment variables in `config/.env`:
 - `MONGO_DB_*` - MongoDB connection settings
 - `API_*` - Backend API configuration
 - `API_WEBSOCKET_URL` - WebSocket for real-time notifications
+- `POLING_DELAY` - Notification polling delay in ms (default 30000, minimum 5000)
 
 ### External Integrations
 - **Backend API**: HTTP client in `src/api/` with auth middleware
