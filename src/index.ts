@@ -1,5 +1,6 @@
 import { run } from "@grammyjs/runner"
 import domBot from "./domBot"
+import { stopNotificationListener } from "./startup"
 
 async function startBot() {
   try {
@@ -40,6 +41,7 @@ async function startBot() {
           await runner.stop()
           console.info("Bot runner stopped")
         }
+        stopNotificationListener()
         process.exit(0)
       } catch (error) {
         console.error("Error during shutdown:", error)
