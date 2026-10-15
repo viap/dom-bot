@@ -56,6 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     needs: test
+    outputs:
+      rollback_required: ${{ steps.arm_rollback.outputs.required }}
     steps:
       - name: Get the project code
         uses: actions/checkout@v4
@@ -66,10 +68,14 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Ensure config directory exists
+        run: mkdir -p config
+
       - name: Make env file with secrets
         uses: SpicyPizza/create-envfile@v2.0
         with:
           directory: 'config/'
+          file_name: '.env'
           fail_on_empty: true
           envkey_NODE_ENV: prod
           envkey_TOKEN: ${{secrets.TOKEN}}
@@ -88,6 +94,10 @@ jobs:
 
       - name: Build the project
         run: npm run build
+
+      - name: Arm rollback for server deployment
+        id: arm_rollback
+        run: echo "required=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy to server
         uses: easingthemes/ssh-deploy@v6.0.1
@@ -182,7 +192,7 @@ jobs:
   rollback:
     runs-on: ubuntu-latest
     environment: prod
-    if: ${{ always() && needs.deploy.result == 'failure' }}
+    if: ${{ always() && needs.deploy.result == 'failure' && needs.deploy.outputs.rollback_required == 'true' }}
     needs: deploy
     steps:
       - name: Rollback to previous deployment
