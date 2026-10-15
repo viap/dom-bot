@@ -2,6 +2,7 @@
 /dist
 
 #ENV
+.env
 .env.prod
 
 #node_modules
