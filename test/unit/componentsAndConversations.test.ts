@@ -1,9 +1,15 @@
 import assert from "node:assert/strict"
 import { afterEach, beforeEach, describe, it } from "node:test"
+import { numberOfCommissionHours } from "@/common/consts/numberOfCommissionHours"
+import { TherapySessionDto } from "@/common/dto/therapySession.dto"
+import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { ACTION_BUTTON_TEXTS } from "@/common/enums/actionButtonTexts"
+import { CURRENCIES } from "@/common/enums/currencies"
 import { SocialNetworks } from "@/common/enums/socialNetworks"
 import { THERAPY_REQUEST_CATEGORY, THERAPY_REQUEST_CLIENT_GENDER } from "@/common/enums/therapyRequestAnalytics"
 import { ROLES } from "@/common/enums/roles"
+import { getTextOfRequisites } from "@/common/texts/getTextOfRequisites"
+import { getTextOfTherapySession } from "@/common/texts/getTextOfTherapySession"
 import getAvailableCommandButtons from "@/common/utils/getAvailableCommandButtons"
 import getFilterByCommand from "@/common/utils/getFilterByCommand"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
@@ -13,12 +19,24 @@ import { createForm } from "@/components/Form/form"
 import defaultMenu from "@/components/MenuBlock/consts/defaultMenu"
 import MenuBlock from "@/components/MenuBlock/menuBlock"
 import { MENU_ITEM_TYPES } from "@/components/MenuBlock/enums/menuItemTypes"
+import requisitesShow from "@/conversations/others/requisites"
 import termsAgreementShow from "@/conversations/others/termsAgreement"
 import therapyRequestAdd from "@/conversations/therapyRequests/add"
+import therapySessionAdd from "@/conversations/therapySessions/add"
 import { BOT_COMMANDS } from "@/common/enums/botCommands"
 import { CONVERSATION_TERMS_TEXTS } from "@/conversations/enums/conversationTermsTexts"
-import { makeContext, makeFakeConversation } from "../helpers/fakeConversation"
-import { makePsychologist, makeUser } from "../helpers/fixtures"
+import { createTestBot } from "../helpers/createTestBot"
+import {
+  type FakeReply,
+  makeContext,
+  makeFakeConversation,
+} from "../helpers/fakeConversation"
+import {
+  makeClient,
+  makePsychologist,
+  makeTherapySession,
+  makeUser,
+} from "../helpers/fixtures"
 import { withMockedApiClient } from "../helpers/apiClientMock"
 
 const broadcastMessageWithUrl = `Здравствуйте! 👋
@@ -37,11 +55,95 @@ https://docs.google.com/presentation/d/1bpbpc5ipIrwF0QZY2E4XWddTmAkz6Cg2Lb4x8UjQ
 
 Спасибо за вашу помощь и внимательность! 💛`
 
+const expectedRequisitesText = [
+  "*Beneficiary’s Bank*: JSC TBC Bank",
+  "*Beneficiary’s IBAN*: GE54TB7471136010100058",
+  "*Name of Beneficiary*: P/E Vladislav Birilov",
+].join("\r\n")
+
+const therapySessionFormAnswers = [
+  "описание >",
+  "Session note",
+  "один час",
+  CURRENCIES.GEL,
+  "100",
+]
+
+async function runTherapySessionAdd({
+  response,
+  answers = therapySessionFormAnswers,
+  sessions = [],
+  failedReplyText,
+}: {
+  response: unknown
+  answers?: Array<string>
+  sessions?: Array<TherapySessionDto>
+  failedReplyText?: string
+}) {
+  // Date inputs require DatePicker's global bot instance.
+  await createTestBot()
+  const mock = withMockedApiClient(() => {
+    if (response instanceof Error) throw response
+    return { status: 200, data: response }
+  })
+  const conversation = makeFakeConversation({ answers })
+  const ctx = makeContext({ session: { token: "auth-token" } })
+  const typedCtx = ctx as never as {
+    replies: Array<FakeReply>
+    reply: (text: string, options?: unknown) => Promise<unknown>
+  }
+  const originalReply = typedCtx.reply.bind(ctx)
+
+  if (failedReplyText) {
+    typedCtx.reply = async (text: string, options?: unknown) => {
+      if (text === failedReplyText) {
+        throw new Error("Telegram unavailable")
+      }
+
+      return originalReply(text, options)
+    }
+  }
+
+  let result: unknown
+
+  try {
+    result = await therapySessionAdd.getConversation(makeClient(), sessions)(
+      conversation as never,
+      ctx
+    )
+  } finally {
+    mock.restore()
+  }
+
+  return {
+    result,
+    calls: mock.calls,
+    logs: conversation.logs,
+    replies: typedCtx.replies,
+  }
+}
+
+function assertFailedSessionCreation(
+  result: unknown,
+  replies: Array<FakeReply>
+) {
+  assert.equal(result, undefined)
+  assert.equal(replies.at(-1)?.text, "*Не удалось добавить сессию*")
+  assert.equal(
+    replies.some((reply) => reply.text.includes("Beneficiary’s Bank")),
+    false
+  )
+}
+
 describe("utility and component characterization", () => {
   it("escapes Telegram MarkdownV2 content", () => {
     assert.equal(
       ReplyMarkup.escapeForParseModeV2("_*[]()~`>#+-=|{}.!"),
       "\\_\\*\\[\\]\\(\\)\\~\\`\\>\\#\\+\\-\\=\\|\\{\\}\\.\\!"
+    )
+    assert.equal(
+      ReplyMarkup.escapeForParseModeV2("0123456789,/:;<"),
+      "0123456789,/:;<"
     )
   })
 
@@ -218,6 +320,149 @@ describe("conversation characterization", () => {
       ),
       true
     )
+  })
+
+  it("keeps the standalone requisites output and keyboard removal unchanged", async () => {
+    const ctx = makeContext()
+
+    await requisitesShow.getConversation()(makeFakeConversation() as never, ctx)
+
+    assert.equal(getTextOfRequisites(), expectedRequisitesText)
+    assert.deepEqual(
+      (ctx as never as { replies: Array<FakeReply> }).replies,
+      [
+        {
+          text: expectedRequisitesText,
+          options: {
+            ...ReplyMarkup.emptyKeyboard,
+            ...ReplyMarkup.parseModeV2,
+          },
+        },
+      ]
+    )
+  })
+
+  it("sends requisites once after a created therapy session", async () => {
+    const addedSession = makeTherapySession({ descr: "Session note" })
+    const commissionRequisites = getTextOfRequisites(
+      "Комиссия 50 GEL — реквизиты для оплаты"
+    )
+    const { result, replies } = await runTherapySessionAdd({
+      response: addedSession,
+    })
+    const finalReplies = replies.slice(-3)
+
+    assert.deepEqual(
+      finalReplies.map((reply) => reply.text),
+      [
+        "*Добавлена сессия*",
+        getTextOfTherapySession(addedSession),
+        commissionRequisites,
+      ]
+    )
+    assert.deepEqual(
+      finalReplies.map((reply) => reply.options),
+      [
+        ReplyMarkup.parseModeV2,
+        ReplyMarkup.parseModeV2,
+        ReplyMarkup.parseModeV2,
+      ]
+    )
+    assert.equal(
+      replies.filter((reply) => reply.text === commissionRequisites).length,
+      1
+    )
+    assert.deepEqual(result, { stepsBack: 2 })
+  })
+
+  it("does not send requisites when the created session has zero commission", async () => {
+    const addedSession = makeTherapySession({
+      descr: "Session note",
+      commission: { currency: CURRENCIES.GEL, value: 0 },
+    })
+    const sessions = [
+      makeTherapySession({ duration: numberOfCommissionHours * 60 }),
+    ]
+    const { calls, result, replies } = await runTherapySessionAdd({
+      response: addedSession,
+      sessions,
+    })
+    const createCall = calls.find(
+      (call) => call.url === "http://dom-api.test/therapy-sessions/me"
+    )
+
+    assert.ok(createCall)
+    assert.deepEqual(
+      (createCall.data as { commission: { value: number } }).commission.value,
+      0
+    )
+    assert.deepEqual(
+      replies.slice(-2).map((reply) => reply.text),
+      ["*Добавлена сессия*", getTextOfTherapySession(addedSession)]
+    )
+    assert.equal(
+      replies.some((reply) => reply.text.includes("Beneficiary’s Bank")),
+      false
+    )
+    assert.deepEqual(result, { stepsBack: 2 })
+  })
+
+  it("keeps navigation when the requisites reply fails after creation", async () => {
+    const addedSession = makeTherapySession({ descr: "Session note" })
+    const commissionRequisites = getTextOfRequisites(
+      "Комиссия 50 GEL — реквизиты для оплаты"
+    )
+    const { logs, result, replies } = await runTherapySessionAdd({
+      response: addedSession,
+      failedReplyText: commissionRequisites,
+    })
+
+    assert.deepEqual(
+      replies.slice(-2).map((reply) => reply.text),
+      ["*Добавлена сессия*", getTextOfTherapySession(addedSession)]
+    )
+    assert.equal(
+      logs.some(
+        (entry) => Array.isArray(entry) && entry[0] === BOT_ERRORS.REQUEST
+      ),
+      true
+    )
+    assert.deepEqual(result, { stepsBack: 2 })
+  })
+
+  it("does not create a session or send requisites when the form is cancelled", async () => {
+    const { calls, result, replies } = await runTherapySessionAdd({
+      response: new Error("Unexpected API request"),
+      answers: [ACTION_BUTTON_TEXTS.REJECT],
+    })
+
+    assert.equal(calls.length, 0)
+    assert.equal(result, undefined)
+    assert.equal(
+      replies.some((reply) =>
+        [
+          "*Добавлена сессия*",
+          "*Не удалось добавить сессию*",
+        ].includes(reply.text)
+      ) || replies.some((reply) => reply.text.includes("Beneficiary’s Bank")),
+      false
+    )
+  })
+
+  it("keeps API failures free of session details and requisites", async () => {
+    const { result, replies } = await runTherapySessionAdd({
+      response: new Error("API unavailable"),
+    })
+
+    assertFailedSessionCreation(result, replies)
+  })
+
+  it("treats an empty create response as failure without requisites", async () => {
+    const { result, replies } = await runTherapySessionAdd({
+      response: undefined,
+    })
+
+    assertFailedSessionCreation(result, replies)
   })
 
   it("therapy request create flow builds the current dom-api payload", async () => {
