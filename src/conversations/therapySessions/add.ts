@@ -6,6 +6,7 @@ import { ClientDto } from "@/common/dto/client.dto"
 import { TherapySessionDto } from "@/common/dto/therapySession.dto"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { CURRENCIES } from "@/common/enums/currencies"
+import { getTextOfRequisites } from "@/common/texts/getTextOfRequisites"
 import { getTextOfTherapySession } from "@/common/texts/getTextOfTherapySession"
 import { MyContext } from "@/common/types/myContext"
 import { getLocalDateString } from "@/common/utils/getLocalDateString"
@@ -138,32 +139,33 @@ const therapySessionAdd: BotConversation = {
           result = notEmpty(addedSession)
         } catch (e) {
           conversation.log(BOT_ERRORS.REQUEST, e)
-        } finally {
-          if (result === true) {
-            await ctx.reply("*Добавлена сессия*", ReplyMarkup.parseModeV2)
-          } else {
-            await ctx.reply(
-              "*Не удалось добавить сессию*",
-              ReplyMarkup.parseModeV2
-            )
-          }
         }
 
         if (addedSession) {
+          try {
+            await ctx.reply("*Добавлена сессия*", ReplyMarkup.parseModeV2)
+            await ctx.reply(
+              getTextOfTherapySession(addedSession),
+              ReplyMarkup.parseModeV2
+            )
+
+            const commission = addedSession.commission
+            if (commission?.value > 0) {
+              const title = `Комиссия ${commission.value} ${commission.currency.toUpperCase()} — реквизиты для оплаты`
+
+              await ctx.reply(
+                getTextOfRequisites(title),
+                ReplyMarkup.parseModeV2
+              )
+            }
+          } catch (e) {
+            conversation.log(BOT_ERRORS.REQUEST, e)
+          }
+        } else {
           await ctx.reply(
-            getTextOfTherapySession(addedSession),
+            "*Не удалось добавить сессию*",
             ReplyMarkup.parseModeV2
           )
-          // const conv: BotConversation | undefined = BotConversations.getByName(
-          //   CONVERSATION_NAMES.THERAPY_SESSION_SHOW
-          // )
-
-          // if (conv) {
-          //   return await conv.getConversation(...[client, addedSession])(
-          //     conversation,
-          //     ctx
-          //   )
-          // }
         }
       }
 
