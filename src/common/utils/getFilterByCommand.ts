@@ -2,22 +2,48 @@ import botCommandsInfo from "../consts/botCommandsInfo"
 import { BOT_COMMANDS } from "../enums/botCommands"
 import { MyContext } from "../types/myContext"
 
-function getLeadingCommand(ctx: MyContext): string | undefined {
+export function getLeadingCommand(ctx: MyContext): string | undefined {
+  const parsed = getLeadingCommandParts(ctx)
+  if (!parsed || isCommandAddressedToOtherBot(ctx)) {
+    return undefined
+  }
+
+  return parsed.command
+}
+
+export function isCommandAddressedToOtherBot(ctx: MyContext): boolean {
+  const parsed = getLeadingCommandParts(ctx)
+  return Boolean(
+    parsed?.targetBot &&
+      ctx.me?.username &&
+      parsed.targetBot !== ctx.me.username.toLowerCase()
+  )
+}
+
+function getLeadingCommandParts(
+  ctx: MyContext
+): { command: string; targetBot?: string } | undefined {
   const message = ctx.message?.text || ""
   const leadingBotCommandEntity = ctx.message?.entities?.find(
     (entity) => entity.type === "bot_command" && entity.offset === 0
   )
 
-  if (leadingBotCommandEntity) {
-    return message
-      .slice(1, leadingBotCommandEntity.length)
-      .split("@")[0]
-      .toLowerCase()
+  const commandPrefix = leadingBotCommandEntity
+    ? message.slice(0, leadingBotCommandEntity.length)
+    : message
+  const commandText = /^\/[a-zA-Z0-9_]+(?:@[a-zA-Z0-9_]+)?(?:\s|$)/.exec(
+    commandPrefix
+  )?.[0]
+
+  if (!commandText) {
+    return undefined
   }
 
-  const command = /^\/([a-zA-Z0-9_]+)(?:@[a-zA-Z0-9_]+)?(?:\s|$)/.exec(message)
-
-  return command?.[1]?.toLowerCase()
+  const [command, targetBot] = commandText.trim().slice(1).split("@")
+  return {
+    command: command.toLowerCase(),
+    targetBot: targetBot?.toLowerCase(),
+  }
 }
 
 export default function getFilterByCommand(expectedСommand: BOT_COMMANDS) {

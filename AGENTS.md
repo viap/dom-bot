@@ -8,12 +8,13 @@ For cross-service architecture, auth contracts, and stack rules, read the files 
 
 - **Never use webhooks.** The bot runs on long polling via `@grammyjs/runner`. Webhooks cause conflicts with the runner. `deleteWebhook()` is called in `src/index.ts` before startup — do not remove it.
 - **Always type context as `MyContext`**, never plain grammY `Context`. `MyContext` is required to access `ctx.session`, `ctx.conversation`, and other extensions.
-- **Never bypass `apiLoginByTelegram` middleware.** It handles JWT token acquisition and refresh on every message. Removing it breaks all API calls.
+- **Never bypass `apiLoginByTelegram` middleware.** It validates current user identity/roles and acquires a replacement JWT when required on every eligible interaction. Removing it breaks protected API calls.
 - **Always wrap API calls and DB queries inside `conversation.external()`** when inside a conversation. Calling them directly corrupts conversation state replay.
-- **Never mutate session properties with direct assignment.** Use `Object.assign(ctx.session, { key: value })` or spread to ensure persistence.
+- **Clear optional session properties with `delete`.** Direct assignment and `Object.assign` both persist because grammY writes the current session object after the update; assigning `undefined` can become BSON `null`.
 - **Always use `@/*` path aliases** (`@/api/*`, `@/common/*`, `@/components/*`, `@/conversations/*`, `@/services/*`). Never write deep relative imports.
 - **Never hardcode secrets.** All config comes from `config/.env` via `process.env`.
 - **Always register new conversations in `BotConversations.getList()`** in `src/conversations/index.ts`. An unregistered conversation is unreachable.
+- **Bump `CONVERSATION_VERSION` for replay-incompatible changes.** Increment `src/common/consts/conversationVersion.ts` when a release changes conversation waits, Telegram/external call order, menu/form branching, shared MenuBlock/Form/Quiz replay behavior, or the conversations dependency. Logging-only and deployment-only changes do not require a bump.
 
 ## Do Not Do
 
@@ -60,13 +61,16 @@ const users = await getAllUsers(ctx);
 const users = await conversation.external(async () => getAllUsers(ctx));
 ```
 
-### 5. Never mutate session properties with direct assignment
+### 5. Never clear optional session properties with `undefined`
 ```typescript
-// ❌ — may not persist to MongoDB storage
+// ❌ — MongoDB may persist this as null
+ctx.session.menuDeepLink = undefined;
+
+// ✓ — direct assignment and Object.assign both persist normal values
 ctx.session.user = newUser;
 
-// ✓
-Object.assign(ctx.session, { user: newUser });
+// ✓ — clear optional BSON-backed values by removing the key
+delete ctx.session.menuDeepLink;
 ```
 
 ### 6. Never add a conversation without registering it
@@ -112,12 +116,19 @@ src/services/         — MongoDB session DB, NotificationListener (WebSocket)
 src/common/           — types, enums, utilities
 ```
 
-**Middleware order in `domBot.ts` (must not be reordered):**
-1. `session()` — MongoDB-backed session storage, key: `${userId}/${chatId}`
-2. `apiLoginByTelegram` — JWT token lifecycle on every message
-3. `conversations()` — enables conversation system
+**Middleware order in `createDomBot.ts` (must not be reordered):**
+1. `sequentialize(getSessionKey)` — serializes only the same `${userId}/${chatId}` session
+2. `session()` — MongoDB-backed session storage with the same key
+3. Eligible-human/target-bot guard — stops unsupported updates, bot senders and commands addressed to another bot before DOM API calls
+4. `apiLoginByTelegram` — login-aligns JWT claims and fetches the current user on every eligible interaction
+5. `conversations()` — enables the installed conversations v1 controls
+6. Compatibility/access gate — exits incompatible history before any builder can replay
+7. Role-aware command synchronization and existing conditional conversation registrations
+8. Recovery dispatcher — enters replacement UI only after the destination builder is registered
 
-All commands and callback routes attach via `BotConversations.getMiddlewareByName()`.
+Do not enter a recovery conversation in the early gate. Derive current access from the authenticated session, read recovery decisions from durable `pendingRecovery`, and retain that marker until replacement UI is successfully sent/entered.
+
+All commands and callback routes attach via `BotConversations.getMiddlewareByName()`. Shared callback routing reports whether it handled a payload but does not acknowledge it. The normal callback handler and recovery dispatcher each acknowledge once, before replies or conversation entry.
 
 ---
 
@@ -248,15 +259,20 @@ type SessionData = {
   token?: string;              // JWT from dom-api
   hasTermsAgreement: boolean;
   user?: UserDto;              // logged-in user profile
-  psychologist?: PsychologistDto; // set when user is a psychologist
+  psychologist?: PsychologistDto; // omitted means unknown, not applicable, or a confirmed absence that must be retried
   selectedQuiz?: ObjectId;
   quizAnswers: QuizGivenAnswers;
+  interactionState?: InteractionState; // replay/access compatibility and pending recovery
+  menuDeepLink?: DeepLink;              // per-session notification navigation intent
+  syncedCommandsKey?: string;           // last successful private command plan
 };
 ```
 
 Session key: `${ctx.from.id}/${ctx.chat.id}` — per-user, per-chat. Storage: MongoDB via `@grammyjs/storage-mongodb`.
 
-Always update session via `Object.assign(ctx.session, { ... })`.
+Update present session values with direct assignment or `Object.assign(ctx.session, { ... })`. Delete optional properties when clearing them; assigning `undefined` may persist BSON `null`. A confirmed missing psychologist profile is not cached and is retried on the next eligible interaction.
+
+`apiLoginByTelegram` must keep current database roles and JWT claims aligned before protected routing. Fetch `/users/me` directly on each eligible interaction instead of preflighting `/auth/check-token`; use at most one Telegram login plus one verification read, and do not use refresh-token for role alignment. Load `/psychologists/me` only after claims align, normalize the API's empty response to confirmed absence, and distinguish it from transport/auth failure. Auth/profile requests use 10-second timeouts, all GET helpers default to 60 seconds, and mutating business requests have no default timeout. Never advance compatibility metadata inside auth middleware; the post-conversations gate owns it.
 
 ---
 

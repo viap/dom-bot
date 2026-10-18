@@ -1,4 +1,5 @@
 import { conversations } from "@grammyjs/conversations"
+import { sequentialize } from "@grammyjs/runner"
 import {
   Bot,
   BotConfig,
@@ -12,36 +13,54 @@ import {
 import { BOT_COMMANDS } from "@/common/enums/botCommands"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { BOT_TEXTS } from "@/common/enums/botTexts"
+import { CONVERSATION_VERSION } from "@/common/consts/conversationVersion"
 import { apiLoginByTelegram } from "@/common/middlewares/apiLoginByTelegram"
+import {
+  clearPendingRecovery,
+  createInteractionRecoveryGate,
+  dispatchPendingRecovery,
+  isRecoveryMenuRegistrationRequired,
+} from "@/common/middlewares/interactionRecovery"
+import {
+  syncRoleAwareCommandsOnChange,
+} from "@/common/middlewares/roleAwareCommands"
 import { MyContext } from "@/common/types/myContext"
-import { PrimitiveValues } from "@/common/types/primitiveValues"
 import { SessionData, defaultSessionData } from "@/common/types/sessionData"
+import {
+  acknowledgeCallback,
+  handleCallbackData,
+  parseCallbackData,
+} from "@/common/utils/callbackRouting"
 import getAvailableCommandButtons from "@/common/utils/getAvailableCommandButtons"
-import getFilterByCommand from "@/common/utils/getFilterByCommand"
+import getFilterByCommand, {
+  isCommandAddressedToOtherBot,
+} from "@/common/utils/getFilterByCommand"
 import {
   MANUAL_COMMAND_UNAVAILABLE_TEXT,
   getManualInstructionText,
-  getRoleAwareBotCommands,
-  hasManualCommandAccess,
 } from "@/common/utils/manualCommand"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { BotConversations } from "@/conversations"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import { DatePicker } from "@/components/DatePicker/datePicker"
-import { MENU_ITEM_TYPES } from "@/components/MenuBlock/enums/menuItemTypes"
-import MenuBlock from "@/components/MenuBlock/menuBlock"
 
 export type CreateDomBotOptions = {
   token?: string
   botConfig?: BotConfig<MyContext>
   sessionStorage: StorageAdapter<SessionData>
   authMiddleware?: MiddlewareFn<MyContext>
+  conversationVersion?: number
 }
 
-export function sessionInit(): SessionData {
+export function sessionInit(
+  conversationVersion = CONVERSATION_VERSION
+): SessionData {
   // NOTICE: should create a new object otherwise several chats might share the same session object in memory
   // https://grammy.dev/plugins/session#initial-session-data
-  return structuredClone(defaultSessionData) as SessionData
+  return {
+    ...(structuredClone(defaultSessionData) as SessionData),
+    interactionState: { conversationVersion },
+  }
 }
 
 export function getSessionKey(ctx: Context): string | undefined {
@@ -52,89 +71,47 @@ export function getSessionKey(ctx: Context): string | undefined {
     : `${ctx.from.id}/${ctx.chat.id}`
 }
 
-export async function syncRoleAwareBotCommands(ctx: MyContext): Promise<void> {
-  try {
-    if (ctx.chat?.type !== "private" || !ctx.session.user) {
-      return
-    }
-
-    const roles = ctx.session.user.roles
-    const scope = { type: "chat" as const, chat_id: ctx.chat.id }
-
-    if (hasManualCommandAccess(roles)) {
-      await ctx.api.setMyCommands(getRoleAwareBotCommands(roles), { scope })
-    } else {
-      await ctx.api.deleteMyCommands({ scope })
-    }
-  } catch (error) {
-    console.error("[syncRoleAwareBotCommands] sync failed:", error)
-  }
-}
-
-export type CallbackData = {
-  [key: string]: PrimitiveValues | Array<PrimitiveValues>
-}
-
-export function parseCallbackData(data?: string): CallbackData | undefined {
-  try {
-    return JSON.parse(data || "")
-  } catch {
-    return undefined
-  }
-}
-
-export async function handleCallbackData(
-  ctx: MyContext,
-  data: CallbackData
-): Promise<void> {
-  if (data.command) {
-    switch (data.command) {
-      case BOT_COMMANDS.MENU:
-        await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
-        break
-      case BOT_COMMANDS.TERMS_AGREEMENT:
-        await ctx.conversation.reenter(CONVERSATION_NAMES.TERMS_AGREEMENT)
-        break
-    }
-  } else if (data.goTo) {
-    switch (data.goTo) {
-      case MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW:
-        MenuBlock.setDeepLink(data.goTo)
-        await ctx.conversation.reenter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
-        break
-    }
-  } else {
-    console.log(BOT_ERRORS.UNKNOWN_CALLBACK, ctx.callbackQuery?.data)
-  }
-
-  // NOTICE: remove loading animation
-  await ctx.answerCallbackQuery()
-}
-
 export function createDomBot({
   token = process.env.TOKEN || "",
   botConfig,
   sessionStorage,
   authMiddleware = apiLoginByTelegram,
+  conversationVersion = CONVERSATION_VERSION,
 }: CreateDomBotOptions): Bot<MyContext> {
   const domBot = new Bot<MyContext>(token, botConfig)
 
   DatePicker.setBotInstance(domBot)
 
+  domBot.use(sequentialize(getSessionKey))
+
   domBot.use(
     session({
       getSessionKey,
-      initial: sessionInit,
+      initial: () => sessionInit(conversationVersion),
       storage: sessionStorage,
     })
   )
 
-  // FIXME: not necessary to send check token before all requests
+  // Authentication and conversation routing apply only to eligible human chat
+  // updates addressed to this bot. Ignored commands must not call dom-api.
+  domBot.use(async (ctx, next) => {
+    if (
+      getSessionKey(ctx) !== undefined &&
+      !ctx.from?.is_bot &&
+      !isCommandAddressedToOtherBot(ctx)
+    ) {
+      await next()
+    }
+  })
+
   /** API: login */
   domBot.use(authMiddleware)
 
   /** CONVERSATIONS: init */
   domBot.use(conversations())
+
+  domBot.use(createInteractionRecoveryGate(conversationVersion))
+  domBot.use(syncRoleAwareCommandsOnChange)
 
   /** COMMAND HANDLERS: start */
   domBot.command(BOT_COMMANDS.START, async (ctx) => {
@@ -144,11 +121,15 @@ export function createDomBot({
       console.log(BOT_ERRORS.CONVERSATION_EXIT, error)
     }
 
-    await syncRoleAwareBotCommands(ctx)
-
-    await ctx.reply(BOT_TEXTS.WELCOME, {
-      reply_markup: getAvailableCommandButtons(ctx.session),
-    })
+    delete ctx.session.menuDeepLink
+    try {
+      await ctx.reply(BOT_TEXTS.WELCOME, {
+        reply_markup: getAvailableCommandButtons(ctx.session),
+      })
+      clearPendingRecovery(ctx)
+    } catch (error) {
+      console.error("[interactionRecovery] start reply failed:", error)
+    }
   })
 
   /** CONVERSATIONS: use */
@@ -163,13 +144,21 @@ export function createDomBot({
     .use(BotConversations.getMiddlewareByName(CONVERSATION_NAMES.REQUISITES))
 
   domBot
-    .filter(getFilterByCommand(BOT_COMMANDS.MENU))
+    .filter(async (ctx) => {
+      return (
+        isRecoveryMenuRegistrationRequired(ctx) ||
+        getFilterByCommand(BOT_COMMANDS.MENU)(ctx)
+      )
+    })
     .use(
       BotConversations.getMiddlewareByName(CONVERSATION_NAMES.SELECT_MENU_ITEM)
     )
 
+  domBot.use(dispatchPendingRecovery)
+
   /* CALLBACKS */
   domBot.on("callback_query:data", async (ctx: MyContext) => {
+    await acknowledgeCallback(ctx)
     const data = parseCallbackData(ctx.callbackQuery?.data)
 
     if (!data) {
@@ -192,6 +181,7 @@ export function createDomBot({
   })
 
   domBot.command(BOT_COMMANDS.MENU, async (ctx) => {
+    delete ctx.session.menuDeepLink
     await ctx.conversation.enter(CONVERSATION_NAMES.SELECT_MENU_ITEM)
   })
 

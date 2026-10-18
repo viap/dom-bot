@@ -2,15 +2,17 @@ import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
   getSessionKey,
+  sessionInit,
+} from "@/createDomBot"
+import { syncRoleAwareBotCommands } from "@/common/middlewares/roleAwareCommands"
+import {
+  acknowledgeCallback,
   handleCallbackData,
   parseCallbackData,
-  sessionInit,
-  syncRoleAwareBotCommands,
-} from "@/createDomBot"
+} from "@/common/utils/callbackRouting"
 import { BOT_COMMANDS } from "@/common/enums/botCommands"
 import { ROLES } from "@/common/enums/roles"
 import { MENU_ITEM_TYPES } from "@/components/MenuBlock/enums/menuItemTypes"
-import MenuBlock from "@/components/MenuBlock/menuBlock"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import { makeUser } from "../helpers/fixtures"
 
@@ -105,7 +107,6 @@ describe("dom bot factory helpers", () => {
 
   it("routes menu and terms callback commands to their conversations", async () => {
     const reentered: Array<CONVERSATION_NAMES> = []
-    const answers: Array<string> = []
     const ctx = {
       callbackQuery: { data: "" },
       conversation: {
@@ -113,29 +114,42 @@ describe("dom bot factory helpers", () => {
           reentered.push(name)
         },
       },
-      answerCallbackQuery: async () => {
-        answers.push("answered")
-      },
     }
 
-    await handleCallbackData(ctx as never, { command: BOT_COMMANDS.MENU })
-    await handleCallbackData(ctx as never, {
-      command: BOT_COMMANDS.TERMS_AGREEMENT,
-    })
+    assert.equal(
+      await handleCallbackData(ctx as never, { command: BOT_COMMANDS.MENU }),
+      true
+    )
+    assert.equal(
+      await handleCallbackData(ctx as never, {
+        command: BOT_COMMANDS.TERMS_AGREEMENT,
+      }),
+      true
+    )
 
     assert.deepEqual(reentered, [
       CONVERSATION_NAMES.SELECT_MENU_ITEM,
       CONVERSATION_NAMES.TERMS_AGREEMENT,
     ])
-    assert.deepEqual(answers, ["answered", "answered"])
   })
 
-  it("stores therapy-request deep links without cross-test bleed", async () => {
-    MenuBlock.takeDeepLink()
+  it("acknowledges callbacks separately from routing", async () => {
+    let answers = 0
+    await acknowledgeCallback({
+      callbackQuery: { data: "" },
+      answerCallbackQuery: async () => {
+        answers++
+      },
+    } as never)
 
+    assert.equal(answers, 1)
+  })
+
+  it("stores therapy-request deep links in the current session", async () => {
     const reentered: Array<CONVERSATION_NAMES> = []
     const ctx = {
       callbackQuery: { data: "" },
+      session: {},
       conversation: {
         reenter: async (name: CONVERSATION_NAMES) => {
           reentered.push(name)
@@ -144,12 +158,32 @@ describe("dom bot factory helpers", () => {
       answerCallbackQuery: async () => undefined,
     }
 
-    await handleCallbackData(ctx as never, {
-      goTo: MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW,
-    })
+    assert.equal(
+      await handleCallbackData(ctx as never, {
+        goTo: MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW,
+      }),
+      true
+    )
 
     assert.deepEqual(reentered, [CONVERSATION_NAMES.SELECT_MENU_ITEM])
-    assert.equal(MenuBlock.takeDeepLink(), MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW)
-    assert.equal(MenuBlock.takeDeepLink(), undefined)
+    assert.deepEqual(ctx.session, {
+      menuDeepLink: { goTo: MENU_ITEM_TYPES.THERAPY_REQUESTS_NEW },
+    })
+  })
+
+  it("reports unsupported callbacks without claiming them", async () => {
+    const originalLog = console.log
+    console.log = () => undefined
+    try {
+      assert.equal(
+        await handleCallbackData(
+          { callbackQuery: { data: "unsupported" } } as never,
+          { command: "unsupported" }
+        ),
+        false
+      )
+    } finally {
+      console.log = originalLog
+    }
   })
 })

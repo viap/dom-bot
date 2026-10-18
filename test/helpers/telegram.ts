@@ -89,7 +89,12 @@ export function callbackUpdate(
   } as Update
 }
 
-export function installTelegramApiRecorder(bot: Bot<MyContext>) {
+export function installTelegramApiRecorder(
+  bot: Bot<MyContext>,
+  options: {
+    fail?: (call: TelegramApiCall) => Error | undefined
+  } = {}
+) {
   const calls: Array<TelegramApiCall> = []
   const transformer: Transformer<RawApi> = async (
     _prev,
@@ -97,7 +102,13 @@ export function installTelegramApiRecorder(bot: Bot<MyContext>) {
     payload
   ) => {
     const recordPayload = payload as Record<string, unknown>
-    calls.push({ method, payload: recordPayload })
+    const call = { method, payload: recordPayload }
+    calls.push(call)
+
+    const error = options.fail?.(call)
+    if (error) {
+      throw error
+    }
 
     return {
       ok: true,
