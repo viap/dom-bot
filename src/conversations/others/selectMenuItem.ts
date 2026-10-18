@@ -2,7 +2,11 @@ import MenuBlock from "@/components/MenuBlock/menuBlock"
 import { Conversation } from "@grammyjs/conversations"
 
 import { MyContext } from "@/common/types/myContext"
+import { BOT_TEXTS } from "@/common/enums/botTexts"
+import { ROLES } from "@/common/enums/roles"
 import defaultMenu from "@/components/MenuBlock/consts/defaultMenu"
+import { MENU_ITEM_TYPES } from "@/components/MenuBlock/enums/menuItemTypes"
+import { PartialMenuBlockItemsProps } from "@/components/MenuBlock/types/menuBlockItemsProps"
 
 import { CONVERSATION_ERRORS } from "../enums/conversationErrors"
 import { CONVERSATION_NAMES } from "../enums/conversationNames"
@@ -35,11 +39,13 @@ const menuItemSelect: BotConversation = {
   getConversation() {
     return async (conversation: Conversation<MyContext>, ctx: MyContext) => {
       if (!(await checkAgreemensts(conversation, ctx))) {
+        delete conversation.session.menuDeepLink
         return
       }
 
-      const menu = defaultMenu
-        ? new MenuBlock(conversation, ctx, defaultMenu)
+      const menuDefinition = getMenuForCurrentProfile(ctx)
+      const menu = menuDefinition
+        ? new MenuBlock(conversation, ctx, menuDefinition)
         : undefined
 
       if (!menu) {
@@ -50,6 +56,45 @@ const menuItemSelect: BotConversation = {
       await menu.show()
     }
   },
+}
+
+export function getMenuForCurrentProfile(
+  ctx: Pick<MyContext, "session">
+): PartialMenuBlockItemsProps {
+  const missingPsychologistProfile = Boolean(
+    ctx.session.user?.roles.includes(ROLES.PSYCHOLOGIST) &&
+    !ctx.session.psychologist
+  )
+
+  return cloneMenu(defaultMenu, missingPsychologistProfile)
+}
+
+function cloneMenu(
+  item: PartialMenuBlockItemsProps,
+  replacePsychologistSections: boolean
+): PartialMenuBlockItemsProps {
+  const isProfileDependentSection =
+    item.key === MENU_ITEM_TYPES.CLIENTS ||
+    item.key === MENU_ITEM_TYPES.THERAPY_REQUESTS
+
+  if (replacePsychologistSections && isProfileDependentSection) {
+    return {
+      ...item,
+      content: BOT_TEXTS.PSYCHOLOGIST_PROFILE_MISSING,
+      items: undefined,
+      submenu: undefined,
+      submenuPreloaded: undefined,
+      conversation: undefined,
+      props: undefined,
+    }
+  }
+
+  return {
+    ...item,
+    items: item.items?.map((child) =>
+      cloneMenu(child, replacePsychologistSections)
+    ),
+  }
 }
 
 export default menuItemSelect

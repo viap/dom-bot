@@ -62,18 +62,6 @@ const defaultMenuOptions: MenuBlockOptions = {
   withSearch: false,
 }
 export default class MenuBlock {
-  private static deepLink?: MENU_ITEM_TYPES
-
-  static setDeepLink(goTo: MENU_ITEM_TYPES) {
-    this.deepLink = goTo
-  }
-
-  static takeDeepLink() {
-    const key = this.deepLink
-    delete this.deepLink
-    return key
-  }
-
   static getPreparedMenu(
     sourceMenu: PartialMenuBlockItemsProps,
     parent?: MenuBlockItemsProps,
@@ -391,7 +379,9 @@ export default class MenuBlock {
   }
   async show(itemKey?: string) {
     const deepLink = await this.conversation.external(() => {
-      return MenuBlock.takeDeepLink()
+      const key = this.ctx.session.menuDeepLink?.goTo
+      delete this.ctx.session.menuDeepLink
+      return key
     })
 
     this.selectItem(itemKey || deepLink, true)

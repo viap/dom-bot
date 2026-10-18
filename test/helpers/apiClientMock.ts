@@ -7,6 +7,7 @@ export type ApiClientCall = {
   data?: unknown
   params?: unknown
   headers?: unknown
+  timeout?: number
 }
 
 export function withMockedApiClient(
@@ -27,6 +28,7 @@ export function withMockedApiClient(
           : config.data,
       params: config.params,
       headers: config.headers,
+      timeout: config.timeout,
     })
     const response = await handler(config)
 

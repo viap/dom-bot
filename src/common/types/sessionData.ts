@@ -8,6 +8,19 @@ export type DeepLink = {
   goTo: MENU_ITEM_TYPES
 }
 
+export type RecoveryReason = "release" | "access"
+
+export type PendingRecovery = {
+  reason: RecoveryReason
+  interruptedConversation: boolean
+}
+
+export type InteractionState = {
+  conversationVersion: number
+  accessKey?: string
+  pendingRecovery?: PendingRecovery
+}
+
 export type SessionData = {
   token?: string
   hasTermsAgreement: boolean
@@ -15,6 +28,9 @@ export type SessionData = {
   quizAnswers: QuizGivenAnswers
   user?: UserDto
   psychologist?: PsychologistDto
+  interactionState?: InteractionState
+  menuDeepLink?: DeepLink
+  syncedCommandsKey?: string
 }
 
 export const defaultSessionData = {

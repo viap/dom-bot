@@ -97,12 +97,36 @@ describe("bot handlers", () => {
     assert.equal(telegram.byMethod("answerCallbackQuery").length, 1)
   })
 
-  it("characterizes invalid callback JSON as returning without answerCallbackQuery", async () => {
+  it("acknowledges invalid callback JSON before returning", async () => {
     const { bot, telegram } = await createTestBot()
 
     await bot.handleUpdate(callbackUpdate("{bad json"))
 
-    assert.equal(telegram.byMethod("answerCallbackQuery").length, 0)
+    assert.equal(telegram.byMethod("answerCallbackQuery").length, 1)
+  })
+
+  it("ignores commands addressed to another bot", async () => {
+    const { bot, telegram } = await createTestBot()
+
+    await bot.handleUpdate(messageUpdate("/menu@another_bot"))
+
+    assert.equal(telegram.byMethod("sendMessage").length, 0)
+  })
+
+  it("ignores unsupported updates without a user or chat session key", async () => {
+    const { bot, telegram } = await createTestBot()
+
+    await bot.handleUpdate({
+      update_id: 1,
+      inline_query: {
+        id: "inline-1",
+        from: { id: 123, is_bot: true, first_name: "Bot" },
+        query: "test",
+        offset: "",
+      },
+    })
+
+    assert.equal(telegram.calls.length, 0)
   })
 
   it("persists and isolates sessions through factory session middleware", async () => {
@@ -142,5 +166,58 @@ describe("bot handlers", () => {
     )
 
     assert.deepEqual(seenTokens, [undefined, "token-201", undefined])
+  })
+
+  it("retries role-aware command synchronization after a Telegram failure", async () => {
+    const storage = new MemorySessionStorage<SessionData>()
+    const bot = createDomBot({
+      token: "123:test-token",
+      botConfig: {
+        botInfo: {
+          id: 123,
+          is_bot: true,
+          first_name: "DOM Test Bot",
+          username: "dom_test_bot",
+          can_join_groups: true,
+          can_read_all_group_messages: false,
+          supports_inline_queries: false,
+        },
+      },
+      sessionStorage: storage,
+      authMiddleware: async (ctx, next) => {
+        Object.assign(ctx.session, {
+          token: "token",
+          user: {
+            _id: "user-1",
+            name: "User",
+            descr: "",
+            roles: [ROLES.USER],
+            contacts: [],
+          },
+        })
+        await next()
+      },
+    })
+    let failed = false
+    const telegram = installTelegramApiRecorder(bot, {
+      fail: (call) => {
+        if (call.method === "deleteMyCommands" && !failed) {
+          failed = true
+          return new Error("sync failed")
+        }
+        return undefined
+      },
+    })
+    const originalError = console.error
+    console.error = () => undefined
+    try {
+      await bot.handleUpdate(messageUpdate("first", { updateId: 1 }))
+      await bot.handleUpdate(messageUpdate("second", { updateId: 2 }))
+    } finally {
+      console.error = originalError
+    }
+
+    assert.equal(telegram.byMethod("deleteMyCommands").length, 2)
+    assert.ok((await storage.read("101/201"))?.syncedCommandsKey)
   })
 })

@@ -85,6 +85,14 @@ Uses `@grammyjs/conversations` for multi-step user interactions. All conversatio
 - MongoDB-based session storage via `@grammyjs/storage-mongodb`
 - Per-user-per-chat session isolation
 - Custom session key generation: `${ctx.from.id}/${ctx.chat.id}`
+- Same-key updates are serialized before session reads. Persisted `interactionState` tracks conversation compatibility, current access identity, and pending recovery; successful private command synchronization uses the top-level `syncedCommandsKey`, and notification menu deep links are session-local.
+
+#### Conversation Recovery and Role Refresh
+- The eligible-human/target-bot guard runs before `apiLoginByTelegram`. Authentication fetches `/users/me` directly on every eligible interaction and aligns JWT role claims before protected routing. GET requests have a finite default timeout, with a shorter override for auth/profile calls; mutations have no default timeout.
+- Psychologist profile loading happens only after aligned claims. A confirmed missing profile is not cached: the optional session field is deleted and retried on the next interaction. Direct assignment persists normal session values; clear optional BSON-backed fields with `delete`, never by assigning `undefined`.
+- Recovery derives access from the authenticated session and exits incompatible history after `conversations()` initialization but before any `createConversation` middleware can replay it. Replacement entry happens only after conditional conversation registration and keeps a durable pending marker until delivery succeeds.
+- Shared callback routing returns whether it handled the payload. Normal and recovery owners acknowledge once before replies or conversation entry, so failures cannot leave buttons spinning or double-answer callbacks.
+- Increment `src/common/consts/conversationVersion.ts` for changes to waits, Telegram/external call ordering, menu/form branching, shared conversation components, or conversations dependency versions. Deployment/logging-only changes do not require a bump; version inequality intentionally handles both upgrades and downgrades.
 
 #### Type System
 Custom type definitions in `src/common/types/`:
@@ -134,6 +142,8 @@ Environment variables in `config/.env`:
 - Middleware for automatic Telegram auth (`apiLoginByTelegram`)
 - Typed DTOs for API communication
 - Standardized HTTP methods in `src/api/common/`
+- `/users/me` is the credential/role check; one bounded Telegram login realigns missing, rejected, or mismatched JWTs without `/auth/check-token` or refresh-token preflights.
+- GET requests default to a 60-second timeout, auth/profile requests override it to 10 seconds, and mutating business requests have no default timeout.
 - Error handling and retry logic
 
 ### UI Patterns

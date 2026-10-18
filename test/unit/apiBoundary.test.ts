@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { afterEach, beforeEach, describe, it } from "node:test"
 import { isValidToken } from "@/api/controllerAuth/isValidToken"
 import { loginByTelegram } from "@/api/controllerAuth/loginByTelegram"
+import { getPsychologist } from "@/api/controllerPsychologists/getPsychologist"
 import { getUser } from "@/api/controllerUsers/getUser"
 import { createNotification } from "@/api/controllerNotifications/createNotification"
 import { getAllTherapyRequests } from "@/api/controllerTherapyRequests/getAllTherapyRequests"
@@ -10,6 +11,7 @@ import { ROLES } from "@/common/enums/roles"
 import { makeContext } from "../helpers/fakeConversation"
 import { makeTherapyRequest, makeUser } from "../helpers/fixtures"
 import { withMockedApiClient } from "../helpers/apiClientMock"
+import { DEFAULT_GET_TIMEOUT_MS } from "@/api/common/getRequest"
 
 describe("dom-api client boundary", () => {
   let originalApiUrl: string | undefined
@@ -73,10 +75,38 @@ describe("dom-api client boundary", () => {
 
       assert.deepEqual(result, user)
       assert.equal(mock.calls[0].url, "http://dom-api.test/users/me")
+      assert.equal(mock.calls[0].timeout, DEFAULT_GET_TIMEOUT_MS)
       assert.equal(
         (mock.calls[0].headers as { Authorization?: string }).Authorization,
         "Bearer auth-token"
       )
+    } finally {
+      mock.restore()
+    }
+  })
+
+  it("lets auth/profile callers override the default GET timeout", async () => {
+    const mock = withMockedApiClient(() => ({
+      status: 200,
+      data: makeUser(),
+    }))
+
+    try {
+      await getUser(makeContext(), "me", { timeout: 10_000 })
+
+      assert.equal(mock.calls[0].timeout, 10_000)
+    } finally {
+      mock.restore()
+    }
+  })
+
+  it("normalizes an empty psychologist response to null", async () => {
+    const mock = withMockedApiClient(() => ({ status: 200, data: "" }))
+
+    try {
+      const result = await getPsychologist(makeContext())
+
+      assert.equal(result, null)
     } finally {
       mock.restore()
     }
@@ -116,6 +146,7 @@ describe("dom-api client boundary", () => {
       assert.equal(mock.calls[0].method, "post")
       assert.equal(mock.calls[0].url, "http://dom-api.test/notifications")
       assert.equal((mock.calls[0].data as { title: string }).title, "Title")
+      assert.equal(mock.calls[0].timeout, 0)
     } finally {
       mock.restore()
     }
