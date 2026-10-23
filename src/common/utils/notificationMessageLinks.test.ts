@@ -4,6 +4,7 @@ import {
   offsetNotificationMessageEntities,
   sanitizeNotificationMessageEntities,
 } from "./notificationMessageEntities"
+import { isValidLinkUrl } from "./isValidLinkUrl"
 import { parseNotificationMessageLinks } from "./parseNotificationMessageLinks"
 
 describe("notification message links", () => {
@@ -59,6 +60,44 @@ describe("notification message links", () => {
     ])
   })
 
+  it("accepts public domains and IP addresses but rejects single-label hosts", () => {
+    assert.equal(isValidLinkUrl("https://psydom.org/application"), true)
+    assert.equal(isValidLinkUrl("http://127.0.0.1:3006/application"), true)
+    assert.equal(isValidLinkUrl("http://[::1]:3006/application"), true)
+    assert.equal(isValidLinkUrl("http://localhost:3006/application"), false)
+    assert.equal(isValidLinkUrl("http://devbox:3006/application"), false)
+  })
+
+  it("keeps valid entities when another link has an unsupported host", () => {
+    const message = "psydom.org and open application"
+    const publicLabel = "psydom.org"
+    const applicationLabel = "open application"
+
+    const result = sanitizeNotificationMessageEntities(message, [
+      {
+        type: "text_link",
+        offset: message.indexOf(publicLabel),
+        length: publicLabel.length,
+        url: "https://psydom.org/",
+      },
+      {
+        type: "text_link",
+        offset: message.indexOf(applicationLabel),
+        length: applicationLabel.length,
+        url: "http://localhost:3006/application",
+      },
+    ])
+
+    assert.deepEqual(result, [
+      {
+        type: "text_link",
+        offset: 0,
+        length: publicLabel.length,
+        url: "https://psydom.org/",
+      },
+    ])
+  })
+
   it("keeps valid raw url entities", () => {
     const message = "open https://example.com"
     const result = sanitizeNotificationMessageEntities(message, [
@@ -79,4 +118,3 @@ describe("notification message links", () => {
     ])
   })
 })
-
