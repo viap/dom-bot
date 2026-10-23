@@ -373,9 +373,14 @@ export default class NotificationListener {
   private static async getActiveNotifications(): Promise<
     Array<NotificationDto>
   > {
+    // The API answers with eligibleUserIds among the users we have sessions
+    // for, judged by their current roles.
+    const candidates = await NotificationListener.getRecipientCandidates()
     const result = await NotificationListener.emitWithAck<
       Array<NotificationDto>
-    >("notifications/get-all-batch")
+    >("notifications/get-all-batch", {
+      userIds: candidates.map(({ userId }) => userId),
+    })
 
     return Array.isArray(result) ? result : []
   }
@@ -462,19 +467,25 @@ export default class NotificationListener {
   }
 
   private static async getNotificationRecipient(
-    notification: NotificationDto
+    notification: NotificationDto,
+    skippedUserIds: Set<string> = new Set()
   ): Promise<NotificationRecipient | undefined> {
     const candidates = await NotificationListener.getRecipientCandidates()
+    const { eligibleUserIds } = notification
     const candidate = candidates.find(
       ({ userId, roles }) =>
-        // NOTICE: roles empty or user have any required role
-        (!notification.roles.length ||
-          notification.roles.find((role) => roles.includes(role))) &&
-        // NOTICE: recipients empty or user is in recipients list
-        (!notification.recipients.length ||
-          notification.recipients.includes(userId)) &&
+        !skippedUserIds.has(userId) &&
         // NOTICE: user is not in received list
-        !notification.received.includes(userId)
+        !notification.received.includes(userId) &&
+        (Array.isArray(eligibleUserIds)
+          ? // NOTICE: the API decided by current roles
+            eligibleUserIds.includes(userId)
+          : // NOTICE: older API: roles empty or user has any required role,
+            // and recipients empty or user is in the list
+            (!notification.roles.length ||
+              notification.roles.some((role) => roles.includes(role))) &&
+            (!notification.recipients.length ||
+              notification.recipients.includes(userId)))
     )
 
     return candidate
@@ -488,14 +499,6 @@ export default class NotificationListener {
 
   private static async makeEffect(notification: NotificationDto) {
     let menuItemBreadCrumbs: Array<string> | undefined
-
-    const recipient = await NotificationListener.getNotificationRecipient(
-      notification
-    )
-
-    if (!recipient) {
-      return
-    }
 
     let message:
       | { text: string; options: { [key: string]: unknown } }
@@ -534,23 +537,42 @@ export default class NotificationListener {
         break
     }
 
-    if (message) {
+    if (!message) {
+      return
+    }
+
+    // NOTICE: if the API refuses a receipt (e.g. the user lost the role), try
+    // the next candidate instead of retrying the same one every cycle.
+    const skippedUserIds = new Set<string>()
+    let recipient = await NotificationListener.getNotificationRecipient(
+      notification,
+      skippedUserIds
+    )
+
+    while (recipient) {
       try {
         const result = await NotificationListener.sendNotificationOfReceipt(
           notification._id,
           recipient.token
         )
 
-        if (result) {
-          NotificationListener.diagnostics.claims += 1
-          // NOTICE: important to push userId into notification.received before sending to avoid extra messages
-          notification.received.push(recipient.userId)
-          await NotificationListener.sendTelegramMessage(
-            recipient.chatId,
-            message
+        if (!result) {
+          skippedUserIds.add(recipient.userId)
+          recipient = await NotificationListener.getNotificationRecipient(
+            notification,
+            skippedUserIds
           )
-          NotificationListener.diagnostics.sends += 1
+          continue
         }
+
+        NotificationListener.diagnostics.claims += 1
+        // NOTICE: important to push userId into notification.received before sending to avoid extra messages
+        notification.received.push(recipient.userId)
+        await NotificationListener.sendTelegramMessage(
+          recipient.chatId,
+          message
+        )
+        NotificationListener.diagnostics.sends += 1
       } catch (error) {
         NotificationListener.diagnostics.errors += 1
         // Log without the Telegram request payload: it contains the chat id
@@ -566,6 +588,7 @@ export default class NotificationListener {
           })
         )
       }
+      return
     }
   }
 

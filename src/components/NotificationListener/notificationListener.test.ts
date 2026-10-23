@@ -934,6 +934,119 @@ describe("NotificationListener recipient candidates", () => {
   })
 })
 
+describe("NotificationListener recipient selection", () => {
+  const tokenFor = (userId: string, roles: Array<string>) =>
+    `header.${Buffer.from(JSON.stringify({ userId, roles })).toString(
+      "base64url"
+    )}.signature`
+
+  type Internals = {
+    bot: unknown
+    sessions: unknown
+    socket: unknown
+    makeEffect: (notification: unknown) => Promise<void>
+    getActiveNotifications: () => Promise<Array<unknown>>
+  }
+  const target = NotificationListener as unknown as Internals
+
+  function setup(
+    sessions: Array<{ chatId: string; token: string }>,
+    ack: (data: { token: string }) => boolean
+  ) {
+    const sent: Array<string> = []
+    const receipts: Array<string> = []
+    target.bot = {
+      api: {
+        sendMessage: async (chatId: string) => {
+          sent.push(chatId)
+          return { message_id: 1 }
+        },
+      },
+    }
+    target.sessions = {
+      find: () => {
+        let index = 0
+        return {
+          hasNext: async () => index < sessions.length,
+          next: async () => {
+            const session = sessions[index++]
+            return {
+              key: `bot/${session.chatId}`,
+              value: { token: session.token },
+            }
+          },
+        }
+      },
+    }
+    target.socket = {
+      emitWithAck: async (_message: string, data: { token: string }) => {
+        receipts.push(data.token)
+        return ack(data)
+      },
+    }
+    return { sent, receipts }
+  }
+
+  const notification = (extra: Record<string, unknown>) => ({
+    _id: "notification-1",
+    type: "message",
+    message: "hello",
+    messageEntities: [],
+    roles: ["admin"],
+    recipients: [],
+    received: [],
+    ...extra,
+  })
+
+  it("uses API eligibility instead of stale token roles", async () => {
+    const stale = tokenFor("user-1", ["admin"])
+    const current = tokenFor("user-2", ["user"])
+    const { sent } = setup(
+      [
+        { chatId: "chat-1", token: stale },
+        { chatId: "chat-2", token: current },
+      ],
+      () => true
+    )
+
+    await target.makeEffect(notification({ eligibleUserIds: ["user-2"] }))
+
+    assert.deepEqual(sent, ["chat-2"])
+  })
+
+  it("tries the next candidate when the API refuses a receipt", async () => {
+    const first = tokenFor("user-1", ["admin"])
+    const second = tokenFor("user-2", ["admin"])
+    const { sent, receipts } = setup(
+      [
+        { chatId: "chat-1", token: first },
+        { chatId: "chat-2", token: second },
+      ],
+      (data) => data.token === second
+    )
+
+    await target.makeEffect(notification({}))
+
+    assert.deepEqual(receipts, [first, second])
+    assert.deepEqual(sent, ["chat-2"])
+  })
+
+  it("sends its session user ids with the batch request", async () => {
+    const payloads: Array<unknown> = []
+    setup([{ chatId: "chat-1", token: tokenFor("user-1", []) }], () => true)
+    target.socket = {
+      emitWithAck: async (_message: string, data: unknown) => {
+        payloads.push(data)
+        return []
+      },
+    }
+
+    await target.getActiveNotifications()
+
+    assert.deepEqual(payloads, [{ userIds: ["user-1"] }])
+  })
+})
+
 function createFakeSocket(): FakeSocket {
   const socketHandlers = new Map<
     string,
