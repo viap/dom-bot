@@ -27,9 +27,10 @@ export function getSafeErrorDetails(error: unknown): {
     }
   }
 
+  const message = (error as { message?: unknown } | null)?.message
   return {
     message:
-      error instanceof Error ? stripBotToken(error.message) : "Unknown error",
+      typeof message === "string" ? stripBotToken(message) : "Unknown error",
   }
 }
 

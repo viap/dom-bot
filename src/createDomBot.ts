@@ -129,7 +129,7 @@ export function createDomBot({
     try {
       await ctx.conversation.exit()
     } catch (error) {
-      console.log(BOT_ERRORS.CONVERSATION_EXIT, error)
+      console.log(BOT_ERRORS.CONVERSATION_EXIT, getSafeErrorDetails(error))
     }
 
     delete ctx.session.menuDeepLink
@@ -203,7 +203,7 @@ export function createDomBot({
     try {
       await ctx.conversation.exit()
     } catch (error) {
-      console.log(BOT_ERRORS.CONVERSATION_EXIT, error)
+      console.log(BOT_ERRORS.CONVERSATION_EXIT, getSafeErrorDetails(error))
     }
 
     await ctx.reply(

@@ -723,6 +723,6 @@ export default class NotificationListener {
   }
 
   private static async onException(exception: unknown) {
-    console.log("Notifications: exception", exception)
+    console.log("Notifications: exception", getSafeErrorDetails(exception))
   }
 }

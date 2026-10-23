@@ -45,4 +45,13 @@ describe("getSafeErrorDetails", () => {
 
     assert.ok(!details.message.includes("123:ABC-def"))
   })
+
+  it("keeps the message of plain error payloads", () => {
+    assert.deepEqual(
+      getSafeErrorDetails({ status: "error", message: "boom" }),
+      {
+        message: "boom",
+      }
+    )
+  })
 })

@@ -163,7 +163,7 @@ async function exitPartialRecovery(ctx: MyContext): Promise<void> {
   try {
     await ctx.conversation.exit()
   } catch (exitError) {
-    console.error(BOT_ERRORS.CONVERSATION_EXIT, exitError)
+    console.error(BOT_ERRORS.CONVERSATION_EXIT, getSafeErrorDetails(exitError))
   }
 }
 
