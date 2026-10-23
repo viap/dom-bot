@@ -576,7 +576,7 @@ export default class NotificationListener {
     let text = body.text
 
     if (notification.title) {
-      const prefix = notification.title + ":" + ReplyMarkup.doubleNewLine
+      const prefix = notification.title + ":\n\n"
       text = prefix + body.text
       entities.push({
         type: "bold",

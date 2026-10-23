@@ -112,6 +112,135 @@ describe("NotificationListener message delivery", () => {
     ])
   })
 
+  it("preserves both application notification text links without a title", () => {
+    const siteAddress = "psydom.org"
+    const siteUrl = "https://psydom.org/"
+    const linkLabel = "Открыть заявку"
+    const applicationUrl =
+      "https://psydom.org/ru/admin/applications?applicationId=507f1f77bcf86cd799439031"
+    const message = `Новая заявка с сайта: ${siteAddress}
+
+Тип: Запись на мероприятие
+Имя: 👩‍💻 Анна
+Мероприятие: Семья 👨‍👩‍👧‍👦
+
+${linkLabel}`
+    const siteOffset = message.indexOf(siteAddress)
+    const applicationOffset = message.lastIndexOf(linkLabel)
+    const result = (
+      NotificationListener as unknown as {
+        buildMessageNotification: (notification: unknown) => {
+          text: string
+          options: { entities?: Array<unknown> }
+        }
+      }
+    ).buildMessageNotification({
+      type: "message",
+      message,
+      messageEntities: [
+        {
+          type: "text_link",
+          offset: siteOffset,
+          length: siteAddress.length,
+          url: siteUrl,
+        },
+        {
+          type: "text_link",
+          offset: applicationOffset,
+          length: linkLabel.length,
+          url: applicationUrl,
+        },
+      ],
+      roles: ["admin"],
+      recipients: [],
+      received: [],
+    })
+
+    assert.equal(result.text, message)
+    assert.deepEqual(result.options.entities, [
+      {
+        type: "text_link",
+        offset: siteOffset,
+        length: siteAddress.length,
+        url: siteUrl,
+      },
+      {
+        type: "text_link",
+        offset: applicationOffset,
+        length: linkLabel.length,
+        url: applicationUrl,
+      },
+    ])
+    assert.equal(
+      result.text.slice(siteOffset, siteOffset + siteAddress.length),
+      siteAddress
+    )
+    assert.equal(
+      result.text.slice(
+        applicationOffset,
+        applicationOffset + linkLabel.length
+      ),
+      linkLabel
+    )
+  })
+
+  it("uses an LF-only title prefix before offsetting body entities", () => {
+    const title = "Заголовок"
+    const linkLabel = "Открыть"
+    const url = "https://example.com/application"
+    const message = `Текст 👩‍💻\n\n${linkLabel}`
+    const bodyOffset = message.indexOf(linkLabel)
+    const prefix = `${title}:\n\n`
+    const result = (
+      NotificationListener as unknown as {
+        buildMessageNotification: (notification: unknown) => {
+          text: string
+          options: { entities?: Array<unknown> }
+        }
+      }
+    ).buildMessageNotification({
+      type: "message",
+      title,
+      message,
+      messageEntities: [
+        {
+          type: "text_link",
+          offset: bodyOffset,
+          length: linkLabel.length,
+          url,
+        },
+      ],
+      roles: [],
+      recipients: [],
+      received: [],
+    })
+
+    const entities = result.options.entities as Array<{
+      type: string
+      offset: number
+      length: number
+      url?: string
+    }>
+    const linkEntity = entities[1]
+
+    assert.equal(result.text, `${prefix}${message}`)
+    assert.equal(result.text.includes("\r"), false)
+    assert.deepEqual(linkEntity, {
+      type: "text_link",
+      offset: prefix.length + bodyOffset,
+      length: linkLabel.length,
+      url,
+    })
+    assert.equal(
+      result.text.slice(
+        linkEntity.offset,
+        linkEntity.offset + linkEntity.length
+      ),
+      linkLabel
+    )
+    assert.ok(linkEntity.offset + linkEntity.length <= result.text.length)
+  })
+
   it("retries rich messages as plain text when Telegram rejects entities", async () => {
     const calls: Array<{ chatId: string; text: string; options?: unknown }> = []
     const error = new Error("Bad Request: can't parse entities")
