@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { autoRetry } from "@grammyjs/auto-retry"
 import { conversations } from "@grammyjs/conversations"
 import { sequentialize } from "@grammyjs/runner"
@@ -138,7 +139,10 @@ export function createDomBot({
       })
       clearPendingRecovery(ctx)
     } catch (error) {
-      console.error("[interactionRecovery] start reply failed:", error)
+      console.error(
+        "[interactionRecovery] start reply failed:",
+        getSafeErrorDetails(error)
+      )
     }
   })
 
@@ -232,9 +236,9 @@ export function createDomBot({
     if (e instanceof GrammyError) {
       console.error(`${BOT_ERRORS.REQUEST}:`, e.description)
     } else if (e instanceof HttpError) {
-      console.error(`${BOT_ERRORS.UNAVAILABLE}:`, e)
+      console.error(`${BOT_ERRORS.UNAVAILABLE}:`, getSafeErrorDetails(e))
     } else {
-      console.error(`${BOT_ERRORS.UNKNOWN}:`, e)
+      console.error(`${BOT_ERRORS.UNKNOWN}:`, getSafeErrorDetails(e))
     }
   })
 

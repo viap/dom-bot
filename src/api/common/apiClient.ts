@@ -74,7 +74,10 @@ apiClient.interceptors.response.use(
       console.debug(
         `[API DEBUG] ✗ ${error.response?.status} ${error.config?.url} (${duration}ms)`
       )
-      console.debug("[API DEBUG] Error body:", error.response?.data)
+      console.debug(
+        "[API DEBUG] Error body:",
+        redactSecrets(error.response?.data)
+      )
     } else if (isDev) {
       console.error(
         `[API] Error ${error.response?.status} ${error.config?.url}:`,

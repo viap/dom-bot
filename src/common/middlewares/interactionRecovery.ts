@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { BOT_COMMANDS } from "@/common/enums/botCommands"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { BOT_TEXTS } from "@/common/enums/botTexts"
@@ -97,7 +98,10 @@ export async function dispatchPendingRecovery(
       await next()
       clearPendingRecovery(ctx)
     } catch (error) {
-      console.error("[interactionRecovery] explicit recovery route failed:", error)
+      console.error(
+        "[interactionRecovery] explicit recovery route failed:",
+        getSafeErrorDetails(error)
+      )
     }
     return
   }
@@ -119,7 +123,10 @@ export async function dispatchPendingRecovery(
       }
       clearPendingRecovery(ctx)
     } catch (error) {
-      console.error("[interactionRecovery] callback recovery failed:", error)
+      console.error(
+        "[interactionRecovery] callback recovery failed:",
+        getSafeErrorDetails(error)
+      )
       await exitPartialRecovery(ctx)
     }
     return
@@ -134,7 +141,10 @@ export async function dispatchPendingRecovery(
     })
     clearPendingRecovery(ctx)
   } catch (error) {
-    console.error("[interactionRecovery] menu recovery failed:", error)
+    console.error(
+      "[interactionRecovery] menu recovery failed:",
+      getSafeErrorDetails(error)
+    )
     await exitPartialRecovery(ctx)
   }
 }

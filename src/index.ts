@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { run } from "@grammyjs/runner"
 import domBot from "./domBot"
 import { stopNotificationListener } from "./startup"
@@ -44,7 +45,7 @@ async function startBot() {
         stopNotificationListener()
         process.exit(0)
       } catch (error) {
-        console.error("Error during shutdown:", error)
+        console.error("Error during shutdown:", getSafeErrorDetails(error))
         process.exit(1)
       }
     }
@@ -54,13 +55,13 @@ async function startBot() {
 
     return runner
   } catch (error) {
-    console.error("Failed to start bot:", error)
+    console.error("Failed to start bot:", getSafeErrorDetails(error))
     process.exit(1)
   }
 }
 
 // Start the bot
 startBot().catch((error) => {
-  console.error("Bot startup failed:", error)
+  console.error("Bot startup failed:", getSafeErrorDetails(error))
   process.exit(1)
 })

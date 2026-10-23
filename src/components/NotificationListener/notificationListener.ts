@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { NotificationDto } from "@/common/dto/notification.dto"
 import { TokenPayloadDto } from "@/common/dto/tokenPayload.dto"
 import { NOTIFICATION_TYPES } from "@/common/enums/notificationTypes"
@@ -307,7 +308,10 @@ export default class NotificationListener {
             )
           ) {
             NotificationListener.diagnostics.errors += 1
-            console.error("Notification processing error", error)
+            console.error(
+              "Notification processing error",
+              getSafeErrorDetails(error)
+            )
           }
         }
       }
@@ -319,7 +323,10 @@ export default class NotificationListener {
         )
       ) {
         NotificationListener.diagnostics.errors += 1
-        console.error("Notifications: polling cycle failed", error)
+        console.error(
+          "Notifications: polling cycle failed",
+          getSafeErrorDetails(error)
+        )
       }
     } finally {
       if (
@@ -678,7 +685,7 @@ export default class NotificationListener {
   private static async onError(error: unknown) {
     console.error(
       `Notifications: connection error (${process.env.API_WEBSOCKET_URL})`,
-      error
+      getSafeErrorDetails(error)
     )
   }
 
