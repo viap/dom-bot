@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { editUser } from "@/api/controllerUsers/editUser"
 import { EditUserDto } from "@/api/dto/editUser.dto"
 import { UserDto } from "@/common/dto/user.dto"
@@ -46,7 +47,7 @@ const userSetPassword: BotConversation = {
 
           result = typeof editedUser === "object"
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         } finally {
           if (result === true) {
             await ctx.reply(

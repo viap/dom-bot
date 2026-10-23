@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { Conversation } from "@grammyjs/conversations"
 import { deleteTherapyRequest } from "@/api/controllerTherapyRequests/deleteTherapyRequest"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
@@ -25,7 +26,7 @@ const therapyRequestDelete: BotConversation = {
           return await deleteTherapyRequest(ctx, therapyRequest._id)
         })
       } catch (e) {
-        conversation.log(BOT_ERRORS.REQUEST, e)
+        conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
       } finally {
         if (result === true) {
           await ctx.reply("*Заявка удалена*", ReplyMarkup.parseModeV2)

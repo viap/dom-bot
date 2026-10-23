@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { Conversation } from "@grammyjs/conversations"
 import { rejectTherapyRequest } from "@/api/controllerTherapyRequests/rejectTherapyRequest"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
@@ -24,7 +25,7 @@ const therapyRequestReject: BotConversation = {
           return await rejectTherapyRequest(ctx, therapyRequest._id)
         })
       } catch (e) {
-        conversation.log(BOT_ERRORS.REQUEST, e)
+        conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
       } finally {
         if (result === true) {
           await ctx.reply("*Заявка отклонена*", ReplyMarkup.parseModeV2)

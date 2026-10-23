@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { createNotification } from "@/api/controllerNotifications/createNotification"
 import { ROLES_DESCR_PLURAL } from "@/common/consts/rolesDescr"
 import { ClientDto } from "@/common/dto/client.dto"
@@ -112,7 +113,7 @@ const notificationCreate: BotConversation = {
 
           result = notEmpty(notification)
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         } finally {
           if (result === true) {
             await ctx.reply("*Добавлено уведомление*", ReplyMarkup.parseModeV2)

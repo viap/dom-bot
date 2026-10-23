@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { addNewClient } from "@/api/controllerPsychologists/addNewClient"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { MyContext } from "@/common/types/myContext"
@@ -50,7 +51,7 @@ const clientAdd: BotConversation = {
             })
           })
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         } finally {
           if (result === true) {
             await ctx.reply("*Добавлен новый клиент*", ReplyMarkup.parseModeV2)

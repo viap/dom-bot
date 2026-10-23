@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { getAllPsychologists } from "@/api/controllerPsychologists/getAllPsychologists"
 import { createTherapyRequest } from "@/api/controllerTherapyRequests/createTherapyRequest"
 import {
@@ -121,14 +122,16 @@ const therapyRequestAdd: BotConversation = {
                   typeof formResult.data.psychologist === "string"
                     ? formResult.data.psychologist
                     : undefined,
-                clientGender:
-                  isTherapyRequestClientGender(formResult.data.clientGender)
-                    ? formResult.data.clientGender
-                    : undefined,
-                requestCategory:
-                  isTherapyRequestCategory(formResult.data.requestCategory)
-                    ? formResult.data.requestCategory
-                    : undefined,
+                clientGender: isTherapyRequestClientGender(
+                  formResult.data.clientGender
+                )
+                  ? formResult.data.clientGender
+                  : undefined,
+                requestCategory: isTherapyRequestCategory(
+                  formResult.data.requestCategory
+                )
+                  ? formResult.data.requestCategory
+                  : undefined,
                 contacts: [
                   {
                     id: enteredTelegramUser ? undefined : telegramUser.id,
@@ -141,7 +144,7 @@ const therapyRequestAdd: BotConversation = {
             )
           })
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         } finally {
           if (result === true) {
             await ctx.reply("*Ваш запрос отправлен*", ReplyMarkup.parseModeV2)
