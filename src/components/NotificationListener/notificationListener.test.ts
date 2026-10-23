@@ -246,7 +246,6 @@ ${linkLabel}`
     const error = new Error("Bad Request: can't parse entities")
     const originalConsoleError = console.error
     console.error = () => undefined
-
     ;(
       NotificationListener as unknown as {
         bot: {
@@ -498,7 +497,6 @@ ${linkLabel}`
       warnings.push(args)
     }
     listener.didWarnAboutMissingAckTimeout = false
-
     ;(
       NotificationListener as unknown as {
         socket: {
@@ -891,6 +889,50 @@ function preparePollingState() {
     connectGeneration: listener.connectGeneration,
   }
 }
+
+describe("NotificationListener recipient candidates", () => {
+  it("reads sessions once per polling cycle", async () => {
+    const tokenPayload = Buffer.from(
+      JSON.stringify({ userId: "user-1", roles: ["admin"] })
+    ).toString("base64url")
+    let findCalls = 0
+    const target = NotificationListener as unknown as {
+      isPolling: boolean
+      cycleCandidates?: unknown
+      sessions: unknown
+      getRecipientCandidates: () => Promise<Array<{ userId: string }>>
+    }
+    target.sessions = {
+      find: () => {
+        findCalls += 1
+        let consumed = false
+        return {
+          hasNext: async () => !consumed,
+          next: async () => {
+            consumed = true
+            return {
+              key: "bot/chat-1",
+              value: { token: `header.${tokenPayload}.signature` },
+            }
+          },
+        }
+      },
+    }
+
+    target.isPolling = true
+    try {
+      const first = await target.getRecipientCandidates()
+      const second = await target.getRecipientCandidates()
+
+      assert.equal(findCalls, 1)
+      assert.equal(second, first)
+      assert.equal(first[0].userId, "user-1")
+    } finally {
+      target.isPolling = false
+      delete target.cycleCandidates
+    }
+  })
+})
 
 function createFakeSocket(): FakeSocket {
   const socketHandlers = new Map<

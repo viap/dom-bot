@@ -20,6 +20,7 @@ import { io, Socket } from "socket.io-client"
 import { MENU_ITEM_TYPES } from "../MenuBlock/enums/menuItemTypes"
 
 type NotificationRecipient = { chatId: string; userId: string; token: string }
+type RecipientCandidate = NotificationRecipient & { roles: Array<string> }
 type SocketFactory = typeof io
 type TimeoutSocket = Socket & {
   timeout?: (timeout: number) => Pick<Socket, "emitWithAck">
@@ -50,6 +51,7 @@ export default class NotificationListener {
     | { lifecycleGeneration: number; connectGeneration: number }
     | undefined
   private static currentCycleSessionScans = 0
+  private static cycleCandidates?: Array<RecipientCandidate>
   private static diagnostics = {
     cycles: 0,
     notifications: 0,
@@ -185,10 +187,7 @@ export default class NotificationListener {
       const socket = NotificationListener.socket as TimeoutSocket
       const hasTimeout = typeof socket.timeout === "function"
 
-      if (
-        !hasTimeout &&
-        !NotificationListener.didWarnAboutMissingAckTimeout
-      ) {
+      if (!hasTimeout && !NotificationListener.didWarnAboutMissingAckTimeout) {
         NotificationListener.didWarnAboutMissingAckTimeout = true
         console.warn(
           "NotificationListener: socket timeout() is not available; ACK timeout is disabled"
@@ -224,8 +223,7 @@ export default class NotificationListener {
     return (
       NotificationListener.pollingOwner?.lifecycleGeneration ===
         lifecycleGeneration &&
-      NotificationListener.pollingOwner?.connectGeneration ===
-        connectGeneration
+      NotificationListener.pollingOwner?.connectGeneration === connectGeneration
     )
   }
 
@@ -277,6 +275,7 @@ export default class NotificationListener {
       connectGeneration,
     }
     NotificationListener.currentCycleSessionScans = 0
+    delete NotificationListener.cycleCandidates
     const startedAt = Date.now()
     let notificationCount = 0
 
@@ -331,6 +330,7 @@ export default class NotificationListener {
       ) {
         NotificationListener.isPolling = false
         delete NotificationListener.pollingOwner
+        delete NotificationListener.cycleCandidates
         NotificationListener.recordCycleDiagnostics(
           Date.now() - startedAt,
           notificationCount
@@ -413,20 +413,27 @@ export default class NotificationListener {
     }
   }
 
-  private static async getNotificationRecipient(
-    notification: NotificationDto
-  ): Promise<NotificationRecipient | undefined> {
-    let recipient: NotificationRecipient | undefined = undefined
+  // Sessions with a token, decoded once per polling cycle instead of once per
+  // notification. Outside a cycle they are read fresh.
+  private static async getRecipientCandidates(): Promise<
+    Array<RecipientCandidate>
+  > {
+    if (
+      NotificationListener.isPolling &&
+      NotificationListener.cycleCandidates
+    ) {
+      return NotificationListener.cycleCandidates
+    }
 
+    const candidates: Array<RecipientCandidate> = []
     if (NotificationListener.sessions) {
       const allSessionsWithToken = NotificationListener.sessions.find({
         "value.token": { $exists: true, $ne: "" },
       })
 
-      let session: { key: string; value: SessionData } | undefined = undefined
-      while ((await allSessionsWithToken.hasNext()) && !recipient) {
+      while (await allSessionsWithToken.hasNext()) {
         NotificationListener.currentCycleSessionScans += 1
-        session = (await allSessionsWithToken.next()) as {
+        const session = (await allSessionsWithToken.next()) as {
           key: string
           value: SessionData
         }
@@ -436,27 +443,47 @@ export default class NotificationListener {
             session.value.token
           )
 
-          if (
-            userId &&
-            // NOTICE: roles empty or user have any required role
-            (!notification.roles.length ||
-              notification.roles.find((role) => roles.includes(role))) &&
-            // NOTICE: recipients empty or user is in recipients list
-            (!notification.recipients.length ||
-              notification.recipients.includes(userId)) &&
-            // NOTICE: user is not in received list
-            !notification.received.includes(userId)
-          ) {
-            recipient = {
+          if (userId) {
+            candidates.push({
               userId,
+              roles,
               chatId: session.key.split("/")[1],
               token: session.value.token,
-            }
+            })
           }
         }
       }
     }
-    return recipient
+
+    if (NotificationListener.isPolling) {
+      NotificationListener.cycleCandidates = candidates
+    }
+    return candidates
+  }
+
+  private static async getNotificationRecipient(
+    notification: NotificationDto
+  ): Promise<NotificationRecipient | undefined> {
+    const candidates = await NotificationListener.getRecipientCandidates()
+    const candidate = candidates.find(
+      ({ userId, roles }) =>
+        // NOTICE: roles empty or user have any required role
+        (!notification.roles.length ||
+          notification.roles.find((role) => roles.includes(role))) &&
+        // NOTICE: recipients empty or user is in recipients list
+        (!notification.recipients.length ||
+          notification.recipients.includes(userId)) &&
+        // NOTICE: user is not in received list
+        !notification.received.includes(userId)
+    )
+
+    return candidate
+      ? {
+          userId: candidate.userId,
+          chatId: candidate.chatId,
+          token: candidate.token,
+        }
+      : undefined
   }
 
   private static async makeEffect(notification: NotificationDto) {
@@ -526,7 +553,18 @@ export default class NotificationListener {
         }
       } catch (error) {
         NotificationListener.diagnostics.errors += 1
-        console.error("Notification delivery error", error)
+        // Log without the Telegram request payload: it contains the chat id
+        // and the message text.
+        console.error(
+          JSON.stringify({
+            event: "notification.send.failed",
+            notificationId: notification._id,
+            errorCode: (error as { error_code?: number })?.error_code,
+            description:
+              (error as { description?: string })?.description ||
+              (error as Error)?.message,
+          })
+        )
       }
     }
   }
@@ -548,7 +586,8 @@ export default class NotificationListener {
 
       console.error(
         "Notification rich-text delivery failed, retrying as plain text",
-        error
+        (error as { description?: string })?.description ||
+          (error as Error)?.message
       )
 
       return await NotificationListener.bot.api.sendMessage(
