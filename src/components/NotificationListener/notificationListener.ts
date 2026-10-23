@@ -20,8 +20,7 @@ import { jwtDecode } from "jwt-decode"
 import { io, Socket } from "socket.io-client"
 import { MENU_ITEM_TYPES } from "../MenuBlock/enums/menuItemTypes"
 
-type NotificationRecipient = { chatId: string; userId: string; token: string }
-type RecipientCandidate = NotificationRecipient & { roles: Array<string> }
+type NotificationRecipient = { chatId: string; userId: string }
 type SocketFactory = typeof io
 type TimeoutSocket = Socket & {
   timeout?: (timeout: number) => Pick<Socket, "emitWithAck">
@@ -52,7 +51,7 @@ export default class NotificationListener {
     | { lifecycleGeneration: number; connectGeneration: number }
     | undefined
   private static currentCycleSessionScans = 0
-  private static cycleCandidates?: Array<RecipientCandidate>
+  private static cycleCandidates?: Array<NotificationRecipient>
   private static diagnostics = {
     cycles: 0,
     notifications: 0,
@@ -386,7 +385,7 @@ export default class NotificationListener {
     const result = await NotificationListener.emitWithAck<
       Array<NotificationDto>
     >("notifications/get-all-batch", {
-      userIds: candidates.map(({ userId }) => userId),
+      userIds: [...new Set(candidates.map(({ userId }) => userId))],
     })
 
     return Array.isArray(result) ? result : []
@@ -428,7 +427,7 @@ export default class NotificationListener {
   // Sessions with a token, decoded once per polling cycle instead of once per
   // notification. Outside a cycle they are read fresh.
   private static async getRecipientCandidates(): Promise<
-    Array<RecipientCandidate>
+    Array<NotificationRecipient>
   > {
     if (
       NotificationListener.isPolling &&
@@ -437,7 +436,7 @@ export default class NotificationListener {
       return NotificationListener.cycleCandidates
     }
 
-    const candidates: Array<RecipientCandidate> = []
+    const candidates: Array<NotificationRecipient> = []
     if (NotificationListener.sessions) {
       const allSessionsWithToken = NotificationListener.sessions.find({
         "value.token": { $exists: true, $ne: "" },
@@ -451,16 +450,14 @@ export default class NotificationListener {
         }
 
         if (session.value.token) {
-          const { userId, roles = [] }: Partial<TokenPayloadDto> = jwtDecode(
+          const { userId }: Partial<TokenPayloadDto> = jwtDecode(
             session.value.token
           )
 
           if (userId) {
             candidates.push({
               userId,
-              roles,
               chatId: session.key.split("/")[1],
-              token: session.value.token,
             })
           }
         }
@@ -478,30 +475,16 @@ export default class NotificationListener {
     skippedUserIds: Set<string> = new Set()
   ): Promise<NotificationRecipient | undefined> {
     const candidates = await NotificationListener.getRecipientCandidates()
-    const { eligibleUserIds } = notification
-    const candidate = candidates.find(
-      ({ userId, roles }) =>
-        !skippedUserIds.has(userId) &&
-        // NOTICE: user is not in received list
-        !notification.received.includes(userId) &&
-        (Array.isArray(eligibleUserIds)
-          ? // NOTICE: the API decided by current roles
-            eligibleUserIds.includes(userId)
-          : // NOTICE: older API: roles empty or user has any required role,
-            // and recipients empty or user is in the list
-            (!notification.roles.length ||
-              notification.roles.some((role) => roles.includes(role))) &&
-            (!notification.recipients.length ||
-              notification.recipients.includes(userId)))
-    )
+    // NOTICE: the API decides the audience by current roles; without
+    // eligibleUserIds nobody is eligible.
+    const eligibleUserIds = notification.eligibleUserIds ?? []
 
-    return candidate
-      ? {
-          userId: candidate.userId,
-          chatId: candidate.chatId,
-          token: candidate.token,
-        }
-      : undefined
+    return candidates.find(
+      ({ userId }) =>
+        !skippedUserIds.has(userId) &&
+        !notification.received.includes(userId) &&
+        eligibleUserIds.includes(userId)
+    )
   }
 
   private static async makeEffect(notification: NotificationDto) {
@@ -560,7 +543,7 @@ export default class NotificationListener {
       try {
         const result = await NotificationListener.sendNotificationOfReceipt(
           notification._id,
-          recipient.token
+          recipient.userId
         )
 
         if (!result) {
@@ -667,13 +650,13 @@ export default class NotificationListener {
 
   private static sendNotificationOfReceipt(
     notificationId: string,
-    token: string
+    userId: string
   ): Promise<boolean> | undefined {
     return NotificationListener.emitWithAck<boolean>(
       "notifications/add-received",
       {
         notificationId,
-        token,
+        userId,
       }
     )
   }

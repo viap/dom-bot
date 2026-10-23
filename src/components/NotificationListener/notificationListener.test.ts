@@ -322,6 +322,7 @@ ${linkLabel}`
       roles: [],
       recipients: [],
       received: [],
+      eligibleUserIds: ["user-1"],
     }
 
     ;(
@@ -415,6 +416,7 @@ ${linkLabel}`
       roles: [],
       recipients: [],
       received: [],
+      eligibleUserIds: ["user-1"],
     }
 
     ;(
@@ -951,7 +953,7 @@ describe("NotificationListener recipient selection", () => {
 
   function setup(
     sessions: Array<{ chatId: string; token: string }>,
-    ack: (data: { token: string }) => boolean
+    ack: (data: { userId: string }) => boolean
   ) {
     const sent: Array<string> = []
     const receipts: Array<string> = []
@@ -979,8 +981,8 @@ describe("NotificationListener recipient selection", () => {
       },
     }
     target.socket = {
-      emitWithAck: async (_message: string, data: { token: string }) => {
-        receipts.push(data.token)
+      emitWithAck: async (_message: string, data: { userId: string }) => {
+        receipts.push(data.userId)
         return ack(data)
       },
     }
@@ -1022,13 +1024,64 @@ describe("NotificationListener recipient selection", () => {
         { chatId: "chat-1", token: first },
         { chatId: "chat-2", token: second },
       ],
-      (data) => data.token === second
+      (data) => data.userId === "user-2"
     )
 
+    await target.makeEffect(
+      notification({ eligibleUserIds: ["user-1", "user-2"] })
+    )
+
+    assert.deepEqual(receipts, ["user-1", "user-2"])
+    assert.deepEqual(sent, ["chat-2"])
+  })
+
+  it("sends nothing when the API lists no eligible users", async () => {
+    const { sent, receipts } = setup(
+      [{ chatId: "chat-1", token: tokenFor("user-1", ["admin"]) }],
+      () => true
+    )
+
+    await target.makeEffect(notification({ eligibleUserIds: [] }))
     await target.makeEffect(notification({}))
 
-    assert.deepEqual(receipts, [first, second])
-    assert.deepEqual(sent, ["chat-2"])
+    assert.deepEqual(receipts, [])
+    assert.deepEqual(sent, [])
+  })
+
+  it("reads sessions once per polling cycle, even when receipts are refused", async () => {
+    let findCalls = 0
+    setup(
+      [
+        { chatId: "chat-1", token: tokenFor("user-1", []) },
+        { chatId: "chat-2", token: tokenFor("user-2", []) },
+      ],
+      (data) => data.userId === "user-2"
+    )
+    const sessions = target.sessions as { find: () => unknown }
+    const find = sessions.find
+    target.sessions = {
+      find: () => {
+        findCalls += 1
+        return find()
+      },
+    }
+    const polling = NotificationListener as unknown as {
+      isPolling: boolean
+      cycleCandidates?: unknown
+    }
+
+    polling.isPolling = true
+    try {
+      await target.makeEffect(
+        notification({ eligibleUserIds: ["user-1", "user-2"] })
+      )
+      await target.makeEffect(notification({ eligibleUserIds: ["user-1"] }))
+    } finally {
+      polling.isPolling = false
+      delete polling.cycleCandidates
+    }
+
+    assert.equal(findCalls, 1)
   })
 
   it("sends its session user ids with the batch request", async () => {
