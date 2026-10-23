@@ -1,3 +1,4 @@
+import { autoRetry } from "@grammyjs/auto-retry"
 import { conversations } from "@grammyjs/conversations"
 import { sequentialize } from "@grammyjs/runner"
 import {
@@ -21,9 +22,7 @@ import {
   dispatchPendingRecovery,
   isRecoveryMenuRegistrationRequired,
 } from "@/common/middlewares/interactionRecovery"
-import {
-  syncRoleAwareCommandsOnChange,
-} from "@/common/middlewares/roleAwareCommands"
+import { syncRoleAwareCommandsOnChange } from "@/common/middlewares/roleAwareCommands"
 import { MyContext } from "@/common/types/myContext"
 import { SessionData, defaultSessionData } from "@/common/types/sessionData"
 import {
@@ -79,6 +78,8 @@ export function createDomBot({
   conversationVersion = CONVERSATION_VERSION,
 }: CreateDomBotOptions): Bot<MyContext> {
   const domBot = new Bot<MyContext>(token, botConfig)
+  // Retry Telegram API calls on rate limits (429) and transient server errors.
+  domBot.api.config.use(autoRetry({ maxRetryAttempts: 3, maxDelaySeconds: 30 }))
 
   DatePicker.setBotInstance(domBot)
 
