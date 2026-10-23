@@ -43,6 +43,16 @@ import { BotConversations } from "@/conversations"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import { DatePicker } from "@/components/DatePicker/datePicker"
 
+// Retry only Telegram rate limits (429 with a short retry_after). Network and
+// 5xx errors are rethrown: retrying them can resend a message Telegram already
+// delivered, and unbounded retries would stall long polling.
+export const AUTO_RETRY_OPTIONS = {
+  maxRetryAttempts: 3,
+  maxDelaySeconds: 30,
+  rethrowHttpErrors: true,
+  rethrowInternalServerErrors: true,
+}
+
 export type CreateDomBotOptions = {
   token?: string
   botConfig?: BotConfig<MyContext>
@@ -78,8 +88,7 @@ export function createDomBot({
   conversationVersion = CONVERSATION_VERSION,
 }: CreateDomBotOptions): Bot<MyContext> {
   const domBot = new Bot<MyContext>(token, botConfig)
-  // Retry Telegram API calls on rate limits (429) and transient server errors.
-  domBot.api.config.use(autoRetry({ maxRetryAttempts: 3, maxDelaySeconds: 30 }))
+  domBot.api.config.use(autoRetry(AUTO_RETRY_OPTIONS))
 
   DatePicker.setBotInstance(domBot)
 
