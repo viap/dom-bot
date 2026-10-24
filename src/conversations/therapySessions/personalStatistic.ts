@@ -26,6 +26,15 @@ const therapySessionsPersonalStatistic: BotConversation = {
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
       const sessionPsychologist = ctx.session.psychologist
+      // Without an id the API would be asked for everyone's statistics.
+      if (!sessionPsychologist?._id) {
+        await ctx.reply(
+          "*Не удалось получить статистику*",
+          ReplyMarkup.parseModeV2
+        )
+        return undefined
+      }
+
       const [startDate, endDate] = getTimeRange(period)
 
       const datesOfPeriod = ReplyMarkup.escapeForParseModeV2(
@@ -70,9 +79,9 @@ const therapySessionsPersonalStatistic: BotConversation = {
             sessionDetailsByClientId[clientId] || []
           sessionDetailsByClientId[clientId].push(
             ...sessions.map((session) => {
-              return `${ReplyMarkup.tab} - ${
-                getLocalDateString(session.dateTime)
-              }, сумма ${getSumsForPrices([session.price]).join(
+              return `${ReplyMarkup.tab} - ${getLocalDateString(
+                session.dateTime
+              )}, сумма ${getSumsForPrices([session.price]).join(
                 ", "
               )}, комиссия ${getSumsForPrices([session.commission]).join(", ")}`
             })

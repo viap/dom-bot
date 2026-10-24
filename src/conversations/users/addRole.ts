@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { editUser } from "@/api/controllerUsers/editUser"
 import { EditUserDto } from "@/api/dto/editUser.dto"
 import { ROLES_DESCR } from "@/common/consts/rolesDescr"
@@ -35,7 +36,7 @@ const userAddRole: BotConversation = {
 
         result = (editedUser?.roles || []).includes(role)
       } catch (e) {
-        conversation.log(BOT_ERRORS.REQUEST, e)
+        conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
       } finally {
         if (result === true) {
           await ctx.reply(

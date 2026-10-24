@@ -41,7 +41,8 @@ export async function handleCallbackData(
     }
   }
 
-  console.log(BOT_ERRORS.UNKNOWN_CALLBACK, ctx.callbackQuery?.data)
+  // Callback data is user-controlled and may carry ids; it is not logged.
+  console.log(BOT_ERRORS.UNKNOWN_CALLBACK)
   return false
 }
 

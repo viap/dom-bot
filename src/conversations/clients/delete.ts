@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { deleteClient } from "@/api/controllerPsychologists/deleteClient"
 import { ClientDto } from "@/common/dto/client.dto"
 import { TherapySessionDto } from "@/common/dto/therapySession.dto"
@@ -26,7 +27,7 @@ const clientDelete: BotConversation = {
           return await deleteClient(ctx, client.user._id)
         })
       } catch (e) {
-        conversation.log(BOT_ERRORS.REQUEST, e)
+        conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
       } finally {
         if (result === true) {
           await ctx.reply("*Клиент удален*", ReplyMarkup.parseModeV2)

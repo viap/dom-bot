@@ -1,3 +1,5 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
+import { autoRetry } from "@grammyjs/auto-retry"
 import { conversations } from "@grammyjs/conversations"
 import { sequentialize } from "@grammyjs/runner"
 import {
@@ -21,9 +23,7 @@ import {
   dispatchPendingRecovery,
   isRecoveryMenuRegistrationRequired,
 } from "@/common/middlewares/interactionRecovery"
-import {
-  syncRoleAwareCommandsOnChange,
-} from "@/common/middlewares/roleAwareCommands"
+import { syncRoleAwareCommandsOnChange } from "@/common/middlewares/roleAwareCommands"
 import { MyContext } from "@/common/types/myContext"
 import { SessionData, defaultSessionData } from "@/common/types/sessionData"
 import {
@@ -43,6 +43,16 @@ import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import { BotConversations } from "@/conversations"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
 import { DatePicker } from "@/components/DatePicker/datePicker"
+
+// Retry only Telegram rate limits (429 with a short retry_after). Network and
+// 5xx errors are rethrown: retrying them can resend a message Telegram already
+// delivered, and unbounded retries would stall long polling.
+export const AUTO_RETRY_OPTIONS = {
+  maxRetryAttempts: 3,
+  maxDelaySeconds: 30,
+  rethrowHttpErrors: true,
+  rethrowInternalServerErrors: true,
+}
 
 export type CreateDomBotOptions = {
   token?: string
@@ -79,6 +89,7 @@ export function createDomBot({
   conversationVersion = CONVERSATION_VERSION,
 }: CreateDomBotOptions): Bot<MyContext> {
   const domBot = new Bot<MyContext>(token, botConfig)
+  domBot.api.config.use(autoRetry(AUTO_RETRY_OPTIONS))
 
   DatePicker.setBotInstance(domBot)
 
@@ -118,7 +129,7 @@ export function createDomBot({
     try {
       await ctx.conversation.exit()
     } catch (error) {
-      console.log(BOT_ERRORS.CONVERSATION_EXIT, error)
+      console.log(BOT_ERRORS.CONVERSATION_EXIT, getSafeErrorDetails(error))
     }
 
     delete ctx.session.menuDeepLink
@@ -128,7 +139,10 @@ export function createDomBot({
       })
       clearPendingRecovery(ctx)
     } catch (error) {
-      console.error("[interactionRecovery] start reply failed:", error)
+      console.error(
+        "[interactionRecovery] start reply failed:",
+        getSafeErrorDetails(error)
+      )
     }
   })
 
@@ -189,7 +203,7 @@ export function createDomBot({
     try {
       await ctx.conversation.exit()
     } catch (error) {
-      console.log(BOT_ERRORS.CONVERSATION_EXIT, error)
+      console.log(BOT_ERRORS.CONVERSATION_EXIT, getSafeErrorDetails(error))
     }
 
     await ctx.reply(
@@ -222,9 +236,9 @@ export function createDomBot({
     if (e instanceof GrammyError) {
       console.error(`${BOT_ERRORS.REQUEST}:`, e.description)
     } else if (e instanceof HttpError) {
-      console.error(`${BOT_ERRORS.UNAVAILABLE}:`, e)
+      console.error(`${BOT_ERRORS.UNAVAILABLE}:`, getSafeErrorDetails(e))
     } else {
-      console.error(`${BOT_ERRORS.UNKNOWN}:`, e)
+      console.error(`${BOT_ERRORS.UNKNOWN}:`, getSafeErrorDetails(e))
     }
   })
 

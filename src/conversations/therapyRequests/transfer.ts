@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { getAllPsychologists } from "@/api/controllerPsychologists/getAllPsychologists"
 import { updateTherapyRequest } from "@/api/controllerTherapyRequests/updateTherapyRequest"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
@@ -51,12 +52,15 @@ const therapyRequestTransfer: BotConversation = {
           result = notEmpty(
             await conversation.external(async () => {
               return await updateTherapyRequest(ctx, therapyRequest._id, {
-                psychologist: typeof formResult.data.psychologist === 'string' ? formResult.data.psychologist: undefined,
+                psychologist:
+                  typeof formResult.data.psychologist === "string"
+                    ? formResult.data.psychologist
+                    : undefined,
               })
             })
           )
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         } finally {
           if (result === true) {
             await ctx.reply("*Заявка перенаправлена*", ReplyMarkup.parseModeV2)

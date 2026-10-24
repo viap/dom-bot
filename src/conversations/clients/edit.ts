@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { editClient } from "@/api/controllerPsychologists/editClient"
 import { ClientDto } from "@/common/dto/client.dto"
 import { TherapySessionDto } from "@/common/dto/therapySession.dto"
@@ -43,7 +44,7 @@ const clientEdit: BotConversation = {
             })
           })
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         } finally {
           if (result === true) {
             Object.assign(clientResult, formResult.data)

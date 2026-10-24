@@ -76,16 +76,22 @@ export function getUserMenuItem(
         }
   })
 
+  // The API lets only admins change passwords or edit admin/editor accounts.
+  const isPrivilegedUser =
+    user.roles.includes(ROLES.ADMIN) || user.roles.includes(ROLES.EDITOR)
+
   result.items = [
     {
       name: "Редактировать",
       conversation: CONVERSATION_NAMES.USER_EDIT,
       props,
+      ...(isPrivilegedUser ? { roles: [ROLES.ADMIN] } : {}),
     },
     {
       name: "Установить пароль",
       conversation: CONVERSATION_NAMES.USER_SET_PASSWORD,
       props,
+      roles: [ROLES.ADMIN],
     },
     !user.roles.includes(ROLES.PSYCHOLOGIST)
       ? {

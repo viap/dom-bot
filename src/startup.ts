@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { Bot } from "grammy"
 import { DEFAULT_BOT_COMMANDS } from "@/common/consts/botCommands"
 import { MyContext } from "@/common/types/myContext"
@@ -11,7 +12,10 @@ export async function setDefaultBotCommands(
   try {
     await bot.api.setMyCommands(DEFAULT_BOT_COMMANDS)
   } catch (error) {
-    console.error("[setDefaultBotCommands] sync failed:", error)
+    console.error(
+      "[setDefaultBotCommands] sync failed:",
+      getSafeErrorDetails(error)
+    )
   }
 }
 
@@ -28,7 +32,10 @@ export async function startNotificationListener(
     console.info("NotificationListener started successfully")
   } catch (error) {
     // Don't fail the entire bot if notifications fail
-    console.error("Failed to start NotificationListener:", error)
+    console.error(
+      "Failed to start NotificationListener:",
+      getSafeErrorDetails(error)
+    )
   }
 }
 
@@ -39,6 +46,9 @@ export function stopNotificationListener(
     stopper()
     console.info("NotificationListener stopped successfully")
   } catch (error) {
-    console.error("Failed to stop NotificationListener:", error)
+    console.error(
+      "Failed to stop NotificationListener:",
+      getSafeErrorDetails(error)
+    )
   }
 }

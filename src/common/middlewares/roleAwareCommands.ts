@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { BOT_COMMANDS } from "@/common/enums/botCommands"
 import { MyContext } from "@/common/types/myContext"
 import { getLeadingCommand } from "@/common/utils/getFilterByCommand"
@@ -56,7 +57,10 @@ export async function syncRoleAwareBotCommands(
     }
     return true
   } catch (error) {
-    console.error("[syncRoleAwareBotCommands] sync failed:", error)
+    console.error(
+      "[syncRoleAwareBotCommands] sync failed:",
+      getSafeErrorDetails(error)
+    )
     return false
   }
 }
