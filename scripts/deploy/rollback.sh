@@ -5,6 +5,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 
+use_node
+
 require_env REMOTE_TARGET
 
 LATEST_BACKUP="$(ls -dt "${REMOTE_TARGET}"_backup_* 2>/dev/null | head -n 1)"
@@ -41,4 +43,5 @@ if ! pm2_wait_online "domBot"; then
   exit 1
 fi
 
+pm2_save
 echo "Rollback completed successfully"
