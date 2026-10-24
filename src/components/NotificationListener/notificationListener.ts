@@ -100,7 +100,6 @@ export default class NotificationListener {
       transports: ["websocket"],
       autoConnect: true,
       reconnectionDelayMax: 10000,
-      reconnectionAttempts: 5,
       extraHeaders: {
         // Authorization: `Bearer ${NotificationListener.ctx.session.token}`,
         Authorization: getApiClientHeader(
@@ -111,12 +110,12 @@ export default class NotificationListener {
     })
 
     NotificationListener.socket.io.on("error", NotificationListener.onError)
-    NotificationListener.socket.io.on(
-      "reconnect_failed",
-      NotificationListener.onReconnectFailed
-    )
     NotificationListener.socket.on("connect", NotificationListener.onConnect)
     NotificationListener.socket.on("inited", NotificationListener.onInited)
+    NotificationListener.socket.on(
+      "unauthorized",
+      NotificationListener.onUnauthorized
+    )
     NotificationListener.socket.on(
       "exception",
       NotificationListener.onException
@@ -140,12 +139,9 @@ export default class NotificationListener {
     const socket = NotificationListener.socket
     if (socket) {
       socket.io?.off?.("error", NotificationListener.onError)
-      socket.io?.off?.(
-        "reconnect_failed",
-        NotificationListener.onReconnectFailed
-      )
       socket.off?.("connect", NotificationListener.onConnect)
       socket.off?.("inited", NotificationListener.onInited)
+      socket.off?.("unauthorized", NotificationListener.onUnauthorized)
       socket.off?.("exception", NotificationListener.onException)
       socket.off?.("disconnect", NotificationListener.onDisconnect)
       socket.disconnect?.()
@@ -672,13 +668,6 @@ export default class NotificationListener {
     )
   }
 
-  private static onReconnectFailed() {
-    console.error(
-      `Notifications: gave up reconnecting to ${process.env.API_WEBSOCKET_URL} — notifications disabled`
-    )
-    NotificationListener.stop()
-  }
-
   private static async onConnect() {
     console.log("Notifications: connected")
 
@@ -694,8 +683,23 @@ export default class NotificationListener {
     )
   }
 
-  private static async onDisconnect() {
+  private static onUnauthorized(payload?: { message?: unknown }) {
+    const message =
+      typeof payload?.message === "string" ? payload.message : "no message"
+    console.error(
+      `Notifications: API rejected the bot client (${message}) — check API_CLIENT_NAME/API_CLIENT_PASSWORD`
+    )
+  }
+
+  private static async onDisconnect(reason?: string) {
     console.log("Notifications: disconnected")
+    if (reason === "io server disconnect") {
+      // socket.io does not reconnect after a server-side disconnect. The API
+      // only does that for a rejected client, which a restart cannot fix.
+      console.error(
+        "Notifications: API closed the connection; no reconnect until the bot restarts with valid client credentials"
+      )
+    }
 
     NotificationListener.isConnected = false
     NotificationListener.connectGeneration += 1

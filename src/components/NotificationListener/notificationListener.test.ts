@@ -818,7 +818,7 @@ describe("NotificationListener polling lifecycle", () => {
     assert.deepEqual(starts, [5000])
   })
 
-  it("allows start after stop and after terminal reconnect failure", async () => {
+  it("allows start after stop", async () => {
     const sockets: Array<FakeSocket> = []
     process.env.API_WEBSOCKET_URL = "ws://localhost:3004"
 
@@ -839,20 +839,66 @@ describe("NotificationListener polling lifecycle", () => {
         return socket
       }) as never,
     })
-    sockets[1].io.emitLocal("reconnect_failed")
+
+    assert.equal(sockets.length, 2)
+    assert.equal(sockets[0].disconnected, true)
+    assert.equal(sockets[1].disconnected, false)
+  })
+
+  it("keeps reconnecting without an attempt limit", async () => {
+    // A limit made the bot give up during API restarts, which then needed
+    // dom-api's deploy scripts to restart domBot.
+    let options: { reconnection?: boolean; reconnectionAttempts?: number } = {}
+    process.env.API_WEBSOCKET_URL = "ws://localhost:3004"
+
     await NotificationListener.start({} as never, {} as never, {
       pollingDelay: 5000,
-      socketFactory: (() => {
-        const socket = createFakeSocket()
-        sockets.push(socket)
-        return socket
+      socketFactory: ((_url: string, socketOptions: typeof options) => {
+        options = socketOptions
+        return createFakeSocket()
       }) as never,
     })
 
-    assert.equal(sockets.length, 3)
-    assert.equal(sockets[0].disconnected, true)
-    assert.equal(sockets[1].disconnected, true)
-    assert.equal(sockets[2].disconnected, false)
+    assert.notEqual(options.reconnection, false)
+    assert.ok(
+      options.reconnectionAttempts === undefined ||
+        options.reconnectionAttempts === Infinity
+    )
+  })
+
+  it("logs an error when the API rejects or drops the bot client", async () => {
+    const sockets: Array<FakeSocket> = []
+    const errors = mock.method(console, "error", () => undefined)
+    const logs = mock.method(console, "log", () => undefined)
+    process.env.API_WEBSOCKET_URL = "ws://localhost:3004"
+
+    try {
+      await NotificationListener.start({} as never, {} as never, {
+        pollingDelay: 5000,
+        socketFactory: (() => {
+          const socket = createFakeSocket()
+          sockets.push(socket)
+          return socket
+        }) as never,
+      })
+
+      sockets[0].emitLocal("disconnect", "transport close")
+      await flushPromises()
+      assert.equal(errors.mock.callCount(), 0)
+
+      sockets[0].emitLocal("unauthorized", { message: "Unauthorized client" })
+      sockets[0].emitLocal("disconnect", "io server disconnect")
+      await flushPromises()
+      assert.equal(errors.mock.callCount(), 2)
+      assert.match(String(errors.mock.calls[0].arguments[0]), /rejected/)
+      assert.match(
+        String(errors.mock.calls[1].arguments[0]),
+        /closed the connection/
+      )
+    } finally {
+      errors.mock.restore()
+      logs.mock.restore()
+    }
   })
 
   it("uses POLING_DELAY as the polling delay environment variable", () => {
