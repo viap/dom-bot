@@ -4,8 +4,7 @@ module.exports = {
     {
       name: "domBot",
       script: "./dist/index.js",
-      node_args:
-        "--experimental-specifier-resolution=node --experimental-loader=extensionless",
+      node_args: "--import=extensionless/register",
       instances: 1,
       exec_mode: "fork",
       env: {
