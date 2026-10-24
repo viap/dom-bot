@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
 import mongoose from "mongoose"
 import { DB_MESSAGES } from "./consts"
@@ -10,9 +11,9 @@ export class DbConnection {
 
   private static initHandlers() {
     if (DbConnection.connection) {
-      DbConnection.connection.on(
-        "error",
-        console.error.bind(console, DB_MESSAGES.CONNECTION_ERROR)
+      DbConnection.connection.on("error", (error: unknown) =>
+        // Mongo errors can carry the connection string with credentials.
+        console.error(DB_MESSAGES.CONNECTION_ERROR, getSafeErrorDetails(error))
       )
 
       DbConnection.connection.once("open", function () {

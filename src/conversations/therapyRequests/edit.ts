@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { Conversation } from "@grammyjs/conversations"
 import { updateTherapyRequest } from "@/api/controllerTherapyRequests/updateTherapyRequest"
 import { TherapyRequestDto } from "@/common/dto/therapyRequest.dto"
@@ -55,7 +56,7 @@ const therapyRequestEdit: BotConversation = {
             })
           )
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         } finally {
           if (result === true) {
             await ctx.reply("*Заявка изменена*", ReplyMarkup.parseModeV2)

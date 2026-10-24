@@ -6,6 +6,24 @@ interface RequestConfigWithMeta extends AxiosRequestConfig {
 
 const apiClient: AxiosInstance = axios.create()
 
+const SECRET_KEYS = new Set(["password", "auth_token", "token"])
+
+// Debug logs must not contain API client passwords or JWTs.
+export function redactSecrets(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(redactSecrets)
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        SECRET_KEYS.has(key) ? "***" : redactSecrets(item),
+      ])
+    )
+  }
+  return value
+}
+
 apiClient.interceptors.request.use((config) => {
   const isDebug = process.env.API_DEBUG === "true"
   const isDev = process.env.NODE_ENV === "dev"
@@ -16,10 +34,11 @@ apiClient.interceptors.request.use((config) => {
     console.debug(`[API DEBUG] → ${config.method?.toUpperCase()} ${config.url}`)
     console.debug("[API DEBUG] Headers:", safeHeaders)
     if (config.params) console.debug("[API DEBUG] Params:", config.params)
-    if (config.data) console.debug("[API DEBUG] Body:", config.data)
+    if (config.data)
+      console.debug("[API DEBUG] Body:", redactSecrets(config.data))
   } else if (isDev) {
     console.info(`[API] ${config.method?.toUpperCase()} ${config.url}`)
-    if (config.data) console.info("[API] Body:", config.data)
+    if (config.data) console.info("[API] Body:", redactSecrets(config.data))
   }
 
   return config
@@ -37,7 +56,7 @@ apiClient.interceptors.response.use(
       console.debug(
         `[API DEBUG] ← ${response.status} ${response.config.url} (${duration}ms)`
       )
-      console.debug("[API DEBUG] Response data:", response.data)
+      console.debug("[API DEBUG] Response data:", redactSecrets(response.data))
     } else if (isDev) {
       console.info(`[API] ${response.status} ${response.config.url}`)
     }
@@ -55,7 +74,10 @@ apiClient.interceptors.response.use(
       console.debug(
         `[API DEBUG] ✗ ${error.response?.status} ${error.config?.url} (${duration}ms)`
       )
-      console.debug("[API DEBUG] Error body:", error.response?.data)
+      console.debug(
+        "[API DEBUG] Error body:",
+        redactSecrets(error.response?.data)
+      )
     } else if (isDev) {
       console.error(
         `[API] Error ${error.response?.status} ${error.config?.url}:`,

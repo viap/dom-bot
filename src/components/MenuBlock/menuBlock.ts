@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { PropType } from "@/api/type/propType"
 import { Conversation } from "@grammyjs/conversations"
 import { randomUUID } from "crypto"
@@ -399,7 +400,7 @@ export default class MenuBlock {
             await this.showConversation(botConversation)
           }
         } catch (e) {
-          this.conversation.log(BOT_ERRORS.CONVERSATION, e)
+          this.conversation.log(BOT_ERRORS.CONVERSATION, getSafeErrorDetails(e))
         }
       }
 
@@ -412,7 +413,7 @@ export default class MenuBlock {
         try {
           await this.loadSubmenuItems(this.current)
         } catch (e) {
-          this.conversation.log(BOT_ERRORS.REQUEST, e)
+          this.conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
           await this.ctx.reply("❌ Ошибка загрузки. Попробуйте позже.")
         } finally {
           await this.ctx.api.deleteMessage(

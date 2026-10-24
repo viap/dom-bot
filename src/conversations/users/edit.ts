@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { editUser } from "@/api/controllerUsers/editUser"
 import { EditUserDto } from "@/api/dto/editUser.dto"
 import { UserDto } from "@/common/dto/user.dto"
@@ -53,7 +54,7 @@ const userEdit: BotConversation = {
 
           result = Object.hasOwn(editedUser, "name")
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         } finally {
           if (result === true) {
             Object.assign(userResult, formResult.data)

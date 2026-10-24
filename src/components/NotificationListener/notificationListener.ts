@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { NotificationDto } from "@/common/dto/notification.dto"
 import { TokenPayloadDto } from "@/common/dto/tokenPayload.dto"
 import { NOTIFICATION_TYPES } from "@/common/enums/notificationTypes"
@@ -19,7 +20,7 @@ import { jwtDecode } from "jwt-decode"
 import { io, Socket } from "socket.io-client"
 import { MENU_ITEM_TYPES } from "../MenuBlock/enums/menuItemTypes"
 
-type NotificationRecipient = { chatId: string; userId: string; token: string }
+type NotificationRecipient = { chatId: string; userId: string }
 type SocketFactory = typeof io
 type TimeoutSocket = Socket & {
   timeout?: (timeout: number) => Pick<Socket, "emitWithAck">
@@ -50,6 +51,7 @@ export default class NotificationListener {
     | { lifecycleGeneration: number; connectGeneration: number }
     | undefined
   private static currentCycleSessionScans = 0
+  private static cycleCandidates?: Array<NotificationRecipient>
   private static diagnostics = {
     cycles: 0,
     notifications: 0,
@@ -185,10 +187,7 @@ export default class NotificationListener {
       const socket = NotificationListener.socket as TimeoutSocket
       const hasTimeout = typeof socket.timeout === "function"
 
-      if (
-        !hasTimeout &&
-        !NotificationListener.didWarnAboutMissingAckTimeout
-      ) {
+      if (!hasTimeout && !NotificationListener.didWarnAboutMissingAckTimeout) {
         NotificationListener.didWarnAboutMissingAckTimeout = true
         console.warn(
           "NotificationListener: socket timeout() is not available; ACK timeout is disabled"
@@ -224,8 +223,7 @@ export default class NotificationListener {
     return (
       NotificationListener.pollingOwner?.lifecycleGeneration ===
         lifecycleGeneration &&
-      NotificationListener.pollingOwner?.connectGeneration ===
-        connectGeneration
+      NotificationListener.pollingOwner?.connectGeneration === connectGeneration
     )
   }
 
@@ -277,6 +275,7 @@ export default class NotificationListener {
       connectGeneration,
     }
     NotificationListener.currentCycleSessionScans = 0
+    delete NotificationListener.cycleCandidates
     const startedAt = Date.now()
     let notificationCount = 0
 
@@ -308,7 +307,10 @@ export default class NotificationListener {
             )
           ) {
             NotificationListener.diagnostics.errors += 1
-            console.error("Notification processing error", error)
+            console.error(
+              "Notification processing error",
+              getSafeErrorDetails(error)
+            )
           }
         }
       }
@@ -320,7 +322,10 @@ export default class NotificationListener {
         )
       ) {
         NotificationListener.diagnostics.errors += 1
-        console.error("Notifications: polling cycle failed", error)
+        console.error(
+          "Notifications: polling cycle failed",
+          getSafeErrorDetails(error)
+        )
       }
     } finally {
       if (
@@ -331,6 +336,7 @@ export default class NotificationListener {
       ) {
         NotificationListener.isPolling = false
         delete NotificationListener.pollingOwner
+        delete NotificationListener.cycleCandidates
         NotificationListener.recordCycleDiagnostics(
           Date.now() - startedAt,
           notificationCount
@@ -373,9 +379,14 @@ export default class NotificationListener {
   private static async getActiveNotifications(): Promise<
     Array<NotificationDto>
   > {
+    // The API answers with eligibleUserIds among the users we have sessions
+    // for, judged by their current roles.
+    const candidates = await NotificationListener.getRecipientCandidates()
     const result = await NotificationListener.emitWithAck<
       Array<NotificationDto>
-    >("notifications/get-all-batch")
+    >("notifications/get-all-batch", {
+      userIds: [...new Set(candidates.map(({ userId }) => userId))],
+    })
 
     return Array.isArray(result) ? result : []
   }
@@ -413,62 +424,71 @@ export default class NotificationListener {
     }
   }
 
-  private static async getNotificationRecipient(
-    notification: NotificationDto
-  ): Promise<NotificationRecipient | undefined> {
-    let recipient: NotificationRecipient | undefined = undefined
+  // Sessions with a token, decoded once per polling cycle instead of once per
+  // notification. Outside a cycle they are read fresh.
+  private static async getRecipientCandidates(): Promise<
+    Array<NotificationRecipient>
+  > {
+    if (
+      NotificationListener.isPolling &&
+      NotificationListener.cycleCandidates
+    ) {
+      return NotificationListener.cycleCandidates
+    }
 
+    const candidates: Array<NotificationRecipient> = []
     if (NotificationListener.sessions) {
       const allSessionsWithToken = NotificationListener.sessions.find({
         "value.token": { $exists: true, $ne: "" },
       })
 
-      let session: { key: string; value: SessionData } | undefined = undefined
-      while ((await allSessionsWithToken.hasNext()) && !recipient) {
+      while (await allSessionsWithToken.hasNext()) {
         NotificationListener.currentCycleSessionScans += 1
-        session = (await allSessionsWithToken.next()) as {
+        const session = (await allSessionsWithToken.next()) as {
           key: string
           value: SessionData
         }
 
         if (session.value.token) {
-          const { userId, roles = [] }: Partial<TokenPayloadDto> = jwtDecode(
+          const { userId }: Partial<TokenPayloadDto> = jwtDecode(
             session.value.token
           )
 
-          if (
-            userId &&
-            // NOTICE: roles empty or user have any required role
-            (!notification.roles.length ||
-              notification.roles.find((role) => roles.includes(role))) &&
-            // NOTICE: recipients empty or user is in recipients list
-            (!notification.recipients.length ||
-              notification.recipients.includes(userId)) &&
-            // NOTICE: user is not in received list
-            !notification.received.includes(userId)
-          ) {
-            recipient = {
+          if (userId) {
+            candidates.push({
               userId,
               chatId: session.key.split("/")[1],
-              token: session.value.token,
-            }
+            })
           }
         }
       }
     }
-    return recipient
+
+    if (NotificationListener.isPolling) {
+      NotificationListener.cycleCandidates = candidates
+    }
+    return candidates
+  }
+
+  private static async getNotificationRecipient(
+    notification: NotificationDto,
+    skippedUserIds: Set<string> = new Set()
+  ): Promise<NotificationRecipient | undefined> {
+    const candidates = await NotificationListener.getRecipientCandidates()
+    // NOTICE: the API decides the audience by current roles; without
+    // eligibleUserIds nobody is eligible.
+    const eligibleUserIds = notification.eligibleUserIds ?? []
+
+    return candidates.find(
+      ({ userId }) =>
+        !skippedUserIds.has(userId) &&
+        !notification.received.includes(userId) &&
+        eligibleUserIds.includes(userId)
+    )
   }
 
   private static async makeEffect(notification: NotificationDto) {
     let menuItemBreadCrumbs: Array<string> | undefined
-
-    const recipient = await NotificationListener.getNotificationRecipient(
-      notification
-    )
-
-    if (!recipient) {
-      return
-    }
 
     let message:
       | { text: string; options: { [key: string]: unknown } }
@@ -507,27 +527,58 @@ export default class NotificationListener {
         break
     }
 
-    if (message) {
+    if (!message) {
+      return
+    }
+
+    // NOTICE: if the API refuses a receipt (e.g. the user lost the role), try
+    // the next candidate instead of retrying the same one every cycle.
+    const skippedUserIds = new Set<string>()
+    let recipient = await NotificationListener.getNotificationRecipient(
+      notification,
+      skippedUserIds
+    )
+
+    while (recipient) {
       try {
         const result = await NotificationListener.sendNotificationOfReceipt(
           notification._id,
-          recipient.token
+          recipient.userId
         )
 
-        if (result) {
-          NotificationListener.diagnostics.claims += 1
-          // NOTICE: important to push userId into notification.received before sending to avoid extra messages
-          notification.received.push(recipient.userId)
-          await NotificationListener.sendTelegramMessage(
-            recipient.chatId,
-            message
+        if (!result) {
+          skippedUserIds.add(recipient.userId)
+          recipient = await NotificationListener.getNotificationRecipient(
+            notification,
+            skippedUserIds
           )
-          NotificationListener.diagnostics.sends += 1
+          continue
         }
+
+        NotificationListener.diagnostics.claims += 1
+        // NOTICE: important to push userId into notification.received before sending to avoid extra messages
+        notification.received.push(recipient.userId)
+        await NotificationListener.sendTelegramMessage(
+          recipient.chatId,
+          message
+        )
+        NotificationListener.diagnostics.sends += 1
       } catch (error) {
         NotificationListener.diagnostics.errors += 1
-        console.error("Notification delivery error", error)
+        // Log without the Telegram request payload: it contains the chat id
+        // and the message text.
+        console.error(
+          JSON.stringify({
+            event: "notification.send.failed",
+            notificationId: notification._id,
+            errorCode: (error as { error_code?: number })?.error_code,
+            description:
+              (error as { description?: string })?.description ||
+              (error as Error)?.message,
+          })
+        )
       }
+      return
     }
   }
 
@@ -548,7 +599,8 @@ export default class NotificationListener {
 
       console.error(
         "Notification rich-text delivery failed, retrying as plain text",
-        error
+        (error as { description?: string })?.description ||
+          (error as Error)?.message
       )
 
       return await NotificationListener.bot.api.sendMessage(
@@ -598,13 +650,13 @@ export default class NotificationListener {
 
   private static sendNotificationOfReceipt(
     notificationId: string,
-    token: string
+    userId: string
   ): Promise<boolean> | undefined {
     return NotificationListener.emitWithAck<boolean>(
       "notifications/add-received",
       {
         notificationId,
-        token,
+        userId,
       }
     )
   }
@@ -616,7 +668,7 @@ export default class NotificationListener {
   private static async onError(error: unknown) {
     console.error(
       `Notifications: connection error (${process.env.API_WEBSOCKET_URL})`,
-      error
+      getSafeErrorDetails(error)
     )
   }
 
@@ -654,6 +706,6 @@ export default class NotificationListener {
   }
 
   private static async onException(exception: unknown) {
-    console.log("Notifications: exception", exception)
+    console.log("Notifications: exception", getSafeErrorDetails(exception))
   }
 }

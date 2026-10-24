@@ -1,3 +1,4 @@
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { addTherapySession } from "@/api/controllerTherapySessions/addTherapySession"
 import { currentUserAlias } from "@/common/consts/currentUserAlias"
 import { numberOfCommissionHours } from "@/common/consts/numberOfCommissionHours"
@@ -138,7 +139,7 @@ const therapySessionAdd: BotConversation = {
 
           result = notEmpty(addedSession)
         } catch (e) {
-          conversation.log(BOT_ERRORS.REQUEST, e)
+          conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
         }
 
         if (addedSession) {
@@ -151,7 +152,9 @@ const therapySessionAdd: BotConversation = {
 
             const commission = addedSession.commission
             if (commission?.value > 0) {
-              const title = `Комиссия ${commission.value} ${commission.currency.toUpperCase()} — реквизиты для оплаты`
+              const title = `Комиссия ${
+                commission.value
+              } ${commission.currency.toUpperCase()} — реквизиты для оплаты`
 
               await ctx.reply(
                 getTextOfRequisites(title),
@@ -159,7 +162,7 @@ const therapySessionAdd: BotConversation = {
               )
             }
           } catch (e) {
-            conversation.log(BOT_ERRORS.REQUEST, e)
+            conversation.log(BOT_ERRORS.REQUEST, getSafeErrorDetails(e))
           }
         } else {
           await ctx.reply(

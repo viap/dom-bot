@@ -2,6 +2,7 @@ import { loginByTelegram } from "@/api/controllerAuth/loginByTelegram"
 import { getPsychologist } from "@/api/controllerPsychologists/getPsychologist"
 import { getUser } from "@/api/controllerUsers/getUser"
 import { currentUserAlias } from "@/common/consts/currentUserAlias"
+import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { PsychologistDto } from "@/common/dto/psychologist.dto"
 import { TelegramUserDto } from "@/common/dto/telegramUser.dto"
 import { UserDto } from "@/common/dto/user.dto"
@@ -214,22 +215,4 @@ function isTransportOrServerFailure(error: unknown): boolean {
     isAxiosError(error) &&
     (error.response === undefined || (error.response.status ?? 0) >= 500)
   )
-}
-
-function getSafeErrorDetails(error: unknown): {
-  message: string
-  status?: number
-  url?: string
-} {
-  if (isAxiosError(error)) {
-    return {
-      message: error.message,
-      status: error.response?.status,
-      url: error.config?.url,
-    }
-  }
-
-  return {
-    message: error instanceof Error ? error.message : "Unknown error",
-  }
 }
