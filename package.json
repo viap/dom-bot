@@ -8,8 +8,7 @@
     "node": ">=20 <23"
   },
   "scripts": {
-    "copy-assets": "cp -r ./src/assets ./dist/assets",
-    "build": "rm -rf ./dist && tspc --incremental false && npm run copy-assets",
+    "build": "rm -rf ./dist.tmp && tspc --incremental false --outDir ./dist.tmp && cp -r ./src/assets ./dist.tmp/assets && rm -rf ./dist && mv ./dist.tmp ./dist",
     "start": "node --experimental-specifier-resolution=node --experimental-loader=extensionless dist/index.js",
     "startInspect": "node --inspect --es-module-specifier-resolution=node dist/index.js",
     "restart:node": "npm run build && npm run start",
