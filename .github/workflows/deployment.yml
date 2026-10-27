@@ -16,7 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mongo:
-        image: mongo:8.0
+        # mongo 8.x exits at startup on Linux kernel 6.19+ (tcmalloc rseq,
+        # SERVER-121912), which GitHub's ubuntu-latest runners now use. The
+        # integration tests only need basic CRUD, so 7.0 is enough here;
+        # production still runs 8.0 on its own kernel.
+        image: mongo:7.0
         ports:
           - 27017:27017
         options: >-
