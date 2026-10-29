@@ -1,7 +1,10 @@
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { run } from "@grammyjs/runner"
 import domBot from "./domBot"
-import { stopNotificationListener } from "./startup"
+import {
+  stopApplicationMessageListener,
+  stopNotificationListener,
+} from "./startup"
 
 async function startBot() {
   try {
@@ -43,6 +46,7 @@ async function startBot() {
           console.info("Bot runner stopped")
         }
         stopNotificationListener()
+        stopApplicationMessageListener()
         process.exit(0)
       } catch (error) {
         console.error("Error during shutdown:", getSafeErrorDetails(error))

@@ -8,7 +8,7 @@ For cross-service architecture, auth contracts, and stack rules, read the files 
 
 - **Never use webhooks.** The bot runs on long polling via `@grammyjs/runner`. Webhooks cause conflicts with the runner. `deleteWebhook()` is called in `src/index.ts` before startup — do not remove it.
 - **Always type context as `MyContext`**, never plain grammY `Context`. `MyContext` is required to access `ctx.session`, `ctx.conversation`, and other extensions.
-- **Never bypass `apiLoginByTelegram` middleware.** It validates current user identity/roles and acquires a replacement JWT when required on every eligible interaction. Removing it breaks protected API calls.
+- **Never bypass `apiLoginByTelegram` for DOM-user interactions.** It validates current user identity/roles and acquires a replacement JWT when required on every eligible interaction. The only pre-auth exceptions are the narrowly scoped private `/start app_<token>` public-application contact-link handler and an exact private reply to an official application message; both use the BOT client, short-circuit, and must never create or authenticate a DOM User.
 - **Always wrap API calls and DB queries inside `conversation.external()`** when inside a conversation. Calling them directly corrupts conversation state replay.
 - **Clear optional session properties with `delete`.** Direct assignment and `Object.assign` both persist because grammY writes the current session object after the update; assigning `undefined` can become BSON `null`.
 - **Always use `@/*` path aliases** (`@/api/*`, `@/common/*`, `@/components/*`, `@/conversations/*`, `@/services/*`). Never write deep relative imports.
@@ -120,11 +120,13 @@ src/common/           — types, enums, utilities
 1. `sequentialize(getSessionKey)` — serializes only the same `${userId}/${chatId}` session
 2. `session()` — MongoDB-backed session storage with the same key
 3. Eligible-human/target-bot guard — stops unsupported updates, bot senders and commands addressed to another bot before DOM API calls
-4. `apiLoginByTelegram` — login-aligns JWT claims and fetches the current user on every eligible interaction
-5. `conversations()` — enables the installed conversations v1 controls
-6. Compatibility/access gate — exits incompatible history before any builder can replay
-7. Role-aware command synchronization and existing conditional conversation registrations
-8. Recovery dispatcher — enters replacement UI only after the destination builder is registered
+4. Public application contact-link handler — consumes only private `/start app_<token>`, calls the dedicated BOT-client confirmation endpoint, replies, and short-circuits without DOM User login
+5. Application-message reply handler — consumes only a private human reply to a bot message with the official application-message prefix, submits it through the BOT client, and short-circuits without DOM User login
+6. `apiLoginByTelegram` — login-aligns JWT claims and fetches the current user on every other eligible interaction
+7. `conversations()` — enables the installed conversations v1 controls
+8. Compatibility/access gate — exits incompatible history before any builder can replay
+9. Role-aware command synchronization and existing conditional conversation registrations
+10. Recovery dispatcher — enters replacement UI only after the destination builder is registered
 
 Do not enter a recovery conversation in the early gate. Derive current access from the authenticated session, read recovery decisions from durable `pendingRecovery`, and retain that marker until replacement UI is successfully sent/entered.
 
@@ -310,6 +312,7 @@ All loaded from `config/.env` via `process.env`.
 | `API_CLIENT_PASSWORD` | Bot's API client password |
 | `API_WEBSOCKET_URL` | dom-api WebSocket URL for `NotificationListener` |
 | `POLING_DELAY` | Polling delay in ms for notification listener (default 30000, minimum 5000) |
+| `APPLICATION_MESSAGE_POLLING_DELAY` | Polling delay in ms for the application-message delivery queue (default 5000, minimum 1000) |
 
 ---
 

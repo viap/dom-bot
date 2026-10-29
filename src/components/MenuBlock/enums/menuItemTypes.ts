@@ -5,6 +5,7 @@ export enum MENU_ITEM_TYPES {
   BOOK = "book",
   USERS = "users",
   NOTIFICATIONS = "notifications",
+  APPLICATION_MESSAGES = "applicationMessages",
 
   ALL_THERAPY_REQUESTS = "allTherapyRequests",
   ALL_THERAPY_REQUESTS_NEW = "allTherapyRequestsNew",

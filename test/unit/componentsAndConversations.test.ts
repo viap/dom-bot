@@ -199,12 +199,12 @@ describe("utility and component characterization", () => {
     const exits: Array<unknown> = []
     const ctx = {
       message: {
-        text: `/${BOT_COMMANDS.MENU}@dom_test_bot open`,
+        text: `/${BOT_COMMANDS.MENU}@PsyDom_Tbilisi_Test_bot open`,
         entities: [
           {
             type: "bot_command",
             offset: 0,
-            length: `/${BOT_COMMANDS.MENU}@dom_test_bot`.length,
+            length: `/${BOT_COMMANDS.MENU}@PsyDom_Tbilisi_Test_bot`.length,
           },
         ],
       },

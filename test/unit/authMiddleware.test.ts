@@ -22,7 +22,7 @@ const botConfig: BotConfig<MyContext> = {
     id: 123,
     is_bot: true,
     first_name: "DOM Test Bot",
-    username: "dom_test_bot",
+    username: "PsyDom_Tbilisi_Test_bot",
     can_join_groups: true,
     can_read_all_group_messages: false,
     supports_inline_queries: false,

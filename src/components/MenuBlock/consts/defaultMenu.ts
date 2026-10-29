@@ -13,6 +13,7 @@ const defaultMenu = {
     // menuItemsList.schedule,
     // menuItemsList.book,
     mappedMenuItemsList[MENU_ITEM_TYPES.ABOUT],
+    mappedMenuItemsList[MENU_ITEM_TYPES.APPLICATION_MESSAGES],
     {
       ...mappedMenuItemsList[MENU_ITEM_TYPES.USERS],
       roles: [ROLES.ADMIN, ROLES.EDITOR],

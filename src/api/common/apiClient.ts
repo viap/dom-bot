@@ -5,8 +5,17 @@ interface RequestConfigWithMeta extends AxiosRequestConfig {
 }
 
 const apiClient: AxiosInstance = axios.create()
+const SILENT_DEV_PATHS = new Set(["/application-messages/claim"])
 
-const SECRET_KEYS = new Set(["password", "auth_token", "token"])
+const SECRET_KEYS = new Set([
+  "password",
+  "auth_token",
+  "token",
+  "startToken",
+  "browserProof",
+  "sessionToken",
+  "currentSessionToken",
+])
 
 // Debug logs must not contain API client passwords or JWTs.
 export function redactSecrets(value: unknown): unknown {
@@ -24,6 +33,16 @@ export function redactSecrets(value: unknown): unknown {
   return value
 }
 
+export function shouldLogDevRequest(url?: string): boolean {
+  if (!url) return true
+
+  try {
+    return !SILENT_DEV_PATHS.has(new URL(url, "http://local").pathname)
+  } catch {
+    return true
+  }
+}
+
 apiClient.interceptors.request.use((config) => {
   const isDebug = process.env.API_DEBUG === "true"
   const isDev = process.env.NODE_ENV === "dev"
@@ -36,7 +55,7 @@ apiClient.interceptors.request.use((config) => {
     if (config.params) console.debug("[API DEBUG] Params:", config.params)
     if (config.data)
       console.debug("[API DEBUG] Body:", redactSecrets(config.data))
-  } else if (isDev) {
+  } else if (isDev && shouldLogDevRequest(config.url)) {
     console.info(`[API] ${config.method?.toUpperCase()} ${config.url}`)
     if (config.data) console.info("[API] Body:", redactSecrets(config.data))
   }
@@ -57,7 +76,7 @@ apiClient.interceptors.response.use(
         `[API DEBUG] ← ${response.status} ${response.config.url} (${duration}ms)`
       )
       console.debug("[API DEBUG] Response data:", redactSecrets(response.data))
-    } else if (isDev) {
+    } else if (isDev && shouldLogDevRequest(response.config.url)) {
       console.info(`[API] ${response.status} ${response.config.url}`)
     }
 

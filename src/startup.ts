@@ -3,6 +3,7 @@ import { Bot } from "grammy"
 import { DEFAULT_BOT_COMMANDS } from "@/common/consts/botCommands"
 import { MyContext } from "@/common/types/myContext"
 import NotificationListener from "@/components/NotificationListener/notificationListener"
+import ApplicationMessageListener from "@/components/ApplicationMessageListener/applicationMessageListener"
 
 type NotificationSessions = Parameters<typeof NotificationListener.start>[1]
 
@@ -48,6 +49,35 @@ export function stopNotificationListener(
   } catch (error) {
     console.error(
       "Failed to stop NotificationListener:",
+      getSafeErrorDetails(error)
+    )
+  }
+}
+
+export function startApplicationMessageListener(
+  bot: Bot<MyContext>,
+  starter: (bot: Bot<MyContext>) => void = ApplicationMessageListener.start
+): void {
+  try {
+    starter(bot)
+    console.info("ApplicationMessageListener started successfully")
+  } catch (error) {
+    console.error(
+      "Failed to start ApplicationMessageListener:",
+      getSafeErrorDetails(error)
+    )
+  }
+}
+
+export function stopApplicationMessageListener(
+  stopper: () => void = ApplicationMessageListener.stop
+): void {
+  try {
+    stopper()
+    console.info("ApplicationMessageListener stopped successfully")
+  } catch (error) {
+    console.error(
+      "Failed to stop ApplicationMessageListener:",
       getSafeErrorDetails(error)
     )
   }

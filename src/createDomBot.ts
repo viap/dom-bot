@@ -17,6 +17,8 @@ import { BOT_ERRORS } from "@/common/enums/botErrors"
 import { BOT_TEXTS } from "@/common/enums/botTexts"
 import { CONVERSATION_VERSION } from "@/common/consts/conversationVersion"
 import { apiLoginByTelegram } from "@/common/middlewares/apiLoginByTelegram"
+import { telegramContactLink } from "@/common/middlewares/telegramContactLink"
+import { applicationMessageReply } from "@/common/middlewares/applicationMessageReply"
 import {
   clearPendingRecovery,
   createInteractionRecoveryGate,
@@ -59,6 +61,8 @@ export type CreateDomBotOptions = {
   botConfig?: BotConfig<MyContext>
   sessionStorage: StorageAdapter<SessionData>
   authMiddleware?: MiddlewareFn<MyContext>
+  telegramLinkMiddleware?: MiddlewareFn<MyContext>
+  applicationReplyMiddleware?: MiddlewareFn<MyContext>
   conversationVersion?: number
 }
 
@@ -86,6 +90,8 @@ export function createDomBot({
   botConfig,
   sessionStorage,
   authMiddleware = apiLoginByTelegram,
+  telegramLinkMiddleware = telegramContactLink,
+  applicationReplyMiddleware = applicationMessageReply,
   conversationVersion = CONVERSATION_VERSION,
 }: CreateDomBotOptions): Bot<MyContext> {
   const domBot = new Bot<MyContext>(token, botConfig)
@@ -114,6 +120,14 @@ export function createDomBot({
       await next()
     }
   })
+
+  // Public application linking is verified directly from the Telegram update
+  // before bot login so it cannot claim or create a DOM User.
+  domBot.use(telegramLinkMiddleware)
+
+  // Applicant replies to official application messages are handled before
+  // DOM User authentication and can never create or authenticate a DOM User.
+  domBot.use(applicationReplyMiddleware)
 
   /** API: login */
   domBot.use(authMiddleware)

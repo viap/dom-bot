@@ -76,6 +76,35 @@ describe("Mongo session storage integration", { skip: !mongoConfig }, () => {
     assert.equal((await secondAdapter.read("101/301"))?.token, "group-token")
   })
 
+  it("persists an active application reply selection across adapter recreation", async () => {
+    assert.ok(connection)
+    const collection = connection.db.collection<MongoStorage.ISession>("sessions")
+    const firstAdapter = new MongoStorage.MongoDBAdapter<SessionData>({
+      collection,
+    })
+    await firstAdapter.write("application-reply", {
+      hasTermsAgreement: true,
+      quizAnswers: {},
+      applicationMessaging: {
+        selectedApplicationId: "507f1f77bcf86cd799439031",
+        selectedAt: 1_000,
+        hasThreads: true,
+      },
+    })
+
+    const secondAdapter = new MongoStorage.MongoDBAdapter<SessionData>({
+      collection,
+    })
+    assert.deepEqual(
+      (await secondAdapter.read("application-reply"))?.applicationMessaging,
+      {
+        selectedApplicationId: "507f1f77bcf86cd799439031",
+        selectedAt: 1_000,
+        hasThreads: true,
+      }
+    )
+  })
+
   it("characterizes malformed stored data as adapter passthrough", async () => {
     assert.ok(connection)
     const collection = connection.db.collection<MongoStorage.ISession>("sessions")
@@ -131,7 +160,7 @@ describe("Mongo session storage integration", { skip: !mongoConfig }, () => {
         id: 123,
         is_bot: true,
         first_name: "DOM Test Bot",
-        username: "dom_test_bot",
+        username: "PsyDom_Tbilisi_Test_bot",
         can_join_groups: true,
         can_read_all_group_messages: false,
         supports_inline_queries: false,
