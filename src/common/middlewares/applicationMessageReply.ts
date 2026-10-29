@@ -21,8 +21,9 @@ import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { getLeadingCommand } from "@/common/utils/getFilterByCommand"
 import { InlineKeyboard, NextFunction } from "grammy"
 
-const OFFICIAL_MESSAGE_PREFIX = "DOM — "
+export const APPLICATION_MESSAGE_MAX_LENGTH = 3_500
 const REPLY_SELECTION_TTL_MS = 15 * 60 * 1000
+const THREAD_AVAILABILITY_TTL_MS = 60 * 1000
 const TRANSCRIPT_CHUNK_LIMIT = 3_800
 const TRANSCRIPT_SEPARATOR = "\n\n────────\n\n"
 
@@ -56,8 +57,14 @@ export function getApplicationReplyPayload(ctx: MyContext) {
     !ctx.from ||
     ctx.from.is_bot ||
     !repliedMessage?.from?.is_bot ||
-    !message ||
-    !repliedMessage.text?.startsWith(OFFICIAL_MESSAGE_PREFIX)
+    !repliedMessage.reply_markup?.inline_keyboard.some((row) =>
+      row.some((button) => {
+        if (!("callback_data" in button)) return false
+        const action = parseApplicationMessageAction(button.callback_data)
+        return action?.type === "reply"
+      })
+    ) ||
+    !message
   ) {
     return null
   }
@@ -80,10 +87,12 @@ export function createApplicationMessageReplyMiddleware(
       return next()
     }
 
-    const payload = getApplicationReplyPayload(ctx)
+    const command = getLeadingCommand(ctx)
+    const payload = command ? null : getApplicationReplyPayload(ctx)
     if (payload) {
-      await handleNativeReply(ctx, payload, deps)
-      return
+      const handled = await handleNativeReply(ctx, payload, deps)
+      if (handled) return
+      return next()
     }
 
     const action = parseApplicationMessageAction(ctx.callbackQuery?.data)
@@ -112,13 +121,17 @@ export function createApplicationMessageReplyMiddleware(
       return
     }
 
-    const command = getLeadingCommand(ctx)
     const callbackCommand = parseCallbackData(ctx.callbackQuery?.data)?.command
     const opensMenu =
       command === BOT_COMMANDS.MENU || callbackCommand === BOT_COMMANDS.MENU
     if (command === BOT_COMMANDS.START || opensMenu) {
       clearReplySelection(ctx)
-      if (opensMenu) {
+      const availability = ctx.session.applicationMessaging
+      const availabilityIsStale =
+        !availability?.threadAvailabilityCheckedAt ||
+        deps.now() - availability.threadAvailabilityCheckedAt >=
+          THREAD_AVAILABILITY_TTL_MS
+      if (opensMenu && availability?.hasThreads !== true && availabilityIsStale) {
         await refreshThreadAvailability(ctx, deps)
       }
       return next()
@@ -130,6 +143,11 @@ export function createApplicationMessageReplyMiddleware(
     }
 
     if (ctx.session.applicationMessaging?.selectedApplicationId) {
+      const eligibleText = ctx.message?.text
+      if (!eligibleText || command || ctx.callbackQuery) {
+        clearReplySelection(ctx)
+        return next()
+      }
       await handleSelectedThreadReply(ctx, deps)
       return
     }
@@ -144,12 +162,15 @@ async function handleNativeReply(
   ctx: MyContext,
   payload: NonNullable<ReturnType<typeof getApplicationReplyPayload>>,
   deps: ApplicationMessagingDependencies
-) {
+): Promise<boolean> {
+  if ((payload.text?.length || 0) > APPLICATION_MESSAGE_MAX_LENGTH) {
+    await ctx.reply(BOT_TEXTS.APPLICATION_REPLY_TOO_LONG)
+    return true
+  }
   try {
     const result = await deps.receiveReply(payload)
     if (!result.accepted) {
-      await ctx.reply(BOT_TEXTS.APPLICATION_THREAD_UNAVAILABLE)
-      return
+      return false
     }
     clearReplySelection(ctx)
     await ctx.reply(
@@ -164,12 +185,14 @@ async function handleNativeReply(
           }
         : undefined
     )
+    return true
   } catch (error) {
     console.error(
       "[applicationMessageReply] failed:",
       getSafeErrorDetails(error)
     )
     await ctx.reply(BOT_TEXTS.APPLICATION_REPLY_FAILED)
+    return true
   }
 }
 
@@ -240,8 +263,9 @@ async function handleSelectedThreadReply(
   }
 
   const text = ctx.message?.text
-  if (!text) {
-    await ctx.reply(BOT_TEXTS.APPLICATION_REPLY_TEXT_ONLY, {
+  if (!text) return
+  if (text.length > APPLICATION_MESSAGE_MAX_LENGTH) {
+    await ctx.reply(BOT_TEXTS.APPLICATION_REPLY_TOO_LONG, {
       reply_markup: getApplicationReplyPromptKeyboard(),
     })
     return
@@ -298,6 +322,7 @@ async function showApplicationThreads(
     ctx.session.applicationMessaging = {
       ...ctx.session.applicationMessaging,
       hasThreads: response.enabled && response.threads.length > 0,
+      threadAvailabilityCheckedAt: deps.now(),
     }
 
     if (!response.enabled || response.threads.length === 0) {
@@ -365,6 +390,7 @@ async function refreshThreadAvailability(
     ctx.session.applicationMessaging = {
       ...ctx.session.applicationMessaging,
       hasThreads: response.enabled && response.threads.length > 0,
+      threadAvailabilityCheckedAt: deps.now(),
     }
   } catch (error) {
     if (process.env.API_DEBUG === "true") {

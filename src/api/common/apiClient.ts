@@ -6,6 +6,10 @@ interface RequestConfigWithMeta extends AxiosRequestConfig {
 
 const apiClient: AxiosInstance = axios.create()
 const SILENT_DEV_PATHS = new Set(["/application-messages/claim"])
+const PRIVATE_BODY_PATH_PREFIXES = [
+  "/application-messages/",
+  "/telegram-contact/",
+]
 
 const SECRET_KEYS = new Set([
   "password",
@@ -43,6 +47,16 @@ export function shouldLogDevRequest(url?: string): boolean {
   }
 }
 
+export function shouldLogBody(url?: string): boolean {
+  if (!url) return true
+  try {
+    const path = new URL(url, "http://local").pathname
+    return !PRIVATE_BODY_PATH_PREFIXES.some((prefix) => path.startsWith(prefix))
+  } catch {
+    return false
+  }
+}
+
 apiClient.interceptors.request.use((config) => {
   const isDebug = process.env.API_DEBUG === "true"
   const isDev = process.env.NODE_ENV === "dev"
@@ -53,11 +67,12 @@ apiClient.interceptors.request.use((config) => {
     console.debug(`[API DEBUG] → ${config.method?.toUpperCase()} ${config.url}`)
     console.debug("[API DEBUG] Headers:", safeHeaders)
     if (config.params) console.debug("[API DEBUG] Params:", config.params)
-    if (config.data)
+    if (config.data && shouldLogBody(config.url))
       console.debug("[API DEBUG] Body:", redactSecrets(config.data))
   } else if (isDev && shouldLogDevRequest(config.url)) {
     console.info(`[API] ${config.method?.toUpperCase()} ${config.url}`)
-    if (config.data) console.info("[API] Body:", redactSecrets(config.data))
+    if (config.data && shouldLogBody(config.url))
+      console.info("[API] Body:", redactSecrets(config.data))
   }
 
   return config
@@ -75,7 +90,9 @@ apiClient.interceptors.response.use(
       console.debug(
         `[API DEBUG] ← ${response.status} ${response.config.url} (${duration}ms)`
       )
-      console.debug("[API DEBUG] Response data:", redactSecrets(response.data))
+      if (shouldLogBody(response.config.url)) {
+        console.debug("[API DEBUG] Response data:", redactSecrets(response.data))
+      }
     } else if (isDev && shouldLogDevRequest(response.config.url)) {
       console.info(`[API] ${response.status} ${response.config.url}`)
     }
@@ -93,10 +110,12 @@ apiClient.interceptors.response.use(
       console.debug(
         `[API DEBUG] ✗ ${error.response?.status} ${error.config?.url} (${duration}ms)`
       )
-      console.debug(
-        "[API DEBUG] Error body:",
-        redactSecrets(error.response?.data)
-      )
+      if (shouldLogBody(error.config?.url)) {
+        console.debug(
+          "[API DEBUG] Error body:",
+          redactSecrets(error.response?.data)
+        )
+      }
     } else if (isDev) {
       console.error(
         `[API] Error ${error.response?.status} ${error.config?.url}:`,

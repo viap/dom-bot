@@ -25,6 +25,7 @@ export type ApplicationMessagingState = {
   selectedApplicationId?: string
   selectedAt?: number
   hasThreads?: boolean
+  threadAvailabilityCheckedAt?: number
 }
 
 export type SessionData = {

@@ -120,8 +120,8 @@ src/common/           — types, enums, utilities
 1. `sequentialize(getSessionKey)` — serializes only the same `${userId}/${chatId}` session
 2. `session()` — MongoDB-backed session storage with the same key
 3. Eligible-human/target-bot guard — stops unsupported updates, bot senders and commands addressed to another bot before DOM API calls
-4. Public application contact-link handler — consumes only private `/start app_<token>`, calls the dedicated BOT-client confirmation endpoint, replies, and short-circuits without DOM User login
-5. Application-message reply handler — consumes only a private human reply to a bot message with the official application-message prefix, submits it through the BOT client, and short-circuits without DOM User login
+4. Public application contact-link handler — consumes only private `/start app_<token>` and its confirm/cancel callbacks, shows an explicit confirmation before the dedicated BOT-client mutation, and short-circuits without DOM User login
+5. Application-message reply handler — consumes only a private human non-command reply to a structurally official Application message (the replied bot message carries an `appmsg:reply:*` inline action), lets the API resolve its Telegram message ID authoritatively, and short-circuits without DOM User login
 6. `apiLoginByTelegram` — login-aligns JWT claims and fetches the current user on every other eligible interaction
 7. `conversations()` — enables the installed conversations v1 controls
 8. Compatibility/access gate — exits incompatible history before any builder can replay

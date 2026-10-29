@@ -1,6 +1,10 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { deliverClaimedApplicationMessage } from "@/components/ApplicationMessageListener/applicationMessageListener"
+import {
+  deliverClaimedApplicationMessage,
+  flushApplicationMessageReport,
+  runApplicationMessageCycle,
+} from "@/components/ApplicationMessageListener/applicationMessageListener"
 import {
   createApplicationMessageReplyMiddleware,
   formatApplicationThreadTranscript,
@@ -18,6 +22,7 @@ import { MENU_ITEM_TYPES } from "@/components/MenuBlock/enums/menuItemTypes"
 import { createTestBot } from "../helpers/createTestBot"
 import { makeUser } from "../helpers/fixtures"
 import { callbackUpdate, messageUpdate } from "../helpers/telegram"
+import { GrammyError, HttpError } from "grammy"
 
 const applicationId = "507f1f77bcf86cd799439031"
 
@@ -87,6 +92,337 @@ describe("application Telegram messaging", () => {
     )
   })
 
+  it("retries only the sent report after Telegram delivery succeeds", async () => {
+    let sends = 0
+    let reports = 0
+    const waits: Array<number> = []
+    const bot = {
+      api: {
+        sendMessage: async () => {
+          sends++
+          return { message_id: 101 }
+        },
+      },
+    }
+
+    await deliverClaimedApplicationMessage(
+      bot as never,
+      {
+        id: "507f1f77bcf86cd799439088",
+        applicationId,
+        privateChatId: "42",
+        text: "Hello",
+      },
+      async () => {
+        reports++
+        if (reports < 3) throw new Error("report unavailable")
+      },
+      async (delay) => {
+        waits.push(delay)
+      }
+    )
+
+    assert.equal(sends, 1)
+    assert.equal(reports, 3)
+    assert.deepEqual(waits, [250, 1_000])
+  })
+
+  it("returns an unsent delivery report for the polling loop to retry", async () => {
+    const bot = {
+      api: { sendMessage: async () => ({ message_id: 101 }) },
+    }
+
+    const pending = await deliverClaimedApplicationMessage(
+      bot as never,
+      {
+        id: "507f1f77bcf86cd799439088",
+        applicationId,
+        privateChatId: "42",
+        text: "Hello",
+      },
+      async () => {
+        throw new Error("report unavailable")
+      },
+      async () => undefined
+    )
+
+    assert.deepEqual(pending, {
+      messageId: "507f1f77bcf86cd799439088",
+      status: "sent",
+      telegramMessageId: 101,
+    })
+  })
+
+  it("clears successful and permanently rejected pending reports", async () => {
+    const report = {
+      messageId: "507f1f77bcf86cd799439088",
+      status: "sent",
+      telegramMessageId: 101,
+    } as const
+    let reportCalls = 0
+
+    assert.equal(
+      await flushApplicationMessageReport(report, async () => {
+        reportCalls += 1
+      }),
+      undefined
+    )
+
+    const originalError = console.error
+    const logged: Array<unknown> = []
+    console.error = (...args: Array<unknown>) => logged.push(args)
+    try {
+      for (const status of [400, 404, 409, 410, 422]) {
+        assert.equal(
+          await flushApplicationMessageReport(report, async () => {
+            reportCalls += 1
+            throw Object.assign(new Error("Rejected"), {
+              isAxiosError: true,
+              response: { status },
+            })
+          }),
+          undefined
+        )
+      }
+    } finally {
+      console.error = originalError
+    }
+
+    assert.equal(reportCalls, 6)
+    assert.deepEqual(logged[0], [
+      "[ApplicationMessageListener] delivery report rejected permanently:",
+      {
+        httpStatus: 400,
+        messageId: report.messageId,
+        status: report.status,
+      },
+    ])
+  })
+
+  it("retains pending reports after retryable 4xx, API 5xx, and transport failures", async () => {
+    const report = {
+      messageId: "507f1f77bcf86cd799439088",
+      status: "sent",
+      telegramMessageId: 101,
+    } as const
+
+    for (const error of [
+      ...[401, 403, 408, 429].map((status) =>
+        Object.assign(new Error("Retryable rejection"), {
+          isAxiosError: true,
+          response: { status },
+        })
+      ),
+      Object.assign(new Error("Unavailable"), {
+        isAxiosError: true,
+        response: { status: 503 },
+      }),
+      Object.assign(new Error("Connection reset"), {
+        isAxiosError: true,
+      }),
+    ]) {
+      await assert.rejects(
+        flushApplicationMessageReport(report, async () => {
+          throw error
+        })
+      )
+    }
+  })
+
+  it("keeps retryable cycle reports pending before resuming the queue", async () => {
+    const report = {
+      messageId: "507f1f77bcf86cd799439088",
+      status: "sent",
+      telegramMessageId: 101,
+    } as const
+    const originalError = console.error
+    console.error = () => undefined
+
+    try {
+      for (const error of [
+        Object.assign(new Error("Unauthorized"), {
+          isAxiosError: true,
+          response: { status: 401 },
+        }),
+        Object.assign(new Error("Timed out"), {
+          isAxiosError: true,
+          response: { status: 408 },
+        }),
+        Object.assign(new Error("Unavailable"), {
+          isAxiosError: true,
+          response: { status: 503 },
+        }),
+        Object.assign(new Error("Connection reset"), {
+          isAxiosError: true,
+        }),
+      ]) {
+        let claimCalls = 0
+        let deliveryCalls = 0
+        const retry = await runApplicationMessageCycle(
+          {} as never,
+          { pendingReport: report, consecutiveFailures: 0 },
+          {
+            claim: async () => {
+              claimCalls += 1
+              return { enabled: true, message: null }
+            },
+            report: async () => {
+              throw error
+            },
+            deliver: async () => {
+              deliveryCalls += 1
+              return undefined
+            },
+            pollingDelay: 5_000,
+          }
+        )
+        assert.deepEqual(retry, {
+          pendingReport: report,
+          consecutiveFailures: 1,
+          nextDelay: 5_000,
+        })
+        assert.equal(claimCalls, 0)
+        assert.equal(deliveryCalls, 0)
+      }
+
+      let claimCalls = 0
+      let deliveryCalls = 0
+      const recoveredDependencies = {
+        claim: async () => {
+          claimCalls += 1
+          return { enabled: true, message: null }
+        },
+        report: async () => undefined,
+        deliver: async () => {
+          deliveryCalls += 1
+          return undefined
+        },
+        pollingDelay: 5_000,
+      }
+
+      const cleared = await runApplicationMessageCycle(
+        {} as never,
+        { pendingReport: report, consecutiveFailures: 1 },
+        recoveredDependencies
+      )
+      assert.deepEqual(cleared, {
+        pendingReport: undefined,
+        consecutiveFailures: 0,
+        nextDelay: 1_000,
+      })
+      assert.equal(claimCalls, 0)
+      assert.equal(deliveryCalls, 0)
+
+      const resumed = await runApplicationMessageCycle(
+        {} as never,
+        cleared,
+        recoveredDependencies
+      )
+      assert.equal(resumed.pendingReport, undefined)
+      assert.equal(claimCalls, 1)
+      assert.equal(deliveryCalls, 0)
+    } finally {
+      console.error = originalError
+    }
+  })
+
+  it("does not queue or resend after a permanent report rejection", async () => {
+    let sends = 0
+    let reports = 0
+    const bot = {
+      api: {
+        sendMessage: async () => {
+          sends += 1
+          return { message_id: 101 }
+        },
+      },
+    }
+    const originalError = console.error
+    console.error = () => undefined
+    try {
+      const pending = await deliverClaimedApplicationMessage(
+        bot as never,
+        {
+          id: "507f1f77bcf86cd799439088",
+          applicationId,
+          privateChatId: "42",
+          text: "Hello",
+        },
+        async () => {
+          reports += 1
+          throw Object.assign(new Error("Conflict"), {
+            isAxiosError: true,
+            response: { status: 409 },
+          })
+        }
+      )
+
+      assert.equal(pending, undefined)
+    } finally {
+      console.error = originalError
+    }
+
+    assert.equal(sends, 1)
+    assert.equal(reports, 1)
+  })
+
+  it("classifies definitive Telegram failures separately from unknown delivery", async () => {
+    for (const [error, expectedStatus, expectedCode] of [
+      [
+        new GrammyError(
+          "Too many requests",
+          {
+            ok: false,
+            error_code: 429,
+            description: "Too many requests",
+            parameters: { retry_after: 1 },
+          },
+          "sendMessage",
+          {}
+        ),
+        "failed",
+        "telegram_429",
+      ],
+      [
+        new GrammyError(
+          "Server error",
+          {
+            ok: false,
+            error_code: 500,
+            description: "Server error",
+            parameters: {},
+          },
+          "sendMessage",
+          {}
+        ),
+        "unknown",
+        "delivery_transport_unknown",
+      ],
+      [
+        new HttpError("Network failure", new Error("socket closed")),
+        "unknown",
+        "telegram_transport_unknown",
+      ],
+    ] as const) {
+      const reports: Array<Record<string, unknown>> = []
+      const bot = { api: { sendMessage: async () => Promise.reject(error) } }
+      await deliverClaimedApplicationMessage(
+        bot as never,
+        {
+          id: "507f1f77bcf86cd799439088",
+          applicationId,
+          privateChatId: "42",
+          text: "Hello",
+        },
+        async (report) => {
+          reports.push(report)
+        }
+      )
+      assert.equal(reports[0]?.status, expectedStatus)
+      assert.equal(reports[0]?.errorCode, expectedCode)
+    }
+  })
+
   it("keeps native Reply compatibility when an older API claim has no application id", async () => {
     let options: unknown = "not-called"
     const bot = {
@@ -115,7 +451,7 @@ describe("application Telegram messaging", () => {
     assert.equal(options, undefined)
   })
 
-  it("recognizes only private replies to official application messages", () => {
+  it("recognizes only replies to structurally official application messages", () => {
     const payload = getApplicationReplyPayload({
       chat: { id: 42, type: "private" },
       from: { id: 42, is_bot: false },
@@ -126,6 +462,16 @@ describe("application Telegram messaging", () => {
           message_id: 101,
           text: "DOM — Editor Jane\n\nHello",
           from: { id: 1, is_bot: true },
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Ответить",
+                  callback_data: applicationReplyCallback(applicationId),
+                },
+              ],
+            ],
+          },
         },
       },
     } as never)
@@ -137,7 +483,7 @@ describe("application Telegram messaging", () => {
       replyToTelegramMessageId: 101,
       text: "Applicant reply",
     })
-    assert.equal(
+    assert.deepEqual(
       getApplicationReplyPayload({
         chat: { id: 42, type: "private" },
         from: { id: 42, is_bot: false },
@@ -155,10 +501,14 @@ describe("application Telegram messaging", () => {
     )
   })
 
-  it("does not fall through to DOM User authentication for an unavailable native reply", async () => {
+  it("continues normal routing without calling the API for a regular bot-message reply", async () => {
     let authCalls = 0
+    let replyCalls = 0
     const middleware = createApplicationMessageReplyMiddleware({
-      receiveReply: async () => ({ accepted: false }),
+      receiveReply: async () => {
+        replyCalls++
+        return { accepted: false }
+      },
     })
     const { bot, telegram } = await createTestBot({
       applicationReplyMiddleware: middleware,
@@ -180,8 +530,10 @@ describe("application Telegram messaging", () => {
       })
     )
 
-    assert.equal(authCalls, 0)
-    assert.equal(
+    assert.equal(authCalls, 1)
+    assert.equal(replyCalls, 0)
+    assert.equal(telegram.byMethod("sendMessage").length, 1)
+    assert.notEqual(
       telegram.byMethod("sendMessage")[0].payload.text,
       BOT_TEXTS.APPLICATION_THREAD_UNAVAILABLE
     )
@@ -384,6 +736,80 @@ describe("application Telegram messaging", () => {
     )
   })
 
+  it("lets commands continue through routing while clearing reply selection", async () => {
+    let receiveCalls = 0
+    let authCalls = 0
+    const middleware = createApplicationMessageReplyMiddleware({
+      listThreads: async () => ({
+        enabled: true,
+        threads: [thread],
+        page: 0,
+        hasMore: false,
+      }),
+      receiveReply: async () => {
+        receiveCalls++
+        return { accepted: true, stored: true, applicationId }
+      },
+      now: () => 1_000,
+    })
+    const { bot, storage } = await createTestBot({
+      applicationReplyMiddleware: middleware,
+      authMiddleware: async (_ctx, next) => {
+        authCalls++
+        return next()
+      },
+    })
+
+    await bot.handleUpdate(
+      callbackUpdate(applicationReplyCallback(applicationId))
+    )
+    await bot.handleUpdate(messageUpdate("/menu", { updateId: 2 }))
+
+    assert.equal(receiveCalls, 0)
+    assert.equal(authCalls, 1)
+    assert.equal(
+      (await storage.read("101/201"))?.applicationMessaging
+        ?.selectedApplicationId,
+      undefined
+    )
+  })
+
+  it("rejects an overlong selected reply and keeps the selection active", async () => {
+    let receiveCalls = 0
+    const middleware = createApplicationMessageReplyMiddleware({
+      listThreads: async () => ({
+        enabled: true,
+        threads: [thread],
+        page: 0,
+        hasMore: false,
+      }),
+      receiveReply: async () => {
+        receiveCalls++
+        return { accepted: true, stored: true, applicationId }
+      },
+      now: () => 1_000,
+    })
+    const { bot, storage, telegram } = await createTestBot({
+      applicationReplyMiddleware: middleware,
+    })
+
+    await bot.handleUpdate(
+      callbackUpdate(applicationReplyCallback(applicationId))
+    )
+    await bot.handleUpdate(messageUpdate("x".repeat(3_501), { updateId: 2 }))
+
+    assert.equal(receiveCalls, 0)
+    assert.equal(
+      telegram.byMethod("sendMessage").at(-1)?.payload.text,
+      BOT_TEXTS.APPLICATION_REPLY_TOO_LONG
+    )
+    assert.equal(
+      (await storage.read("101/201"))?.applicationMessaging
+        ?.selectedApplicationId,
+      applicationId
+    )
+  })
+
   it("lists applicant threads and exposes the menu item only when threads exist", async () => {
     const middleware = createApplicationMessageReplyMiddleware({
       listThreads: async () => ({
@@ -461,5 +887,50 @@ describe("application Telegram messaging", () => {
       (await storage.read("101/201"))?.applicationMessaging?.hasThreads,
       true
     )
+  })
+
+  it("refreshes a stale cached false thread availability on menu", async () => {
+    let listCalls = 0
+    let now = 1_000
+    const middleware = createApplicationMessageReplyMiddleware({
+      listThreads: async () => {
+        listCalls++
+        return {
+          enabled: true,
+          threads: [thread],
+          page: 0,
+          hasMore: false,
+        }
+      },
+      now: () => now,
+    })
+    const { bot } = await createTestBot({
+      applicationReplyMiddleware: middleware,
+      authMiddleware: async (ctx, next) => {
+        if (!ctx.session.user) {
+          Object.assign(ctx.session, {
+            user: makeUser({ roles: [ROLES.USER] }),
+            token: "test-token",
+            applicationMessaging: {
+              hasThreads: false,
+              threadAvailabilityCheckedAt: 1_000,
+            },
+          })
+        }
+        return next()
+      },
+    })
+
+    await bot.handleUpdate(messageUpdate("hello"))
+    await bot.handleUpdate(
+      callbackUpdate(JSON.stringify({ command: "menu" }), { updateId: 2 })
+    )
+    assert.equal(listCalls, 0)
+
+    now = 61_000
+    await bot.handleUpdate(
+      callbackUpdate(JSON.stringify({ command: "menu" }), { updateId: 3 })
+    )
+    assert.equal(listCalls, 1)
   })
 })

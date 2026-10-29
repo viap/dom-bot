@@ -1,6 +1,7 @@
 export const API_PATHS = {
   telegramContact: {
     confirmLink: "/telegram-contact/link/confirm",
+    cancelLink: "/telegram-contact/link/cancel",
   },
   applicationMessages: {
     claim: "/application-messages/claim",
