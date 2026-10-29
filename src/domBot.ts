@@ -6,6 +6,7 @@ import { SessionData } from "@/common/types/sessionData"
 import { DbConnection, getSessions } from "@/services/db/connectDB"
 import {
   setDefaultBotCommands,
+  startApplicationMessageListener,
   startNotificationListener,
 } from "@/startup"
 
@@ -25,5 +26,6 @@ const domBot = createDomBot({
 
 await setDefaultBotCommands(domBot)
 await startNotificationListener(domBot, sessions)
+startApplicationMessageListener(domBot)
 
 export default domBot

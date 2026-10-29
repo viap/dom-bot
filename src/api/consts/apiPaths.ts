@@ -1,4 +1,14 @@
 export const API_PATHS = {
+  telegramContact: {
+    confirmLink: "/telegram-contact/link/confirm",
+    cancelLink: "/telegram-contact/link/cancel",
+  },
+  applicationMessages: {
+    claim: "/application-messages/claim",
+    report: "/application-messages/report",
+    reply: "/application-messages/reply",
+    threads: "/application-messages/threads",
+  },
   auth: {
     loginByTelegram: "/auth/login/telegram",
     checkToken: "/auth/check-token",

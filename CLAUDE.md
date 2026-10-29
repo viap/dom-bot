@@ -88,7 +88,7 @@ Uses `@grammyjs/conversations` for multi-step user interactions. All conversatio
 - Same-key updates are serialized before session reads. Persisted `interactionState` tracks conversation compatibility, current access identity, and pending recovery; successful private command synchronization uses the top-level `syncedCommandsKey`, and notification menu deep links are session-local.
 
 #### Conversation Recovery and Role Refresh
-- The eligible-human/target-bot guard runs before `apiLoginByTelegram`. Authentication fetches `/users/me` directly on every eligible interaction and aligns JWT role claims before protected routing. GET requests have a finite default timeout, with a shorter override for auth/profile calls; mutations have no default timeout.
+- The eligible-human/target-bot guard runs before the narrow public-application contact-link and application-message reply handlers, then `apiLoginByTelegram`. A private `/start app_<token>` shows explicit Confirm/Cancel actions; only their callback mutates the link. A private non-command reply is treated as an Application reply only when the replied bot message carries the structural `appmsg:reply:*` action, after which the API resolves the Telegram message ID authoritatively. These paths use the BOT client and short-circuit without DOM User creation/login; every other eligible interaction continues through normal authentication. Authentication fetches `/users/me` directly and aligns JWT role claims before protected routing. GET requests have a finite default timeout, with a shorter override for auth/profile calls; mutations have no default timeout.
 - Psychologist profile loading happens only after aligned claims. A confirmed missing profile is not cached: the optional session field is deleted and retried on the next interaction. Direct assignment persists normal session values; clear optional BSON-backed fields with `delete`, never by assigning `undefined`.
 - Recovery derives access from the authenticated session and exits incompatible history after `conversations()` initialization but before any `createConversation` middleware can replay it. Replacement entry happens only after conditional conversation registration and keeps a durable pending marker until delivery succeeds.
 - Shared callback routing returns whether it handled the payload. Normal and recovery owners acknowledge once before replies or conversation entry, so failures cannot leave buttons spinning or double-answer callbacks.
@@ -117,6 +117,7 @@ Environment variables in `config/.env`:
 - `API_*` - Backend API configuration
 - `API_WEBSOCKET_URL` - WebSocket for real-time notifications
 - `POLING_DELAY` - Notification polling delay in ms (default 30000, minimum 5000)
+- `APPLICATION_MESSAGE_POLLING_DELAY` - Application-message queue polling delay in ms (default 5000, minimum 1000)
 
 ### External Integrations
 - **Backend API**: HTTP client in `src/api/` with auth middleware
@@ -140,6 +141,7 @@ Environment variables in `config/.env`:
 
 ### API Integration
 - Middleware for automatic Telegram auth (`apiLoginByTelegram`)
+- Dedicated pre-auth public application contact-link confirmation for private `/start app_<token>` plus its Confirm/Cancel callbacks; it is not a user-authentication path
 - Typed DTOs for API communication
 - Standardized HTTP methods in `src/api/common/`
 - `/users/me` is the credential/role check; one bounded Telegram login realigns missing, rejected, or mismatched JWTs without `/auth/check-token` or refresh-token preflights.

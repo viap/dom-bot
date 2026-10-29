@@ -63,10 +63,16 @@ export function getMenuForCurrentProfile(
 ): PartialMenuBlockItemsProps {
   const missingPsychologistProfile = Boolean(
     ctx.session.user?.roles.includes(ROLES.PSYCHOLOGIST) &&
-    !ctx.session.psychologist
+      !ctx.session.psychologist
   )
 
-  return cloneMenu(defaultMenu, missingPsychologistProfile)
+  const menu = cloneMenu(defaultMenu, missingPsychologistProfile)
+  if (!ctx.session.applicationMessaging?.hasThreads) {
+    menu.items = menu.items?.filter(
+      (item) => item.key !== MENU_ITEM_TYPES.APPLICATION_MESSAGES
+    )
+  }
+  return menu
 }
 
 function cloneMenu(

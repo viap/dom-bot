@@ -20,6 +20,65 @@ import {
 } from "../helpers/telegram"
 
 describe("bot handlers", () => {
+  it("handles application links before bot authentication", async () => {
+    let authCalls = 0
+    let linkCalls = 0
+    const { bot, telegram } = await createTestBot({
+      authMiddleware: async (_ctx, next) => {
+        authCalls++
+        return next()
+      },
+      telegramLinkMiddleware: async (ctx, next) => {
+        if (ctx.message?.text?.includes("app_")) {
+          linkCalls++
+          await ctx.reply(BOT_TEXTS.TELEGRAM_CONTACT_LINKED)
+          return
+        }
+        return next()
+      },
+    })
+
+    await bot.handleUpdate(
+      messageUpdate(`/start app_${"a".repeat(43)}`, {
+        chat: makePrivateChat({ id: 101 }),
+        message: {
+          entities: [{ type: "bot_command", offset: 0, length: 6 }],
+        },
+      })
+    )
+
+    assert.equal(linkCalls, 1)
+    assert.equal(authCalls, 0)
+    assert.equal(
+      telegram.byMethod("sendMessage")[0].payload.text,
+      BOT_TEXTS.TELEGRAM_CONTACT_LINKED
+    )
+  })
+
+  it("handles application replies before bot authentication", async () => {
+    let authCalls = 0
+    let replyCalls = 0
+    const { bot, telegram } = await createTestBot({
+      authMiddleware: async (_ctx, next) => {
+        authCalls++
+        return next()
+      },
+      applicationReplyMiddleware: async (ctx) => {
+        replyCalls++
+        await ctx.reply(BOT_TEXTS.APPLICATION_REPLY_RECEIVED)
+      },
+    })
+
+    await bot.handleUpdate(messageUpdate("Applicant reply"))
+
+    assert.equal(replyCalls, 1)
+    assert.equal(authCalls, 0)
+    assert.equal(
+      telegram.byMethod("sendMessage")[0].payload.text,
+      BOT_TEXTS.APPLICATION_REPLY_RECEIVED
+    )
+  })
+
   it("/start exits flow, syncs role-aware commands, and replies with menu", async () => {
     const { bot, telegram } = await createTestBot({
       roles: [ROLES.EDITOR],
@@ -89,7 +148,9 @@ describe("bot handlers", () => {
     console.log = () => undefined
 
     try {
-      await bot.handleUpdate(callbackUpdate(JSON.stringify({ unexpected: true })))
+      await bot.handleUpdate(
+        callbackUpdate(JSON.stringify({ unexpected: true }))
+      )
     } finally {
       console.log = originalLog
     }
@@ -139,7 +200,7 @@ describe("bot handlers", () => {
           id: 123,
           is_bot: true,
           first_name: "DOM Test Bot",
-          username: "dom_test_bot",
+          username: "PsyDom_Tbilisi_Test_bot",
           can_join_groups: true,
           can_read_all_group_messages: false,
           supports_inline_queries: false,
@@ -177,7 +238,7 @@ describe("bot handlers", () => {
           id: 123,
           is_bot: true,
           first_name: "DOM Test Bot",
-          username: "dom_test_bot",
+          username: "PsyDom_Tbilisi_Test_bot",
           can_join_groups: true,
           can_read_all_group_messages: false,
           supports_inline_queries: false,

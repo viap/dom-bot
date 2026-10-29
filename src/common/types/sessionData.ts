@@ -21,6 +21,13 @@ export type InteractionState = {
   pendingRecovery?: PendingRecovery
 }
 
+export type ApplicationMessagingState = {
+  selectedApplicationId?: string
+  selectedAt?: number
+  hasThreads?: boolean
+  threadAvailabilityCheckedAt?: number
+}
+
 export type SessionData = {
   token?: string
   hasTermsAgreement: boolean
@@ -29,6 +36,7 @@ export type SessionData = {
   user?: UserDto
   psychologist?: PsychologistDto
   interactionState?: InteractionState
+  applicationMessaging?: ApplicationMessagingState
   menuDeepLink?: DeepLink
   syncedCommandsKey?: string
 }

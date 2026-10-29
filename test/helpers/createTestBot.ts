@@ -10,10 +10,14 @@ export async function createTestBot({
   roles = [ROLES.USER],
   session = {},
   authMiddleware,
+  telegramLinkMiddleware,
+  applicationReplyMiddleware,
 }: {
   roles?: Array<ROLES>
   session?: Partial<SessionData>
   authMiddleware?: MiddlewareFn<MyContext>
+  telegramLinkMiddleware?: MiddlewareFn<MyContext>
+  applicationReplyMiddleware?: MiddlewareFn<MyContext>
 } = {}) {
   const storage = new MemorySessionStorage<SessionData>()
   const bot = createDomBot({
@@ -23,13 +27,16 @@ export async function createTestBot({
         id: 123,
         is_bot: true,
         first_name: "DOM Test Bot",
-        username: "dom_test_bot",
+        username: "PsyDom_Tbilisi_Test_bot",
         can_join_groups: true,
         can_read_all_group_messages: false,
         supports_inline_queries: false,
       },
     },
     sessionStorage: storage,
+    telegramLinkMiddleware,
+    applicationReplyMiddleware:
+      applicationReplyMiddleware || (async (_ctx, next) => next()),
     authMiddleware:
       authMiddleware ||
       (async (ctx, next) => {

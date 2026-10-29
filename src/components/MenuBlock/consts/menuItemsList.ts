@@ -18,6 +18,10 @@ const menuItemsList: Array<
     *Психологический центр DOM*\r\n\r\n*_Кто мы?_*\r\nКоманда профессиональных психологов и психотерапевтов разных модальностей, объединённых общими ценностями гуманизма и веры в людей🕊️`,
   },
   {
+    key: MENU_ITEM_TYPES.APPLICATION_MESSAGES,
+    name: "Мои переписки",
+  },
+  {
     key: MENU_ITEM_TYPES.SCHEDULE,
     name: "Расписание",
     content: "Расписание кабинетов DOM'а",
