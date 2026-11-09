@@ -30,8 +30,10 @@ const therapySessionShow: BotConversation = {
     ): Promise<ConversationResult | undefined | unknown> => {
       const content = getTextOfTherapySession(session)
 
+      // conversation.now() keeps the replayed branch equal to the first run
       const deletionIsAvailable =
-        Date.now() - new Date(session.createdAt).getTime() < oneDayInMilliseconds * 7
+        (await conversation.now()) - new Date(session.createdAt).getTime() <
+        oneDayInMilliseconds * 7
 
       const keyboard = new Keyboard()
 

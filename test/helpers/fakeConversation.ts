@@ -141,7 +141,9 @@ export function makeFakeConversation({
     logs,
     replies,
     now: async () => now.getTime(),
-    external: async <T>(fn: () => T | Promise<T>) => fn(),
+    external: async <T>(
+      op: (() => T | Promise<T>) | { task: () => T | Promise<T> }
+    ) => (typeof op === "function" ? op() : op.task()),
     wait: async () => makeQueuedContext(),
     waitFor: async (filter: SupportedWaitForFilter) => {
       const ctx = makeQueuedContext()

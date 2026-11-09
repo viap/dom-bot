@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { Conversation } from "@grammyjs/conversations"
 import { ConversationResult } from "conversations/types/conversationResult"
@@ -21,7 +22,7 @@ const therapyRequestAccept: BotConversation = {
       let result: boolean | undefined = false
 
       try {
-        result = await conversation.external(async () => {
+        result = await safeExternal(conversation, async () => {
           return await acceptTherapyRequest(ctx, therapyRequest._id)
         })
       } catch (e) {

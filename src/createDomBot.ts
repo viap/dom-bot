@@ -5,7 +5,6 @@ import { sequentialize } from "@grammyjs/runner"
 import {
   Bot,
   BotConfig,
-  Context,
   GrammyError,
   HttpError,
   MiddlewareFn,
@@ -26,6 +25,12 @@ import {
   isRecoveryMenuRegistrationRequired,
 } from "@/common/middlewares/interactionRecovery"
 import { syncRoleAwareCommandsOnChange } from "@/common/middlewares/roleAwareCommands"
+import {
+  UPDATE_WATCHDOG_MS,
+  createUpdateWatchdog,
+  skipSessionWriteIfReleased,
+} from "@/common/middlewares/updateWatchdog"
+import { getSessionKey } from "@/common/utils/getSessionKey"
 import { MyContext } from "@/common/types/myContext"
 import { SessionData, defaultSessionData } from "@/common/types/sessionData"
 import {
@@ -64,7 +69,10 @@ export type CreateDomBotOptions = {
   telegramLinkMiddleware?: MiddlewareFn<MyContext>
   applicationReplyMiddleware?: MiddlewareFn<MyContext>
   conversationVersion?: number
+  updateTimeoutMs?: number
 }
+
+export { getSessionKey }
 
 export function sessionInit(
   conversationVersion = CONVERSATION_VERSION
@@ -77,14 +85,6 @@ export function sessionInit(
   }
 }
 
-export function getSessionKey(ctx: Context): string | undefined {
-  // Give every user their one personal session storage per chat with the bot
-  // (an independent session for each group and their private chat)
-  return ctx.from === undefined || ctx.chat === undefined
-    ? undefined
-    : `${ctx.from.id}/${ctx.chat.id}`
-}
-
 export function createDomBot({
   token = process.env.TOKEN || "",
   botConfig,
@@ -93,6 +93,7 @@ export function createDomBot({
   telegramLinkMiddleware = telegramContactLink,
   applicationReplyMiddleware = applicationMessageReply,
   conversationVersion = CONVERSATION_VERSION,
+  updateTimeoutMs = UPDATE_WATCHDOG_MS,
 }: CreateDomBotOptions): Bot<MyContext> {
   const domBot = new Bot<MyContext>(token, botConfig)
   domBot.api.config.use(autoRetry(AUTO_RETRY_OPTIONS))
@@ -100,6 +101,7 @@ export function createDomBot({
   DatePicker.setBotInstance(domBot)
 
   domBot.use(sequentialize(getSessionKey))
+  domBot.use(createUpdateWatchdog(updateTimeoutMs))
 
   domBot.use(
     session({
@@ -108,6 +110,7 @@ export function createDomBot({
       storage: sessionStorage,
     })
   )
+  domBot.use(skipSessionWriteIfReleased)
 
   // Authentication and conversation routing apply only to eligible human chat
   // updates addressed to this bot. Ignored commands must not call dom-api.

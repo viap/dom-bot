@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { createNotification } from "@/api/controllerNotifications/createNotification"
 import { ROLES_DESCR_PLURAL } from "@/common/consts/rolesDescr"
@@ -93,7 +94,7 @@ const notificationCreate: BotConversation = {
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
         let notification: NotificationDto | false = false
         try {
-          notification = await conversation.external(async () => {
+          notification = await safeExternal(conversation, async () => {
             return createNotification(ctx, {
               startsAt: formResult.data.startsAt
                 ? getDateFromRuDateString(

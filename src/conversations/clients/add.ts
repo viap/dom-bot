@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { addNewClient } from "@/api/controllerPsychologists/addNewClient"
 import { BOT_ERRORS } from "@/common/enums/botErrors"
@@ -44,7 +45,7 @@ const clientAdd: BotConversation = {
         let result = false
 
         try {
-          result = await conversation.external(async () => {
+          result = await safeExternal(conversation, async () => {
             return await addNewClient(ctx, {
               name: formResult.data.name,
               descr: formResult.data.descr,

@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { Conversation } from "@grammyjs/conversations"
 import { deleteTherapySession } from "@/api/controllerTherapySessions/deleteTherapySession"
@@ -23,12 +24,13 @@ const therapySessionDelete: BotConversation = {
       let result = false
 
       try {
+        // conversation.now() keeps the replayed branch equal to the first run
         const deletionIsAvailable =
-          Date.now() - new Date(session.createdAt).getTime() <
+          (await conversation.now()) - new Date(session.createdAt).getTime() <
           oneDayInMilliseconds * 7
 
         result = deletionIsAvailable
-          ? await conversation.external(async () => {
+          ? await safeExternal(conversation, async () => {
               return await deleteTherapySession(ctx, session._id)
             })
           : false

@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { PropType } from "@/api/type/propType"
 import { Conversation } from "@grammyjs/conversations"
@@ -274,31 +275,31 @@ export default class MenuBlock {
 
     switch (parent.submenu) {
       case SUBMENU_TYPES.ALL_USERS:
-        items = await this.conversation.external(async () => {
+        items = await safeExternal(this.conversation, async () => {
           return await loadUsersMenuItems(...props)
         })
         break
 
       case SUBMENU_TYPES.PSYCHOLOGIST_CLIENTS:
-        items = await this.conversation.external(async () => {
+        items = await safeExternal(this.conversation, async () => {
           return await loadClientsMenuItems(...props)
         })
         break
 
       case SUBMENU_TYPES.PSYCHOLOGIST_CLIENT_THERAPY_SESSIONS:
-        items = await this.conversation.external(async () => {
+        items = await safeExternal(this.conversation, async () => {
           return await loadTherapySessionsMenuItems(...props)
         })
         break
 
       case SUBMENU_TYPES.ALL_THERAPY_REQUESTS:
-        items = await this.conversation.external(async () => {
+        items = await safeExternal(this.conversation, async () => {
           return await loadTherapyRequestsMenuItems(...props)
         })
         break
 
       case SUBMENU_TYPES.PSYCHOLOGIST_THERAPY_REQUESTS:
-        items = await this.conversation.external(async () => {
+        items = await safeExternal(this.conversation, async () => {
           return await loadPsychologistTherapyRequestsMenuItems(...props)
         })
 

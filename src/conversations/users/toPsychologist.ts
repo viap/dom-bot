@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { createPsychologistFromUser } from "@/api/controllerPsychologists/createPsychologistFromUser"
 import { UserDto } from "@/common/dto/user.dto"
@@ -24,7 +25,7 @@ const userToPsychologist: BotConversation = {
 
       try {
         result = notEmpty(
-          await conversation.external(async () => {
+          await safeExternal(conversation, async () => {
             return await createPsychologistFromUser(ctx, { userId: user._id })
           })
         )

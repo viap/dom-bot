@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { getAllPsychologists } from "@/api/controllerPsychologists/getAllPsychologists"
 import { createTherapyRequest } from "@/api/controllerTherapyRequests/createTherapyRequest"
@@ -31,7 +32,9 @@ const therapyRequestAdd: BotConversation = {
       conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
-      const allPsychologists = await getAllPsychologists(ctx)
+      const allPsychologists = await safeExternal(conversation, () =>
+        getAllPsychologists(ctx)
+      )
       const telegramUser: TelegramUserDto | undefined =
         ctx.from && !ctx.from.is_bot
           ? {
@@ -106,7 +109,7 @@ const therapyRequestAdd: BotConversation = {
           .replace("@", "")
 
         try {
-          result = await conversation.external(async () => {
+          result = await safeExternal(conversation, async () => {
             return notEmpty(
               await createTherapyRequest(ctx, {
                 name:

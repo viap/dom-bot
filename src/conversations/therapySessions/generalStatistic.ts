@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { Conversation } from "@grammyjs/conversations"
 import { getStatisticForPeriod } from "@/api/controllerTherapySessions/getStatisticForPeriod"
 import { numberOfCommissionHours } from "@/common/consts/numberOfCommissionHours"
@@ -47,13 +48,18 @@ const therapySessionsGeneralStatistic: BotConversation = {
         ReplyMarkup.parseModeV2
       )
 
-      const sessionsStatistic: Array<TherapySessionsStatisticDto> =
-        await getStatisticForPeriod(ctx, {
-          from: startDate.getTime(),
-          to: endDate.getTime(),
-        })
+      // Only the report text is stored in the conversation log.
+      const report = await safeExternal(conversation, async () => {
+        const sessionsStatistic: Array<TherapySessionsStatisticDto> =
+          await getStatisticForPeriod(ctx, {
+            from: startDate.getTime(),
+            to: endDate.getTime(),
+          })
 
-      if (sessionsStatistic.length) {
+        if (!sessionsStatistic.length) {
+          return undefined
+        }
+
         const sessionsByPsychologist = groupBy(
           sessionsStatistic,
           (item) => item.psychologist._id
@@ -95,19 +101,16 @@ const therapySessionsGeneralStatistic: BotConversation = {
 
         if (fullCommissions.length) {
           content.push(
-            `Общая комиссия за период: *${getSumsForPrices(fullCommissions).join(
-              ", "
-            )}*`
+            `Общая комиссия за период: *${getSumsForPrices(
+              fullCommissions
+            ).join(", ")}*`
           )
         }
 
-        await ctx.reply(
-          content.join(ReplyMarkup.newLine),
-          ReplyMarkup.parseModeV2
-        )
-      } else {
-        await ctx.reply("*Записей нет*", ReplyMarkup.parseModeV2)
-      }
+        return content.join(ReplyMarkup.newLine)
+      })
+
+      await ctx.reply(report || "*Записей нет*", ReplyMarkup.parseModeV2)
 
       return
     }
