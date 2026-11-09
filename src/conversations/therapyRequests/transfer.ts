@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { getAllPsychologists } from "@/api/controllerPsychologists/getAllPsychologists"
 import { updateTherapyRequest } from "@/api/controllerTherapyRequests/updateTherapyRequest"
@@ -24,7 +25,9 @@ const therapyRequestTransfer: BotConversation = {
       conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
-      const psychologists = await getAllPsychologists(ctx)
+      const psychologists = await safeExternal(conversation, () =>
+        getAllPsychologists(ctx)
+      )
 
       const inputs = [
         {
@@ -50,7 +53,7 @@ const therapyRequestTransfer: BotConversation = {
         let result = false
         try {
           result = notEmpty(
-            await conversation.external(async () => {
+            await safeExternal(conversation, async () => {
               return await updateTherapyRequest(ctx, therapyRequest._id, {
                 psychologist:
                   typeof formResult.data.psychologist === "string"

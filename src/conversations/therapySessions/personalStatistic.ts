@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getStatisticForPeriod } from "@/api/controllerTherapySessions/getStatisticForPeriod"
 import { getTherapySessions } from "@/api/controllerTherapySessions/getTherapySessions"
 import { PriceDto } from "@/common/dto/price.dto"
@@ -22,7 +23,7 @@ const therapySessionsPersonalStatistic: BotConversation = {
 
   getConversation(period: PERIODS) {
     return async (
-      _conversation: Conversation<MyContext>,
+      conversation: Conversation<MyContext>,
       ctx: MyContext
     ): Promise<ConversationResult | undefined> => {
       const sessionPsychologist = ctx.session.psychologist
@@ -47,49 +48,57 @@ const therapySessionsPersonalStatistic: BotConversation = {
         ReplyMarkup.parseModeV2
       )
 
-      const sessionsStatistic: Array<TherapySessionsStatisticDto> =
-        await getStatisticForPeriod(
+      // Only the report text is stored in the conversation log, not the raw
+      // session lists with client data.
+      const report = await safeExternal(conversation, async () => {
+        const sessionsStatistic: Array<TherapySessionsStatisticDto> =
+          await getStatisticForPeriod(
+            ctx,
+            {
+              from: startDate.getTime(),
+              to: endDate.getTime(),
+            },
+            sessionPsychologist._id
+          )
+
+        const sessions = await getTherapySessions(
           ctx,
+          sessionPsychologist._id,
+          undefined,
           {
             from: startDate.getTime(),
             to: endDate.getTime(),
-          },
-          sessionPsychologist?._id
+          }
         )
 
-      const sessions = await getTherapySessions(
-        ctx,
-        sessionPsychologist?._id,
-        undefined,
-        {
-          from: startDate.getTime(),
-          to: endDate.getTime(),
-        }
-      )
-
-      const sessionDetailsByClientId: { [key: string]: Array<string> } = {}
-      if (sessions.length) {
-        const sessionsByClient = groupBy(
-          sessions,
-          (session) => session.client._id
-        )
-
-        Object.entries(sessionsByClient).forEach(([clientId, sessions]) => {
-          sessionDetailsByClientId[clientId] =
-            sessionDetailsByClientId[clientId] || []
-          sessionDetailsByClientId[clientId].push(
-            ...sessions.map((session) => {
-              return `${ReplyMarkup.tab} - ${getLocalDateString(
-                session.dateTime
-              )}, сумма ${getSumsForPrices([session.price]).join(
-                ", "
-              )}, комиссия ${getSumsForPrices([session.commission]).join(", ")}`
-            })
+        const sessionDetailsByClientId: { [key: string]: Array<string> } = {}
+        if (sessions.length) {
+          const sessionsByClient = groupBy(
+            sessions,
+            (session) => session.client._id
           )
-        })
-      }
 
-      if (sessionsStatistic.length) {
+          Object.entries(sessionsByClient).forEach(([clientId, sessions]) => {
+            sessionDetailsByClientId[clientId] =
+              sessionDetailsByClientId[clientId] || []
+            sessionDetailsByClientId[clientId].push(
+              ...sessions.map((session) => {
+                return `${ReplyMarkup.tab} - ${getLocalDateString(
+                  session.dateTime
+                )}, сумма ${getSumsForPrices([session.price]).join(
+                  ", "
+                )}, комиссия ${getSumsForPrices([session.commission]).join(
+                  ", "
+                )}`
+              })
+            )
+          })
+        }
+
+        if (!sessionsStatistic.length) {
+          return undefined
+        }
+
         const commonSum: Array<PriceDto> = []
         const commonCommission: Array<PriceDto> = []
         const content: Array<string> = sessionsStatistic.map((stat, index) => {
@@ -131,13 +140,10 @@ const therapySessionsPersonalStatistic: BotConversation = {
           )}*`
         )
 
-        await ctx.reply(
-          content.join(ReplyMarkup.doubleNewLine),
-          ReplyMarkup.parseModeV2
-        )
-      } else {
-        await ctx.reply("*Записей нет*", ReplyMarkup.parseModeV2)
-      }
+        return content.join(ReplyMarkup.doubleNewLine)
+      })
+
+      await ctx.reply(report || "*Записей нет*", ReplyMarkup.parseModeV2)
 
       return undefined
     }

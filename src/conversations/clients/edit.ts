@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { editClient } from "@/api/controllerPsychologists/editClient"
 import { ClientDto } from "@/common/dto/client.dto"
@@ -38,7 +39,7 @@ const clientEdit: BotConversation = {
       if (formResult.status === FORM_RESULT_STATUSES.FINISHED) {
         let result = false
         try {
-          result = await conversation.external(async () => {
+          result = await safeExternal(conversation, async () => {
             return await editClient(ctx, client.user._id, {
               descr: formResult.data.descr,
             })

@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { addTherapySession } from "@/api/controllerTherapySessions/addTherapySession"
 import { currentUserAlias } from "@/common/consts/currentUserAlias"
@@ -118,7 +119,7 @@ const therapySessionAdd: BotConversation = {
 
         let addedSession: TherapySessionDto | undefined = undefined
         try {
-          addedSession = await conversation.external(async () => {
+          addedSession = await safeExternal(conversation, async () => {
             return addTherapySession(ctx, {
               dateTime: parseRuDate(formResult.data.date) || Date.now(),
               psychologist: currentUserAlias,

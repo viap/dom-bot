@@ -12,6 +12,7 @@ import {
 import { getLeadingCommand } from "@/common/utils/getFilterByCommand"
 import { createAccessKey } from "@/common/utils/interactionIdentity"
 import { CONVERSATION_NAMES } from "@/conversations/enums/conversationNames"
+import { consumeReleasedSessionKey } from "@/common/middlewares/updateWatchdog"
 import { NextFunction } from "grammy"
 
 const EXPLICIT_RECOVERY_COMMANDS = new Set<string>([
@@ -22,6 +23,9 @@ const EXPLICIT_RECOVERY_COMMANDS = new Set<string>([
 
 export function createInteractionRecoveryGate(conversationVersion: number) {
   return async (ctx: MyContext, next: NextFunction): Promise<void> => {
+    // The watchdog released this user's last update: its conversation may be
+    // stuck in a replay that would hang again on every update.
+    const released = consumeReleasedSessionKey(ctx)
     const user = ctx.session.user
     if (!user) {
       await next()
@@ -41,15 +45,25 @@ export function createInteractionRecoveryGate(conversationVersion: number) {
       previous?.accessKey !== undefined && previous.accessKey !== accessKey
     const unknownAccessWithHistory =
       previous?.accessKey === undefined && interruptedConversation
+    const stuckConversation = released && interruptedConversation
     let pending = previous?.pendingRecovery
 
-    if (versionMismatch || accessMismatch || unknownAccessWithHistory) {
+    if (
+      versionMismatch ||
+      accessMismatch ||
+      unknownAccessWithHistory ||
+      stuckConversation
+    ) {
       if (interruptedConversation) {
         await ctx.conversation.exit()
       }
 
       pending = pending || {
-        reason: versionMismatch ? "release" : "access",
+        reason: stuckConversation
+          ? "stuck"
+          : versionMismatch
+          ? "release"
+          : "access",
         interruptedConversation,
       }
       delete ctx.session.menuDeepLink
@@ -168,6 +182,10 @@ async function exitPartialRecovery(ctx: MyContext): Promise<void> {
 }
 
 function getRecoveryText(pending: PendingRecovery): BOT_TEXTS {
+  if (pending.reason === "stuck") {
+    return BOT_TEXTS.RECOVERY_STUCK
+  }
+
   if (pending.reason === "release") {
     return pending.interruptedConversation
       ? BOT_TEXTS.RECOVERY_RELEASE_INTERRUPTED

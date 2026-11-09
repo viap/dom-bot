@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { editUser } from "@/api/controllerUsers/editUser"
 import { EditUserDto } from "@/api/dto/editUser.dto"
@@ -39,7 +40,7 @@ const userSetPassword: BotConversation = {
         let result = false
 
         try {
-          const editedUser = (await conversation.external(async () => {
+          const editedUser = (await safeExternal(conversation, async () => {
             return await editUser(ctx, user._id, {
               password: formResult.data.password,
             })

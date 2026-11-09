@@ -1,3 +1,4 @@
+import { safeExternal } from "@/common/utils/safeExternal"
 import { getSafeErrorDetails } from "@/common/utils/getSafeErrorDetails"
 import { deleteClient } from "@/api/controllerPsychologists/deleteClient"
 import { ClientDto } from "@/common/dto/client.dto"
@@ -23,7 +24,7 @@ const clientDelete: BotConversation = {
       let result = false
 
       try {
-        result = await conversation.external(async () => {
+        result = await safeExternal(conversation, async () => {
           return await deleteClient(ctx, client.user._id)
         })
       } catch (e) {

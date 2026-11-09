@@ -14,6 +14,7 @@ For cross-service architecture, auth contracts, and stack rules, read the files 
 - **Always use `@/*` path aliases** (`@/api/*`, `@/common/*`, `@/components/*`, `@/conversations/*`, `@/services/*`). Never write deep relative imports.
 - **Never hardcode secrets.** All config comes from `config/.env` via `process.env`.
 - **Always register new conversations in `BotConversations.getList()`** in `src/conversations/index.ts`. An unregistered conversation is unreachable.
+- **Call dom-api inside conversations only through `safeExternal`.** Replay re-runs the conversation with the first update's possibly expired token; a direct call that fails or returns different data diverges the replay and conversations v1 waits forever, blocking the user's update queue. A plain `conversation.external` would persist the raw AxiosError (JWT header, request body) in the session; return only the data the conversation needs.
 - **Bump `CONVERSATION_VERSION` for replay-incompatible changes.** Increment `src/common/consts/conversationVersion.ts` when a release changes conversation waits, Telegram/external call order, menu/form branching, shared MenuBlock/Form/Quiz replay behavior, or the conversations dependency. Logging-only and deployment-only changes do not require a bump.
 
 ## Do Not Do

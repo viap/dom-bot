@@ -8,7 +8,7 @@ export type DeepLink = {
   goTo: MENU_ITEM_TYPES
 }
 
-export type RecoveryReason = "release" | "access"
+export type RecoveryReason = "release" | "access" | "stuck"
 
 export type PendingRecovery = {
   reason: RecoveryReason
