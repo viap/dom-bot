@@ -10,6 +10,7 @@ import {
   sanitizeNotificationMessageEntities,
 } from "@/common/utils/notificationMessageEntities"
 import { parseNotificationMessageLinks } from "@/common/utils/parseNotificationMessageLinks"
+import { parsePrivateSessionKey } from "@/common/utils/parsePrivateSessionKey"
 import { ReplyMarkup } from "@/common/utils/replyMarkup"
 import getMenuItemBreadCrumbs from "@/components/MenuBlock/utils/getMenuItemBreadCrumbs"
 import * as MongoStorage from "@grammyjs/storage-mongodb"
@@ -433,6 +434,7 @@ export default class NotificationListener {
     }
 
     const candidates: Array<NotificationRecipient> = []
+    const seenUserIds = new Set<string>()
     if (NotificationListener.sessions) {
       const allSessionsWithToken = NotificationListener.sessions.find({
         "value.token": { $exists: true, $ne: "" },
@@ -445,17 +447,25 @@ export default class NotificationListener {
           value: SessionData
         }
 
-        if (session.value.token) {
+        const privateSession = parsePrivateSessionKey(session.key)
+        if (!privateSession || !session.value.token) {
+          continue
+        }
+
+        try {
           const { userId }: Partial<TokenPayloadDto> = jwtDecode(
             session.value.token
           )
 
-          if (userId) {
+          if (userId && !seenUserIds.has(userId)) {
+            seenUserIds.add(userId)
             candidates.push({
               userId,
-              chatId: session.key.split("/")[1],
+              chatId: privateSession.privateChatId,
             })
           }
+        } catch {
+          // A malformed or stale token must not fail the whole polling cycle.
         }
       }
     }
