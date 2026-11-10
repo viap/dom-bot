@@ -373,7 +373,7 @@ ${linkLabel}`
           hasNext: async () => !consumed,
           next: async () => {
             consumed = true
-            return { key: "bot/chat-1", value: { token } }
+            return { key: "123/123", value: { token } }
           },
           rewind: () => undefined,
         }
@@ -463,7 +463,7 @@ ${linkLabel}`
           hasNext: async () => !consumed,
           next: async () => {
             consumed = true
-            return { key: "bot/chat-1", value: { token } }
+            return { key: "123/123", value: { token } }
           },
           rewind: () => undefined,
         }
@@ -959,7 +959,7 @@ describe("NotificationListener recipient candidates", () => {
           next: async () => {
             consumed = true
             return {
-              key: "bot/chat-1",
+              key: "123/123",
               value: { token: `header.${tokenPayload}.signature` },
             }
           },
@@ -998,7 +998,11 @@ describe("NotificationListener recipient selection", () => {
   const target = NotificationListener as unknown as Internals
 
   function setup(
-    sessions: Array<{ chatId: string; token: string }>,
+    sessions: Array<{
+      telegramUserId: string
+      chatId: string
+      token: string
+    }>,
     ack: (data: { userId: string }) => boolean
   ) {
     const sent: Array<string> = []
@@ -1019,7 +1023,7 @@ describe("NotificationListener recipient selection", () => {
           next: async () => {
             const session = sessions[index++]
             return {
-              key: `bot/${session.chatId}`,
+              key: `${session.telegramUserId}/${session.chatId}`,
               value: { token: session.token },
             }
           },
@@ -1046,20 +1050,124 @@ describe("NotificationListener recipient selection", () => {
     ...extra,
   })
 
-  it("uses API eligibility instead of stale token roles", async () => {
-    const stale = tokenFor("user-1", ["admin"])
-    const current = tokenFor("user-2", ["user"])
-    const { sent } = setup(
+  it("selects the private session when a group session appears first", async () => {
+    const token = tokenFor("user-1", ["admin"])
+    const { sent, receipts } = setup(
       [
-        { chatId: "chat-1", token: stale },
-        { chatId: "chat-2", token: current },
+        { telegramUserId: "101", chatId: "-100500", token },
+        { telegramUserId: "101", chatId: "101", token },
+      ],
+      () => true
+    )
+
+    await target.makeEffect(notification({ eligibleUserIds: ["user-1"] }))
+
+    assert.deepEqual(receipts, ["user-1"])
+    assert.deepEqual(sent, ["101"])
+  })
+
+  it("keeps the private session when a group session appears later", async () => {
+    const token = tokenFor("user-1", ["admin"])
+    const { sent, receipts } = setup(
+      [
+        { telegramUserId: "101", chatId: "101", token },
+        { telegramUserId: "101", chatId: "-100500", token },
+      ],
+      () => true
+    )
+
+    await target.makeEffect(notification({ eligibleUserIds: ["user-1"] }))
+
+    assert.deepEqual(receipts, ["user-1"])
+    assert.deepEqual(sent, ["101"])
+  })
+
+  it("omits group-only sessions from the batch and receipt flow", async () => {
+    const batchPayloads: Array<unknown> = []
+    const { sent, receipts } = setup(
+      [
+        {
+          telegramUserId: "101",
+          chatId: "-100500",
+          token: tokenFor("user-1", ["admin"]),
+        },
+      ],
+      () => true
+    )
+    target.socket = {
+      emitWithAck: async (message: string, data: unknown) => {
+        if (message === "notifications/get-all-batch") {
+          batchPayloads.push(data)
+          return []
+        }
+        receipts.push((data as { userId: string }).userId)
+        return true
+      },
+    }
+
+    await target.getActiveNotifications()
+    await target.makeEffect(notification({ eligibleUserIds: ["user-1"] }))
+
+    assert.deepEqual(batchPayloads, [{ userIds: [] }])
+    assert.deepEqual(receipts, [])
+    assert.deepEqual(sent, [])
+  })
+
+  it("skips a malformed token without failing valid private candidates", async () => {
+    const { sent, receipts } = setup(
+      [
+        { telegramUserId: "101", chatId: "101", token: "malformed" },
+        {
+          telegramUserId: "202",
+          chatId: "202",
+          token: tokenFor("user-2", ["admin"]),
+        },
       ],
       () => true
     )
 
     await target.makeEffect(notification({ eligibleUserIds: ["user-2"] }))
 
-    assert.deepEqual(sent, ["chat-2"])
+    assert.deepEqual(receipts, ["user-2"])
+    assert.deepEqual(sent, ["202"])
+  })
+
+  it("deduplicates multiple private candidates for one DOM user", async () => {
+    const token = tokenFor("user-1", ["admin"])
+    const payloads: Array<unknown> = []
+    setup(
+      [
+        { telegramUserId: "101", chatId: "101", token },
+        { telegramUserId: "202", chatId: "202", token },
+      ],
+      () => true
+    )
+    target.socket = {
+      emitWithAck: async (_message: string, data: unknown) => {
+        payloads.push(data)
+        return []
+      },
+    }
+
+    await target.getActiveNotifications()
+
+    assert.deepEqual(payloads, [{ userIds: ["user-1"] }])
+  })
+
+  it("uses API eligibility instead of stale token roles", async () => {
+    const stale = tokenFor("user-1", ["admin"])
+    const current = tokenFor("user-2", ["user"])
+    const { sent } = setup(
+      [
+        { telegramUserId: "101", chatId: "101", token: stale },
+        { telegramUserId: "202", chatId: "202", token: current },
+      ],
+      () => true
+    )
+
+    await target.makeEffect(notification({ eligibleUserIds: ["user-2"] }))
+
+    assert.deepEqual(sent, ["202"])
   })
 
   it("tries the next candidate when the API refuses a receipt", async () => {
@@ -1067,8 +1175,8 @@ describe("NotificationListener recipient selection", () => {
     const second = tokenFor("user-2", ["admin"])
     const { sent, receipts } = setup(
       [
-        { chatId: "chat-1", token: first },
-        { chatId: "chat-2", token: second },
+        { telegramUserId: "101", chatId: "101", token: first },
+        { telegramUserId: "202", chatId: "202", token: second },
       ],
       (data) => data.userId === "user-2"
     )
@@ -1078,12 +1186,18 @@ describe("NotificationListener recipient selection", () => {
     )
 
     assert.deepEqual(receipts, ["user-1", "user-2"])
-    assert.deepEqual(sent, ["chat-2"])
+    assert.deepEqual(sent, ["202"])
   })
 
   it("sends nothing when the API lists no eligible users", async () => {
     const { sent, receipts } = setup(
-      [{ chatId: "chat-1", token: tokenFor("user-1", ["admin"]) }],
+      [
+        {
+          telegramUserId: "101",
+          chatId: "101",
+          token: tokenFor("user-1", ["admin"]),
+        },
+      ],
       () => true
     )
 
@@ -1098,8 +1212,16 @@ describe("NotificationListener recipient selection", () => {
     let findCalls = 0
     setup(
       [
-        { chatId: "chat-1", token: tokenFor("user-1", []) },
-        { chatId: "chat-2", token: tokenFor("user-2", []) },
+        {
+          telegramUserId: "101",
+          chatId: "101",
+          token: tokenFor("user-1", []),
+        },
+        {
+          telegramUserId: "202",
+          chatId: "202",
+          token: tokenFor("user-2", []),
+        },
       ],
       (data) => data.userId === "user-2"
     )
@@ -1132,7 +1254,16 @@ describe("NotificationListener recipient selection", () => {
 
   it("sends its session user ids with the batch request", async () => {
     const payloads: Array<unknown> = []
-    setup([{ chatId: "chat-1", token: tokenFor("user-1", []) }], () => true)
+    setup(
+      [
+        {
+          telegramUserId: "101",
+          chatId: "101",
+          token: tokenFor("user-1", []),
+        },
+      ],
+      () => true
+    )
     target.socket = {
       emitWithAck: async (_message: string, data: unknown) => {
         payloads.push(data)
